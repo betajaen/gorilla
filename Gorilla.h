@@ -201,14 +201,9 @@ namespace Gorilla
 
     for (Ogre::uint y=0;y < mDimensions.height;y++)
     {
-     for (Ogre::uint x=0;x < mDimensions.width;x++)
-     {
-      *target_handle++ = *source_handle++;
-      *target_handle++ = *source_handle++;
-      *target_handle++ = *source_handle++;
-      *target_handle++ = *source_handle++;
-     }
-     target_handle += (target_stride - source_stride);
+     memcpy(target_handle, source_handle, source_stride);
+     source_handle += source_stride;
+     target_handle += target_stride;
     }
    }
    
@@ -392,6 +387,8 @@ namespace Gorilla
     MonoText(const Pixel& position,  const Size& size, const Ogre::uint nbCols, const Ogre::uint nbRows, const Ogre::String& initialText, const Colour& foreground, const Colour& background, const Ogre::uint& zorder, Screen*);
     
    ~MonoText();
+    
+    void  setText(const Ogre::String& new_text, bool refreshScreen = true);
     
    protected:
     

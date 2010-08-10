@@ -219,7 +219,9 @@ void Screen::_refreshTexture()
   if (block->m1pxOptimised == true)
    continue;
   
-  std::cout << "Splatting block\n";
+  if (block->mRedrawRequired == false)
+   continue;
+  
   block->mBitmap->splat(pDest, pixelBox.getWidth(), pixelBox.getHeight(), splatPos);
   
   Ogre::Real top, left, bottom, right;
@@ -414,7 +416,7 @@ Font8x8::Font8x8()
   }
  }
  
- mData->save("8x8font.png");
+ //mData->save("8x8font.png");
 }
 
 Font8x8::~Font8x8()
@@ -516,6 +518,14 @@ MonoText::~MonoText()
 {
 }
 
+void MonoText::setText(const Ogre::String& new_text, bool refreshScreen)
+{
+ mText = new_text;
+ _redraw();
+ if (refreshScreen)
+  mScreen->_refreshTexture();
+}
+
 void MonoText::_redraw()
 {
  
@@ -561,7 +571,7 @@ void MonoText::_redraw()
  
  
  // Debug
- mBitmap->save("monotext.png");
+ //mBitmap->save("monotext.png");
 }
 
 
