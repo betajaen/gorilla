@@ -24,6 +24,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				CommandLine=""
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -83,6 +84,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)\..&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -156,6 +158,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)\..&quot;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -163,11 +166,11 @@
 	</References>
 	<Files>
 		<File
-			RelativePath="..\Gorilla.cpp"
+			RelativePath=".\Gorilla.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\Gorilla.h"
+			RelativePath=".\Gorilla.h"
 			>
 		</File>
 		<File

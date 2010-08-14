@@ -1,0 +1,172 @@
+[Texture]
+file dejavu.png
+rectangle 0 0
+
+[Font]
+lineheight 15
+spacelength 5
+glyph_33 0 0 7 19 6
+glyph_34 7 0 8 19 7
+glyph_35 15 0 14 19 13
+glyph_36 29 0 11 19 10
+glyph_37 40 0 16 19 15
+glyph_38 56 0 13 19 12
+glyph_39 69 0 5 19 4
+glyph_40 74 0 7 19 6
+glyph_41 81 0 7 19 6
+glyph_42 88 0 8 19 8
+glyph_43 96 0 14 19 13
+glyph_44 110 0 5 19 5
+glyph_45 115 0 6 19 5
+glyph_46 121 0 5 19 5
+glyph_47 126 0 6 19 5
+glyph_48 132 0 11 19 10
+glyph_49 143 0 11 19 10
+glyph_50 154 0 11 19 10
+glyph_51 165 0 11 19 10
+glyph_52 176 0 11 19 10
+glyph_53 187 0 11 19 10
+glyph_54 198 0 11 19 10
+glyph_55 209 0 11 19 10
+glyph_56 220 0 11 19 10
+glyph_57 231 0 11 19 10
+glyph_58 242 0 6 19 5
+glyph_59 248 0 6 19 5
+glyph_60 0 19 14 19 13
+glyph_61 14 19 14 19 13
+glyph_62 28 19 14 19 13
+glyph_63 42 19 9 19 8
+glyph_64 51 19 17 19 16
+glyph_65 68 19 11 19 10
+glyph_66 79 19 11 19 10
+glyph_67 90 19 12 19 11
+glyph_68 102 19 13 19 12
+glyph_69 115 19 11 19 10
+glyph_70 126 19 10 19 9
+glyph_71 136 19 13 19 12
+glyph_72 149 19 13 19 12
+glyph_73 162 19 5 19 4
+glyph_74 167 19 5 19 4
+glyph_75 172 19 11 19 10
+glyph_76 183 19 9 19 8
+glyph_77 192 19 14 19 13
+glyph_78 206 19 12 19 11
+glyph_79 218 19 13 19 12
+glyph_80 231 19 10 19 9
+glyph_81 241 19 13 19 12
+glyph_82 0 38 12 19 11
+glyph_83 12 38 11 19 10
+glyph_84 23 38 10 19 9
+glyph_85 33 38 12 19 11
+glyph_86 45 38 11 19 10
+glyph_87 56 38 16 19 15
+glyph_88 72 38 11 19 10
+glyph_89 83 38 10 19 9
+glyph_90 93 38 11 19 10
+glyph_91 104 38 7 19 6
+glyph_92 111 38 6 19 5
+glyph_93 117 38 7 19 6
+glyph_94 124 38 14 19 13
+glyph_95 138 38 8 19 8
+glyph_96 146 38 8 19 8
+glyph_97 154 38 10 19 9
+glyph_98 164 38 11 19 10
+glyph_99 175 38 9 19 8
+glyph_100 184 38 11 19 10
+glyph_101 195 38 10 19 9
+glyph_102 205 38 6 19 5
+glyph_103 211 38 11 19 10
+glyph_104 222 38 11 19 10
+glyph_105 233 38 5 19 4
+glyph_106 238 38 5 19 4
+glyph_107 243 38 10 19 9
+glyph_108 0 57 5 19 4
+glyph_109 5 57 16 19 15
+glyph_110 21 57 11 19 10
+glyph_111 32 57 10 19 9
+glyph_112 42 57 11 19 10
+glyph_113 53 57 11 19 10
+glyph_114 64 57 7 19 6
+glyph_115 71 57 9 19 8
+glyph_116 80 57 7 19 6
+glyph_117 87 57 11 19 10
+glyph_118 98 57 10 19 9
+glyph_119 108 57 14 19 13
+glyph_120 122 57 10 19 9
+glyph_121 132 57 10 19 9
+glyph_122 142 57 9 19 8
+glyph_123 151 57 11 19 10
+glyph_124 162 57 6 19 5
+glyph_125 168 57 11 19 10
+glyph_126 179 57 14 19 13
+
+
+[FontKerning]
+glyph_45 84 -1
+glyph_45 89 -1
+glyph_65 84 -1
+glyph_65 86 -1
+glyph_65 89 -1
+glyph_65 121 -1
+glyph_70 46 -2
+glyph_70 58 -1
+glyph_70 65 -1
+glyph_70 97 -1
+glyph_70 105 -1
+glyph_70 114 -1
+glyph_70 121 -1
+glyph_75 45 -1
+glyph_75 84 -1
+glyph_75 121 -1
+glyph_76 84 -2
+glyph_76 86 -1
+glyph_76 87 -1
+glyph_76 89 -2
+glyph_76 121 -1
+glyph_79 88 -1
+glyph_80 46 -2
+glyph_80 65 -1
+glyph_82 84 -1
+glyph_82 89 -1
+glyph_84 45 -1
+glyph_84 46 -1
+glyph_84 58 -1
+glyph_84 65 -1
+glyph_84 97 -2
+glyph_84 99 -2
+glyph_84 101 -2
+glyph_84 111 -2
+glyph_84 114 -2
+glyph_84 115 -2
+glyph_84 117 -2
+glyph_84 119 -2
+glyph_84 121 -2
+glyph_86 46 -2
+glyph_86 58 -1
+glyph_86 65 -1
+glyph_86 97 -1
+glyph_86 101 -1
+glyph_86 111 -1
+glyph_86 117 -1
+glyph_87 46 -1
+glyph_87 97 -1
+glyph_88 67 -1
+glyph_88 79 -1
+glyph_89 45 -1
+glyph_89 46 -3
+glyph_89 58 -2
+glyph_89 65 -1
+glyph_89 97 -2
+glyph_89 101 -2
+glyph_89 111 -2
+glyph_89 117 -1
+glyph_102 46 -1
+glyph_114 45 -1
+glyph_114 46 -1
+glyph_118 46 -1
+glyph_119 46 -1
+glyph_121 46 -2
+glyph_121 58 -1
+
+[Sprites]
+sprite_0 0 208 48 48  # OGRE Head
