@@ -166,11 +166,15 @@
 	</References>
 	<Files>
 		<File
-			RelativePath=".\Gorilla.cpp"
+			RelativePath="..\dejavu.gorilla"
 			>
 		</File>
 		<File
-			RelativePath=".\Gorilla.h"
+			RelativePath="..\Gorilla.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\Gorilla.h"
 			>
 		</File>
 		<File

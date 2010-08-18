@@ -32,20 +32,40 @@ class App : public Ogre::FrameListener
    mSceneMgr = mRoot->createSceneManager(Ogre::ST_GENERIC);
    mCamera = mSceneMgr->createCamera("Camera");
    mViewport = mWindow->addViewport(mCamera);
+   mViewport->setBackgroundColour(Ogre::ColourValue(0.45,0.45,0.45,1.0));
    
    rgm->initialiseAllResourceGroups();
    
    // Initialise Gorilla
-   mTextureAtlas = new Gorilla::TextureAtlas("dejavu.gorilla");
-   mScreen = new Gorilla::Screen(mViewport, mTextureAtlas);
-   
-   for (int i=0;i < 80;i++)
-   {
-    makeRandomSprite();
-    makeRandomRectangle();
-   }
-   
-   mScreen->addText(10,10, "ABCDEFGHIJKLMNOPQRSTUVWXYZ\nabcdefghijklmnopqrstuvwxyz\n01234567890\nThese tutorials are where you should start learning Ogre, but they\n assume you know nothing about Ogre, and step you through the\n process of using the engine one concept at a time.\n Otherwise see Setting up an Application for a general guidance on how to set up your own project.");
+   mGorilla = new Gorilla::System();
+   mGorilla->loadAtlas("dejavu");
+   mScreen = mGorilla->createScreen(mViewport, "dejavu");
+   mScreen->createRectangle(10,10, 105, 304, Ogre::ColourValue::Red);
+   mScreen->createRectangle(115,10, 40, 104, Ogre::ColourValue::Blue);
+   mScreen->createSprite(10,10, "ogrehead");
+   mScreen->createText(50,50, "hat in a th tax whou, now exis Alp bovid th frot my con ye Gar, Che T.\n"
+"Do th-se-she dre be 16 Beld Pegair end th at anize by of piry throd\n"
+"rive in the thave sag pat natin reproce cou co ing; the a Divold\n"
+"dabough ther stich gant infe are subin Compas oto Pologs, Effe, and\n"
+"cad tord to Res swerge indoul ce cal Batic), wouse fut syna neend inal\n"
+"a-Come raclue annobir 1 ager cat the le in whict, in yeeced th yout I\n"
+"com hics forit rine the rompar A was the Coducin and my to the Darivey\n"
+"ficave accurvin an asigin of ou mothe pre the is thampla: 32 Hown;\n"
+"Bolot he ferno to hated has and blivis alichow iseedevid. To shoplear\n"
+"for of he se zercumbic al Saff. Yore-Amord baly of exply the by wor re\n"
+"the be fate mand im, M. 860 by preake enot Z. 30,00 alcen; al\n"
+"expeaciat dit; art actiode plence dookes exionse your metem. Thint min\n"
+"breher of ther ther. Bran tryoust, ed fla lay of Tesuene whort, welf,\n"
+"ad he of en patumaim way, rep al if Bar The ary meteman my gloge\n"
+"dismirl, whent vild samplip dowithys, ponsir to decom om is re bons\n"
+"withann, is for laster, thich witer. Sheat hapeatur commad mety or a\n"
+"parthe he pre then he Borne dons, the vocial, th, a sortum thalsopme\n"
+"of the for of to your torbat later the all usequin cartager hatted\n"
+"buisobany sationta pan en Fremplic, of inite sonever a cor vinve by\n"
+"withe fid, Mor whe will dyint res Beated ithe of in's beaccee noly\n"
+"falation the pris und the dampor whin am to tor powdeur inhaso\n"
+"nobliare by becanner (e. The whin throsibe the dernagood of a to begis\n");
+
   }
   
  ~App()
@@ -53,9 +73,7 @@ class App : public Ogre::FrameListener
    std::cout << "** Batch Count: " << mWindow->getBatchCount() << "\n";
    std::cout << "** Triangle Count: " << mWindow->getTriangleCount() << "\n";
    std::cout << "** Average FPS: " << mWindow->getAverageFPS() << "\n";
-   
-   delete mScreen;
-   delete mTextureAtlas;
+   delete mGorilla;
    delete mRoot;
   }
   
@@ -66,69 +84,13 @@ class App : public Ogre::FrameListener
     return false;
    
    mNextUpdate+=evt.timeSinceLastFrame;
-   if (mNextUpdate >= 1.0f/10.0f) // Only update every 1/10th of a second.
+   if (mNextUpdate >= 1.0f/60.0f) // Only update every 1/60th of a second.
    {
-    std::stringstream s;
-    s << "FPS: " << mWindow->getLastFPS() << " Batches:" << mWindow->getBatchCount();
     
-    randomiseExistingRectangle();
-    randomiseExistingSprite();
     mNextUpdate = 0;
    }
+   
    return true;
-  }
-  
-  void makeRandomSprite()
-  {
-   
-   int x = Ogre::Math::RangeRandom(0, mViewport->getActualWidth());
-   int y = Ogre::Math::RangeRandom(0, mViewport->getActualHeight());
-   int d = Ogre::Math::RangeRandom(-100, 100);
-   
-   mSprites.push_back(   mScreen->addSprite(x,y, 0, d)   );
-   
-  }
-  
-  void makeRandomRectangle()
-  {
-   int x = Ogre::Math::RangeRandom(0, mViewport->getActualWidth());
-   int y = Ogre::Math::RangeRandom(0, mViewport->getActualHeight());
-   int w = Ogre::Math::RangeRandom(0, mViewport->getActualWidth());
-   int h = Ogre::Math::RangeRandom(0, mViewport->getActualHeight());
-   int d = Ogre::Math::RangeRandom(-100, 100);
-   Gorilla::Colour colour = Gorilla::Colour::Random(0.5f);
-   
-   mRectangles.push_back(   mScreen->addRectangle(x,y, w,h, d, colour)   );
-  }
-
-  void randomiseExistingRectangle()
-  {
-   
-   Ogre::uint rectId = mRectangles[size_t(Ogre::Math::RangeRandom(0, mRectangles.size()))];
-   
-   int x = Ogre::Math::RangeRandom(0, mViewport->getActualWidth());
-   int y = Ogre::Math::RangeRandom(0, mViewport->getActualHeight());
-   int w = Ogre::Math::RangeRandom(0, mViewport->getActualWidth());
-   int h = Ogre::Math::RangeRandom(0, mViewport->getActualHeight());
-   int d = Ogre::Math::RangeRandom(-100, 100);
-   
-   Gorilla::Colour colour = Gorilla::Colour::Random(0.5f);
-   
-   mScreen->updateRectangle(rectId, x,y, w,h,d,colour);
-   
-  }
-
-  void randomiseExistingSprite()
-  {
-   
-   Ogre::uint spriteId = mSprites[size_t(Ogre::Math::RangeRandom(0, mSprites.size()))];
-   
-   int x = Ogre::Math::RangeRandom(0, mViewport->getActualWidth());
-   int y = Ogre::Math::RangeRandom(0, mViewport->getActualHeight());
-   int d = Ogre::Math::RangeRandom(-100, 100);
-   
-   mScreen->updateSprite(spriteId, x, y, d);
-   
   }
   
   Ogre::Root*             mRoot;
@@ -136,14 +98,10 @@ class App : public Ogre::FrameListener
   Ogre::Viewport*         mViewport;
   Ogre::SceneManager*     mSceneMgr;
   Ogre::Camera*           mCamera;
-  
-  Gorilla::TextureAtlas*  mTextureAtlas;
-  Gorilla::Screen*        mScreen;
-  
   Ogre::Real              mNextUpdate;
-  std::vector<Ogre::uint> mSprites;
-  std::vector<Ogre::uint> mRectangles;
-
+  
+  Gorilla::System*        mGorilla;
+  Gorilla::Screen*        mScreen;
   
 };
 
@@ -153,3 +111,5 @@ void main()
  app->mRoot->startRendering();
  delete app;
 }
+
+
