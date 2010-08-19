@@ -47,6 +47,20 @@ namespace Gorilla
   
   class Screen;
   
+  inline Ogre::ColourValue rgb(Ogre::uchar r, Ogre::uchar g, Ogre::uchar b, Ogre::uchar a = 255)
+  {
+   return Ogre::ColourValue(float(r) / 255.0f,float(g) / 255.0f,float(b) / 255.0f, float(a) / 255.0f);
+  }
+  
+  inline Ogre::ColourValue random_colour(Ogre::Real alpha = 1.0)
+  {
+   return Ogre::ColourValue(
+     Ogre::Math::RangeRandom(0,1),
+     Ogre::Math::RangeRandom(0,1),
+     Ogre::Math::RangeRandom(0,1),
+     alpha); 
+  }
+  
   // Slightly rewritten and stolen from NxOgre's Buffer class.
   template<typename T> class buffer
   {
@@ -222,13 +236,11 @@ namespace Gorilla
   };
   
   class TextureAtlas
-   {
-     
+  {
+    
+    friend class Silverback;
+    
     public:
-     
-     TextureAtlas(const Ogre::String& gorillaFile, const Ogre::String& group = Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-     
-    ~TextureAtlas();
      
      inline Ogre::TexturePtr  getTexture() const
      {
@@ -296,7 +308,20 @@ namespace Gorilla
       return mPass;
      }
     
+     inline Ogre::uint getGlyphRangeBegin() const
+     {
+      return mGlyphRangeBegin;
+     }
+    
+     inline Ogre::uint getGlyphRangeEnd() const
+     {
+      return mGlyphRangeEnd;
+     }
+
     protected:
+     
+     TextureAtlas(const Ogre::String& gorillaFile, const Ogre::String& group);
+    ~TextureAtlas();
      
      void  _reset();
      void  _load(const Ogre::String& gorillaFile, const Ogre::String& groupName);
@@ -335,19 +360,19 @@ namespace Gorilla
   
   typedef buffer<Vertex> VertexList;
 
-  class System : public Ogre::Singleton<System>
+  class Silverback : public Ogre::Singleton<Silverback>
   {
     
    public:
     
-    System();
+    Silverback();
     
-   ~System();
+   ~Silverback();
     
     void  loadAtlas(const Ogre::String& name, const Ogre::String& group = Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-    Screen* createScreen(Ogre::Viewport*, const Ogre::String& atlas);
+    Screen*  createScreen(Ogre::Viewport*, const Ogre::String& atlas);
+    void  destroyScreen(Screen*);
     
-
    protected:
     
     std::map<Ogre::String, TextureAtlas*>  mAtlases;
@@ -359,40 +384,69 @@ namespace Gorilla
   
   class Screen : public Ogre::RenderQueueListener
   {
-    
+   
+   friend class Silverback;
+   
    public:
     
     struct Rectangle
     { 
-     Ogre::Real         left, top, width, height, depth;
-     Ogre::ColourValue  colour;
-     size_t             vertexStart;
+      Rectangle() {}
+     ~Rectangle() {}
+      Ogre::Real         left, top, width, height, depth;
+      Ogre::ColourValue  colour;
+      size_t             vertexStart;
     };
     
     struct Sprite
     {
-     Ogre::Real         left, top, depth;
-     ::Gorilla::Sprite* sprite;
-     size_t             vertexStart;
+      Sprite() {}
+     ~Sprite() {}
+      Ogre::Real         left, top, depth;
+      ::Gorilla::Sprite* sprite;
+      size_t             vertexStart;
     };
     
     struct Text
     {
-     Ogre::Real         left, top, depth;
-     Ogre::String       text;
-     Ogre::ColourValue  colour;
-     size_t             vertexStart;
+      Text() {}
+     ~Text() {}
+      Ogre::Real         left, top, depth, knownWidth, knownHeight;
+      Ogre::String       text;
+      Ogre::ColourValue  colour;
+      VertexList         vertices;
+      bool               redrawRequested;
     };
-    
-    Screen(Ogre::Viewport*, System*, TextureAtlas*);
-   ~Screen();
-    
-    size_t createRectangle(int left, int top, int width, int height, const Ogre::ColourValue& background = Ogre::ColourValue::White, int depth = 0);
-    
+    inline      TextureAtlas* getAtlas() const { return mAtlas; }
+    Ogre::uint  getViewportWidth() const { return mViewportWidth; }
+    Ogre::uint  getViewportHeight() const { return mViewportHeight; }
+
+    size_t      createRectangle(int left, int top, int width, int height, const Ogre::ColourValue& background = Ogre::ColourValue::White, int depth = 0);
+    void        removeRectangle(size_t);
+    void        removeAllRectangles();
+    Ogre::uint  getNbRectangles() const;
+    void        setRectanglePosition(Ogre::uint id, int left, int top);
+    void        setRectangleSize(Ogre::uint id, Ogre::uint width, Ogre::uint height);
+    void        setRectangleZOrder(Ogre::uint id, int zorder);
+    void        setRectangleColour(Ogre::uint id, const Ogre::ColourValue& colour);
+    void        updateRectangle(Ogre::uint id, int left, int top, Ogre::uint width, Ogre::uint height, int zorder, const Ogre::ColourValue& colour);
+    void        getRectanglePosition(size_t id, int& left, int& top) const;
+    void        getRectangleSize(Ogre::uint id) const;
+    int         getRectangleZOrder(Ogre::uint id) const;
+    Ogre::ColourValue getRectangleColour(Ogre::uint id) const;
+
     size_t createSprite(int left, int top, const Ogre::String& sprite_name, int depth = 0);
     
-    size_t createText(int left, int top, const Ogre::String& name, const Ogre::ColourValue& background = Ogre::ColourValue::White, int depth = 0);
+    size_t createText(int left, int top, const Ogre::String& caption, const Ogre::ColourValue& background = Ogre::ColourValue::White, int depth = 0);
     
+    
+    void   setTextCaption(size_t text_id, const Ogre::String& caption);
+    void   getTextSize(size_t text_id, int& width, int& height);
+    
+    void   refreshMarkupColours();
+    void   setMarkupColour(Ogre::uint colour_palette_index, const Ogre::ColourValue&);
+    Ogre::ColourValue  getMarkupColour(Ogre::uint colour_palette_index);
+
     void  _createVertexBuffer();
     void  _destroyVertexBuffer();
     void  _prepareVertexBuffer(size_t neededVertices);
@@ -412,8 +466,9 @@ namespace Gorilla
     
     void  _redrawAllText();
     void  _drawText(Screen::Text* text);
-    void  _updateText(Screen::Text* text);
+    bool  _domarkup(Screen::Text* text, size_t& index, Ogre::ColourValue& colour, Ogre::Real& cursorLeft, Ogre::Real& cursorTop, Ogre::Real& nextLineHeight);
 
+    
     inline Ogre::Real _vpx(Ogre::Real x)
     {
      
@@ -422,7 +477,7 @@ namespace Gorilla
       x = mViewportWidth + x;
      }
      
-     x /= mViewportWidth;
+     x *= mInvViewportWidth;
      
      return (x * 2) - 1;
     }
@@ -435,13 +490,13 @@ namespace Gorilla
       y = mViewportHeight + y;
      }
      
-     y /= mViewportHeight;
+     y *= mInvViewportHeight;
      return 1 - (y * 2);
     }
     
     inline Ogre::Real _vpz(int z)
     {
-     return Ogre::Real(z) * 0.001f;
+     return -0.025f + (Ogre::Real(z) * 0.001f);
     }
     
     static inline void pushQuadFixedUV(Vertex& vertex, VertexList&, const Ogre::Real& left, const Ogre::Real& top, const Ogre::Real& bottom, const Ogre::Real& right, const Ogre::Real& depth, const Ogre::ColourValue& colour, const Ogre::Real& fixedU, const Ogre::Real& fixedV);
@@ -454,6 +509,9 @@ namespace Gorilla
     
    protected:
     
+    Screen(Ogre::Viewport*, Silverback*, TextureAtlas*);
+   ~Screen();
+    
     Ogre::SceneManager*                    mSceneMgr;
     Ogre::RenderSystem*                    mRenderSystem;
     Ogre::Viewport*                        mViewport;
@@ -461,18 +519,19 @@ namespace Gorilla
                                            mViewportHeight,
                                            mInvViewportWidth,
                                            mInvViewportHeight;
-    System*                                mSystem;
+    Silverback*                            mSilverback;
     TextureAtlas*                          mAtlas;
     Ogre::HardwareVertexBufferSharedPtr    mVertexBuffer;
-    size_t                                 mMaxVertexCount, mUsedVertexCount;
-    Vertex*                                mWriteVertex;
+    size_t                                 mMaxVertexCount;
     Ogre::RenderOperation                  mRenderOp;
     std::map<size_t, Screen::Rectangle*>   mRectangles;
     std::map<size_t, Screen::Sprite*>      mSprites;
     std::map<size_t, Screen::Text*>        mText;
     size_t                                 mNextRectangleID, mNextSpriteID, mNextTextID;
-    VertexList                             mRectangleData, mSpriteData, mTextData;
+    VertexList                             mRectangleData, mSpriteData;
     bool                                   mRefreshRequired;
+    size_t                                 mAllTextSize;
+    Ogre::ColourValue                      mMarkupColour[10];
     
   };
   
