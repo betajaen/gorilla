@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="gorilla_console"
-	ProjectGUID="{5149D250-1629-41DF-9A7E-5982296E2906}"
-	RootNamespace="GorillaOgreConsole"
+	Name="gorilla_test"
+	ProjectGUID="{4722520A-274E-4071-9E3F-880C9E4F7928}"
+	RootNamespace="gorilla"
 	TargetFrameworkVersion="196613"
 	>
 	<Platforms>
@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(OGRE_HOME)/include&quot;;&quot;$(OGRE_HOME)/boost_1_42&quot;;.."
+				AdditionalIncludeDirectories="&quot;$(OGRE_HOME)/include&quot;;&quot;$(OGRE_HOME)/boost_1_42&quot;;..;../.."
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -59,7 +59,6 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="OgreMain_d.lib OIS_d.lib"
-				OutputFile="$(OutDir)\gorilla_console.exe"
 				AdditionalLibraryDirectories="&quot;$(OGRE_HOME)/lib/Debug/&quot;;&quot;$(OGRE_HOME)/boost_1_42/lib/&quot;"
 				GenerateDebugInformation="true"
 				TargetMachine="1"
@@ -84,7 +83,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)\..&quot;"
+				CommandLine="copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)\..\..&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -114,7 +113,6 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;$(OGRE_HOME)/include&quot;;&quot;$(OGRE_HOME)/boost_1_42&quot;;.."
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
@@ -131,7 +129,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="OgreMain.lib OIS.lib"
+				AdditionalDependencies="OgreMain.lib"
 				AdditionalLibraryDirectories="&quot;$(OGRE_HOME)/lib/release/&quot;;&quot;$(OGRE_HOME)/boost_1_42/lib/&quot;"
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
@@ -158,7 +156,6 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)\..&quot;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -166,15 +163,15 @@
 	</References>
 	<Files>
 		<File
-			RelativePath="..\Gorilla.cpp"
+			RelativePath="..\gorila_test.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\Gorilla.h"
+			RelativePath="..\..\Gorilla.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\gorilla_console.cpp"
+			RelativePath="..\..\Gorilla.h"
 			>
 		</File>
 	</Files>

@@ -29,14 +29,16 @@
 
 #pragma warning ( disable : 4244 )
 
-
 template<>   Gorilla::Silverback*   Ogre::Singleton<Gorilla::Silverback>::ms_Singleton = 0;
 
+Gorilla::Vertex Gorilla::Renderable::tVertex = Gorilla::Vertex();
+Ogre::Real Gorilla::Renderable::tTop = 0;
+Ogre::Real Gorilla::Renderable::tBottom = 0;
+Ogre::Real Gorilla::Renderable::tLeft = 0;
+Ogre::Real Gorilla::Renderable::tRight = 0;
 
 namespace Gorilla
 {
-
-/////////////////////////////////////////////////////////////////////////////////
 
 TextureAtlas::TextureAtlas(const Ogre::String& gorillaFile, const Ogre::String& groupName)
 {
@@ -128,8 +130,8 @@ void  TextureAtlas::_loadTexture(Ogre::ConfigFile::SettingsMultiMap* settings)
    
    continue;
   }
-  // rectangle x y
-  // >  rectangle 100 105
+  // canvas x y
+  // >  canvas 100 105
   else if (name == "rectangle")
   {
    mRectangleCoords = Ogre::StringConverter::parseVector2(data);
@@ -339,14 +341,15 @@ void  TextureAtlas::_createMaterial()
  
  if (mMaterial.isNull() == false)
   return;
- 
+
  mMaterial = Ogre::MaterialManager::getSingletonPtr()->create(matName, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
  mPass = mMaterial->getTechnique(0)->getPass(0);
+ 
  mPass->setCullingMode(Ogre::CULL_NONE);
- mPass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
- //mPass->setDepthCheckEnabled(false);
- //mPass->setDepthWriteEnabled(false);
+ mPass->setDepthCheckEnabled(false);
+ mPass->setDepthWriteEnabled(false);
  mPass->setLightingEnabled(false);
+ mPass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
 
  mTextureUnit = mPass->createTextureUnitState(mTexture->getName());
  mTextureUnit->setTextureAddressingMode(Ogre::TextureUnitState::TAM_CLAMP);
@@ -365,8 +368,8 @@ void  TextureAtlas::_calculateCoordinates()
   (*it)->uvRight       *= mInverseTextureSize.x;
   (*it)->uvBottom      *= mInverseTextureSize.y;
   (*it)->glyphAdvance  *= mGlyphScale;
-  (*it)->glyphWidth     = (*it)->uvWidth * mGlyphScale;
-  (*it)->glyphHeight    = (*it)->uvHeight * mGlyphScale;
+  (*it)->glyphWidth     = (*it)->uvWidth * 0.999; // Hack
+  (*it)->glyphHeight    = (*it)->uvHeight * 0.999; // Hack
   
   for (Ogre::uint i=0;i < (*it)->kerning.size();i++)
    (*it)->kerning[i].kerning *= mGlyphScale;
@@ -381,14 +384,18 @@ void  TextureAtlas::_calculateCoordinates()
   
   (*it).second->uvLeft    *= mInverseTextureSize.x;
   (*it).second->uvTop     *= mInverseTextureSize.y;
-  (*it).second->uvRight   *= mInverseTextureSize.x;
-  (*it).second->uvBottom  *= mInverseTextureSize.y;
+  (*it).second->uvRight   *= mInverseTextureSize.x * 0.999;  // Hack
+  (*it).second->uvBottom  *= mInverseTextureSize.y * 0.999;  // Hack
   
  }
  
 }
 
-/////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
 
 Silverback::Silverback()
 {
@@ -419,239 +426,63 @@ void Silverback::loadAtlas(const Ogre::String &name, const Ogre::String &group)
 Screen* Silverback::createScreen(Ogre::Viewport* viewport, const Ogre::String& atlas_name)
 {
  TextureAtlas* atlas = (*mAtlases.find(atlas_name)).second;
- Screen* screen = new Screen(viewport, this, atlas);
+ Screen* screen = new Screen(viewport, atlas);
  mScreens.push_back(screen);
  return screen;
 }
 
-void  Silverback::destroyScreen(Screen* screen)
-{
- mScreens.erase(std::find(mScreens.begin(), mScreens.end(), screen));
- delete screen;
-}
 
 
-Screen::Screen(Ogre::Viewport* viewport, Silverback* silverback, TextureAtlas* atlas)
-: mViewport(viewport),
-  mSilverback(silverback),
-  mAtlas(atlas),
-  mSceneMgr(viewport->getCamera()->getSceneManager()),
-  mRenderSystem(0),
-  mMaxVertexCount(0),
-  mNextRectangleID(0),
-  mNextSpriteID(0),
-  mNextTextID(0),
-  mAllTextSize(0),
-  mRefreshRequired(false)
+
+
+
+
+
+
+
+
+
+
+
+Screen::Screen(Ogre::Viewport* viewport, TextureAtlas* atlas)
+: mViewport(viewport), mAtlas(atlas), mLayerRedrawNeeded(false)
 {
- 
- refreshMarkupColours();
+ for (size_t i=0;i < 16;i++)
+  mRedrawLayerNeeded[i] = false;
+
+ mSceneMgr = mViewport->getCamera()->getSceneManager();
  
  mRenderSystem = Ogre::Root::getSingletonPtr()->getRenderSystem();
-
+ 
  mViewportWidth = mViewport->getActualWidth();
  mViewportHeight = mViewport->getActualHeight();
  mInvViewportWidth = 1.0f / mViewportWidth;
  mInvViewportHeight = 1.0f / mViewportHeight;
 
- _createVertexBuffer();
- _startListening();
+ _createBuffer();
+ _registerListener();
 }
 
 Screen::~Screen()
 {
- 
- _stopListening();
- _destroyVertexBuffer();
- 
- for (std::map<size_t, ::Gorilla::Screen::Rectangle*>::iterator it = mRectangles.begin(); it != mRectangles.end(); it++)
-  delete (*it).second;
- 
- for (std::map<size_t, ::Gorilla::Screen::Sprite*>::iterator it = mSprites.begin(); it != mSprites.end(); it++)
-  delete (*it).second;
- 
- for (std::map<size_t, ::Gorilla::Screen::Text*>::iterator it = mText.begin(); it != mText.end(); it++)
-  delete (*it).second;
- 
+ _unregisterListener();
+ // TODO: Delete Renderables
+ _destroyBuffer();
 }
 
-void   Screen::refreshMarkupColours()
+void  Screen::_registerListener()
 {
- mMarkupColour[0] = rgb(255, 255, 255);
- mMarkupColour[1] = rgb(0, 0, 0);
- mMarkupColour[2] = rgb(204, 204, 204);
- mMarkupColour[3] = rgb(254, 220, 129);
- mMarkupColour[4] = rgb(254, 138, 129);
- mMarkupColour[5] = rgb(123, 236, 110);
- mMarkupColour[6] = rgb(44,  192, 171);
- mMarkupColour[7] = rgb(199, 93,  142);
- mMarkupColour[8] = rgb(254, 254, 254);
- mMarkupColour[9] = rgb(13,  13,  13);
+ mSceneMgr->addRenderQueueListener(this);
 }
 
-void   Screen::setMarkupColour(Ogre::uint index, const Ogre::ColourValue& colour)
-{ 
- if (index > 9)
-  return;
- 
- mMarkupColour[index] = colour;
-}
-
-Ogre::ColourValue  Screen::getMarkupColour(Ogre::uint index)
+void  Screen::_unregisterListener()
 {
- if (index > 9)
-  return Ogre::ColourValue::White;
- 
- return mMarkupColour[index];
+ mSceneMgr->removeRenderQueueListener(this);
 }
 
-size_t Screen::createRectangle(int left, int top, int width, int height, const Ogre::ColourValue& colour, int depth)
+void  Screen::_createBuffer()
 {
- Rectangle* rect = new Rectangle();
- rect->left = left;
- rect->top = top;
- rect->width = width;
- rect->height = height;
- rect->colour = colour;
- rect->depth = depth;
- 
- size_t id = mNextRectangleID++;
- mRectangles[id] = rect;
- 
- _drawRectangle(rect);
- mRefreshRequired = true;
- 
- return id;
-}
 
-void Screen::removeRectangle(size_t id)
-{
- 
- std::map<size_t, Rectangle*>::iterator it = mRectangles.find(id);
- 
- if (it != mRectangles.end())
- {
-  delete (*it).second;
-  mRectangles.erase(it);
-  _redrawAllRectanges();
-  mRefreshRequired = true;
- }
- 
-}
-
-void Screen::removeAllRectangles()
-{
- for (std::map<size_t, ::Gorilla::Screen::Rectangle*>::iterator it = mRectangles.begin(); it != mRectangles.end(); it++)
-  delete (*it).second;
- 
- mRectangles.clear();
- mRefreshRequired = true;
-}
-
-Ogre::uint Screen::getNbRectangles() const
-{
- return mRectangles.size();
-}
-
-void Screen::setRectanglePosition(Ogre::uint id, int left, int top)
-{
-}
-
-void Screen::setRectangleSize(Ogre::uint id, Ogre::uint width, Ogre::uint height)
-{
-}
-
-void Screen::setRectangleZOrder(Ogre::uint id, int zorder)
-{
-}
-
-void Screen::setRectangleColour(Ogre::uint id, const Ogre::ColourValue& colour)
-{
-}
-
-void Screen::updateRectangle(Ogre::uint id, int left, int top, Ogre::uint width, Ogre::uint height, int zorder, const Ogre::ColourValue& colour)
-{
-}
-
-void Screen::getRectanglePosition(size_t id, int& left, int& top) const
-{
-}
-
-void Screen::getRectangleSize(Ogre::uint id) const
-{
-}
-
-int Screen::getRectangleZOrder(Ogre::uint id) const
-{
- return 0;
-}
-
-Ogre::ColourValue Screen::getRectangleColour(Ogre::uint id) const
-{
- return Ogre::ColourValue::ZERO;
-}
-
-size_t Screen::createSprite(int left, int top, const Ogre::String& sprite_name, int depth)
-{
- ::Gorilla::Screen::Sprite* sprite = new ::Gorilla::Screen::Sprite();
- sprite->left = left;
- sprite->top = top;
- sprite->depth = depth;
- sprite->sprite = mAtlas->getSprite(sprite_name);
- 
- size_t id = mNextSpriteID++;
- mSprites[id] = sprite;
- 
- _drawSprite(sprite);
- mRefreshRequired = true;
- 
- return id;
-}
-
-size_t Screen::createText(int left, int top, const Ogre::String& caption, const Ogre::ColourValue& colour, int depth)
-{
- ::Gorilla::Screen::Text* text = new ::Gorilla::Screen::Text();
- text->left = left;
- text->top = top;
- text->depth = depth;
- text->text = caption;
- text->colour = colour;
- 
- size_t id = mNextTextID++;
- mText[id] = text;
- 
- _drawText(text);
- mRefreshRequired = true;
- 
- return id;
-}
-
-void Screen::setTextCaption(size_t text_id, const Ogre::String& caption)
-{
- std::map<size_t, Text*>::iterator it = mText.find(text_id);
- 
- if (it != mText.end())
- {
-  (*it).second->text = caption;
-  _drawText((*it).second);
-  mRefreshRequired = true;
- }
-}
-
-void  Screen::getTextSize(size_t text_id, int& width, int& height)
-{
- std::map<size_t, Text*>::iterator it = mText.find(text_id);
- 
- if (it != mText.end())
- {
-  width = (*it).second->knownWidth;
-  height = (*it).second->knownHeight;
- }
-}
-
-void Screen::_createVertexBuffer()
-{
- 
  mMaxVertexCount = 32 * 6;
  mRenderOp.vertexData = new Ogre::VertexData;
  mRenderOp.vertexData->vertexStart = 0;
@@ -679,10 +510,9 @@ void Screen::_createVertexBuffer()
  mRenderOp.vertexData->vertexBufferBinding->setBinding(0, mVertexBuffer);
  mRenderOp.operationType = Ogre::RenderOperation::OT_TRIANGLE_LIST;
  mRenderOp.useIndexes = false;
- 
 }
 
-void Screen::_destroyVertexBuffer()
+void  Screen::_destroyBuffer()
 {
  delete mRenderOp.vertexData;
  mRenderOp.vertexData = 0;
@@ -690,11 +520,11 @@ void Screen::_destroyVertexBuffer()
  mMaxVertexCount = 0;
 }
 
-void  Screen::_prepareVertexBuffer(size_t neededVertices)
+void  Screen::_checkBuffer(size_t neededVertices)
 {
- 
+
  if (mMaxVertexCount == 0)
-  _createVertexBuffer();
+  _createBuffer();
  
  if (neededVertices > mMaxVertexCount)
  {
@@ -717,551 +547,349 @@ void  Screen::_prepareVertexBuffer(size_t neededVertices)
  
 }
 
-void Screen::refresh()
+void  Screen::_calculateLayers()
 {
  
- mRefreshRequired = false;
+ // Clear all layers.
+ for (Ogre::uint i=0;i < 16;i++)
+ {
+  mLayers[i].remove_all();
+  mVertexLayerBuffer[i].remove_all();
+  mRedrawLayerNeeded[i] = false;
+ }
  
- if (mRectangles.size() == 0 && mSprites.size() == 0 && mText.size() == 0)
-  return;
+ //
+ for (std::vector<Renderable*>::iterator it = mRenderables.begin(); it != mRenderables.end();it++)
+ {
+  mLayers[ (*it)->getLayer() ].push_back( (*it) );
+ }
+ 
+ mRedrawAll = true;
+}
 
- std::map<size_t, Text*>::iterator text_it;
- 
- for (text_it = mText.begin(); text_it != mText.end(); text_it++)
- {
-  if ((*text_it).second->redrawRequested)
-   _drawText((*text_it).second);
- }
- 
- size_t vertexBufferSize = mRectangleData.size() + mSpriteData.size() + mAllTextSize;
- 
- _prepareVertexBuffer(vertexBufferSize);
- 
- mRenderOp.vertexData->vertexCount = vertexBufferSize;
- 
- float* writeIterator = (float*) mVertexBuffer->lock(Ogre::HardwareBuffer::HBL_DISCARD);
- 
- // Copy Rectangles.
- for (size_t i = 0; i < mRectangleData.size(); i++)
- {
-  *writeIterator++ = mRectangleData[i].position.x;
-  *writeIterator++ = mRectangleData[i].position.y;
-  *writeIterator++ = mRectangleData[i].position.z;
-  *writeIterator++ = mRectangleData[i].colour.r;
-  *writeIterator++ = mRectangleData[i].colour.g;
-  *writeIterator++ = mRectangleData[i].colour.b;
-  *writeIterator++ = mRectangleData[i].colour.a;
-  *writeIterator++ = mRectangleData[i].uv.x;
-  *writeIterator++ = mRectangleData[i].uv.y;
- }
+void  Screen::_redrawAll()
+{
+ _calculateLayers();
+ for (Ogre::uint i=0;i < 16;i++)
+  _redrawLayer(i); 
+}
 
- // Copy Sprites
- for (size_t i = 0; i < mSpriteData.size(); i++)
+void  Screen::_redrawLayer(Ogre::uint id)
+{
+ mRedrawLayerNeeded[id] = false;
+ mVertexLayerBuffer[id].remove_all();
+ 
+ for (size_t i=0;i < mLayers[id].size();i++)
  {
-  *writeIterator++ = mSpriteData[i].position.x;
-  *writeIterator++ = mSpriteData[i].position.y;
-  *writeIterator++ = mSpriteData[i].position.z;
-  *writeIterator++ = mSpriteData[i].colour.r;
-  *writeIterator++ = mSpriteData[i].colour.g;
-  *writeIterator++ = mSpriteData[i].colour.b;
-  *writeIterator++ = mSpriteData[i].colour.a;
-  *writeIterator++ = mSpriteData[i].uv.x;
-  *writeIterator++ = mSpriteData[i].uv.y;
+  mLayers[id][i]->render(mVertexLayerBuffer[id]);
  }
  
+}
+
+void  Screen::layerRedrawRequested(Ogre::uint layer)
+{
+ mLayerRedrawNeeded = true;
+ mRedrawLayerNeeded[layer] = true;
+}
+
+void  Screen::_copyToVertexBuffer()
+{
  
- // Copy Text
- for (text_it = mText.begin(); text_it != mText.end(); text_it++)
+ mKnownVertexCount = 0;
+ for (size_t i=0;i < 16;i++)
+  mKnownVertexCount += mVertexLayerBuffer[i].size();
+ 
+ _checkBuffer(mKnownVertexCount);
+ 
+ Vertex* writeIterator = (Vertex*) mVertexBuffer->lock(Ogre::HardwareBuffer::HBL_DISCARD);
+ 
+ for (size_t layer=0;layer < 16;layer++)
  {
-  for (size_t i=0; i < (*text_it).second->vertices.size(); i++)
+  for (size_t vertex=0;vertex < mVertexLayerBuffer[layer].size();vertex++)
   {
-  *writeIterator++ = (*text_it).second->vertices[i].position.x;
-  *writeIterator++ = (*text_it).second->vertices[i].position.y;
-  *writeIterator++ = (*text_it).second->vertices[i].position.z;
-  *writeIterator++ = (*text_it).second->vertices[i].colour.r;
-  *writeIterator++ = (*text_it).second->vertices[i].colour.g;
-  *writeIterator++ = (*text_it).second->vertices[i].colour.b;
-  *writeIterator++ = (*text_it).second->vertices[i].colour.a;
-  *writeIterator++ = (*text_it).second->vertices[i].uv.x;
-  *writeIterator++ = (*text_it).second->vertices[i].uv.y;
+   *writeIterator++ = mVertexLayerBuffer[layer][vertex];
   }
  }
-  
- mVertexBuffer->unlock();
  
+ mVertexBuffer->unlock();
+ mRenderOp.vertexData->vertexCount = mKnownVertexCount;
+}
+
+void  Screen::renderQueueEnded(Ogre::uint8 queueGroupId, const Ogre::String& invocation, bool& repeatThisInvocation)
+{
+ if (queueGroupId == Ogre::RENDER_QUEUE_OVERLAY)
+ {
+  
+  // TODO: Check Viewport size here, if changed then call _redraw all
+  
+  // Check to see if redraw needed here.
+  if ( mLayerRedrawNeeded == true)
+  {
+   for (size_t i=0;i < 16;i++)
+    if (mRedrawLayerNeeded[i])
+     _redrawLayer(i);
+   mLayerRedrawNeeded = false;
+   _copyToVertexBuffer();
+  }
+  
+  if (mRenderOp.vertexData->vertexCount)
+  {
+   _prepareRenderSystem();
+   _render();
+  }
+ }
 }
 
 void  Screen::_prepareRenderSystem()
 {
- 
+
  mRenderSystem->_setWorldMatrix( Ogre::Matrix4::IDENTITY );
  mRenderSystem->_setProjectionMatrix( Ogre::Matrix4::IDENTITY );
  mRenderSystem->_setViewMatrix( Ogre::Matrix4::IDENTITY );
  
- mSceneMgr->_setPass(mAtlas->getPass(), true, false);
+ mSceneMgr->_setPass(mAtlas->getPass());
+}
+
+void  Screen::_render()
+{
+ mRenderSystem->_render(mRenderOp);
+}
+
+Canvas*  Screen::createCanvas(int layer)
+{
+ Canvas* canvas = new Canvas(layer, this);
+ mRenderables.push_back(canvas);
+ mLayers[layer].push_back(canvas);
+ mRedrawLayerNeeded[layer] = true;
+ mLayerRedrawNeeded = true;
+ return canvas;
+}
+
+
+Renderable::Renderable(Screen* screen, Ogre::uint layer)
+: mScreen(screen), mLayer(layer), mRedrawNeeded(false)
+{
+}
+
+Renderable::~Renderable()
+{
+}
+
+void Renderable::render(buffer<Vertex>& buffer)
+{
  
-}
-
-void Screen::_startListening()
-{
- mSceneMgr->addRenderQueueListener(this);
-}
-
-void Screen::_stopListening()
-{
- mSceneMgr->removeRenderQueueListener(this);
-}
-
-void Screen::renderQueueEnded(Ogre::uint8 queueGroupId, const Ogre::String& invocation, bool& repeatThisInvocation)
-{
- 
- if (queueGroupId == Ogre::RENDER_QUEUE_OVERLAY)
+ if (mRedrawNeeded)
  {
-  
-  if (mViewport->getActualWidth() != mViewportWidth || mViewport->getActualHeight() != mViewportHeight)
-  {
-   mViewportWidth = mViewport->getActualWidth();
-   mViewportHeight = mViewport->getActualHeight();
-   mInvViewportWidth = 1.0f / mViewportWidth;
-   mInvViewportHeight = 1.0f / mViewportHeight;
-   
-   _redrawAllRectanges();
-   _redrawAllSprites();
-   _redrawAllText();
-   
-   mRefreshRequired = true;
-  }
-  
-  
-  if (mRefreshRequired)
-   refresh();
-  
-  if (mRenderOp.vertexData->vertexCount == 0)
-   return; /// Oh dear. Someone forgot to _endUpdate
-  
-  _prepareRenderSystem();
-  mRenderSystem->_render(mRenderOp);
-  
- }
-
-}
-
-
-void Screen::pushQuadFixedUV(Vertex& vertex, VertexList& list, const Ogre::Real& left, const Ogre::Real& top, const Ogre::Real& bottom, const Ogre::Real& right, const Ogre::Real& depth, const Ogre::ColourValue& colour, const Ogre::Real& fixedU, const Ogre::Real& fixedV)
-{
- vertex.colour = colour;
- vertex.position.z = depth;
- vertex.uv.x = fixedU;
- vertex.uv.y = fixedV;
-
- // Triangle A, Vertex 1
- vertex.position.x = left; vertex.position.y = bottom;
- list.push_back(vertex);
-
- // Triangle A, Vertex 2
- vertex.position.x = right; vertex.position.y = top;
- list.push_back(vertex);
-
- // Triangle A, Vertex 3
- vertex.position.x = left; vertex.position.y = top;
- list.push_back(vertex);
-
- // Triangle B, Vertex 4
- vertex.position.x = left; vertex.position.y = bottom;
- list.push_back(vertex);
-
- // Triangle B, Vertex 5
- vertex.position.x = right; vertex.position.y = bottom;
- list.push_back(vertex);
-
- // Triangle B, Vertex 6
- vertex.position.x = right; vertex.position.y = top;
- list.push_back(vertex);
- 
- 
-}
-
-void Screen::setQuadFixedUV(Vertex& vertex, size_t begin, VertexList& list, const Ogre::Real& left, const Ogre::Real& top, const Ogre::Real& bottom, const Ogre::Real& right, const Ogre::Real& depth, const Ogre::ColourValue& colour, const Ogre::Real& fixedU, const Ogre::Real& fixedV)
-{
- vertex.colour = colour;
- vertex.position.z = depth;
- vertex.uv.x = fixedU;
- vertex.uv.y = fixedV;
-
- // Triangle A, Vertex 1
- vertex.position.x = left; vertex.position.y = bottom;
- list[begin++] = vertex;
-
- // Triangle A, Vertex 2
- vertex.position.x = right; vertex.position.y = top;
- list[begin++] = vertex;
-
- // Triangle A, Vertex 3
- vertex.position.x = left; vertex.position.y = top;
- list[begin++] = vertex;
-
- // Triangle B, Vertex 4
- vertex.position.x = left; vertex.position.y = bottom;
- list[begin++] = vertex;
-
- // Triangle B, Vertex 5
- vertex.position.x = right; vertex.position.y = bottom;
- list[begin++] = vertex;
-
- // Triangle B, Vertex 6
- vertex.position.x = right; vertex.position.y = top;
- list[begin++] = vertex;
- 
- 
-}
-
-
-
-void Screen::pushQuad(Vertex& vertex, VertexList& list, const Ogre::Real& left, const Ogre::Real& top, const Ogre::Real& bottom, const Ogre::Real& right, const Ogre::Real& depth, const Ogre::ColourValue& colour, const Ogre::Real& uvLeft, const Ogre::Real& uvTop, const Ogre::Real& uvRight, const Ogre::Real& uvBottom)
-{
- vertex.colour = colour;
- vertex.position.z = depth;
-
- // Triangle A, Vertex 1
- vertex.position.x = left; vertex.position.y = bottom;
- vertex.uv.x = uvLeft; vertex.uv.y = uvBottom;
- list.push_back(vertex);
-
- // Triangle A, Vertex 2
- vertex.position.x = right; vertex.position.y = top;
- vertex.uv.x = uvRight; vertex.uv.y = uvTop;
- list.push_back(vertex);
-
- // Triangle A, Vertex 3
- vertex.position.x = left; vertex.position.y = top;
- vertex.uv.x = uvLeft; vertex.uv.y = uvTop;
- list.push_back(vertex);
-
- // Triangle B, Vertex 4
- vertex.position.x = left; vertex.position.y = bottom;
- vertex.uv.x = uvLeft; vertex.uv.y = uvBottom;
- list.push_back(vertex);
-
- // Triangle B, Vertex 5
- vertex.position.x = right; vertex.position.y = bottom;
- vertex.uv.x = uvRight; vertex.uv.y = uvBottom;
- list.push_back(vertex);
-
- // Triangle B, Vertex 6
- vertex.position.x = right; vertex.position.y = top;
- vertex.uv.x = uvRight; vertex.uv.y = uvTop;
- list.push_back(vertex);
- 
- 
-}
-
-void Screen::setQuad(Vertex& vertex, size_t begin, VertexList& list, const Ogre::Real& left, const Ogre::Real& top, const Ogre::Real& bottom, const Ogre::Real& right, const Ogre::Real& depth, const Ogre::ColourValue& colour, const Ogre::Real& uvLeft, const Ogre::Real& uvTop, const Ogre::Real& uvRight, const Ogre::Real& uvBottom)
-{
- vertex.colour = colour;
- vertex.position.z = depth;
-
- // Triangle A, Vertex 1
- vertex.position.x = left; vertex.position.y = bottom;
- vertex.uv.x = uvLeft; vertex.uv.y = uvBottom;
- list[begin++] = vertex;
-
- // Triangle A, Vertex 2
- vertex.position.x = right; vertex.position.y = top;
- vertex.uv.x = uvRight; vertex.uv.y = uvTop;
- list[begin++] = vertex;
-
- // Triangle A, Vertex 3
- vertex.position.x = left; vertex.position.y = top;
- vertex.uv.x = uvLeft; vertex.uv.y = uvTop;
- list[begin++] = vertex;
-
- // Triangle B, Vertex 4
- vertex.position.x = left; vertex.position.y = bottom;
- vertex.uv.x = uvLeft; vertex.uv.y = uvBottom;
- list[begin++] = vertex;
-
- // Triangle B, Vertex 5
- vertex.position.x = right; vertex.position.y = bottom;
- vertex.uv.x = uvRight; vertex.uv.y = uvBottom;
- list[begin++] = vertex;
-
- // Triangle B, Vertex 6
- vertex.position.x = right; vertex.position.y = top;
- vertex.uv.x = uvRight; vertex.uv.y = uvTop;
- list[begin++] = vertex;
- 
-}
-
-void  Screen::_redrawAllRectanges()
-{
- 
- mRectangleData.remove_all();
- for(std::map<size_t, Rectangle*>::iterator it = mRectangles.begin(); it != mRectangles.end(); it++)
-  _drawRectangle((*it).second);
- 
-}
-
-void  Screen::_drawRectangle(Screen::Rectangle* rect)
-{
-  
- Ogre::Real left, top, right, bottom, depth;
-
- left = _vpx(rect->left);
- top = _vpy(rect->top);
- right = _vpx(rect->left + rect->width);
- bottom = _vpy(rect->top + rect->height);
- depth = _vpz(rect->depth);
- 
- Vertex tempVertex;
- 
- rect->vertexStart = mRectangleData.size();
- 
- pushQuadFixedUV(tempVertex, mRectangleData, left, top, bottom, right, depth, rect->colour, mAtlas->getRectangleCoordX(), mAtlas->getRectangleCoordY());
- 
- 
-}
-
-void Screen::_updateRectangle(Screen::Rectangle* rect)
-{
- 
- Ogre::Real left, top, right, bottom, depth;
-
- left = _vpx(rect->left);
- top = _vpy(rect->top);
- right = _vpx(rect->left + rect->width);
- bottom = _vpy(rect->top + rect->height);
- depth = _vpz(rect->depth);
- 
- Vertex tempVertex;
- 
- setQuadFixedUV(tempVertex, rect->vertexStart, mRectangleData,  left, top, bottom, right, depth, rect->colour, mAtlas->getRectangleCoordX(), mAtlas->getRectangleCoordY());
-}
-
-void  Screen::_redrawAllSprites()
-{
- 
- mSpriteData.remove_all();
- 
- for(std::map<size_t, Screen::Sprite*>::iterator it = mSprites.begin(); it != mSprites.end(); it++)
-  _drawSprite((*it).second);
- 
-}
-
-void  Screen::_drawSprite(Screen::Sprite* sprite)
-{
-  
- Ogre::Real left, top, right, bottom, depth;
-
- left = _vpx(sprite->left);
- top = _vpy(sprite->top);
- right = _vpx(sprite->left + sprite->sprite->spriteWidth);
- bottom = _vpy(sprite->top + sprite->sprite->spriteHeight);
- depth = _vpz(sprite->depth);
- 
- Vertex tempVertex;
- 
- sprite->vertexStart = mSpriteData.size();
-
- pushQuad(tempVertex, mSpriteData, left, top, bottom, right, depth, Ogre::ColourValue::White, sprite->sprite->uvLeft, sprite->sprite->uvTop, sprite->sprite->uvRight, sprite->sprite->uvBottom);
- 
- 
-}
-
-void Screen::_updateSprite(Screen::Sprite* sprite)
-{
- 
- Ogre::Real left, top, right, bottom, depth;
-
- left = _vpx(sprite->left);
- top = _vpy(sprite->top);
- right = _vpx(sprite->left + sprite->sprite->spriteWidth);
- bottom = _vpy(sprite->top + sprite->sprite->spriteHeight);
- depth = _vpz(sprite->depth);
- 
- Vertex tempVertex;
- 
- setQuad(tempVertex, sprite->vertexStart, mSpriteData, left, top, bottom, right, depth, Ogre::ColourValue::White, sprite->sprite->uvLeft, sprite->sprite->uvTop, sprite->sprite->uvRight, sprite->sprite->uvBottom);
-}
-
-
-void  Screen::_redrawAllText()
-{
- 
- for(std::map<size_t, Text*>::iterator it = mText.begin(); it != mText.end(); it++)
-  _drawText((*it).second);
- 
-}
-
-bool  Screen::_domarkup(Screen::Text* text, size_t& index, Ogre::ColourValue& colour,  Ogre::Real& cursorLeft, Ogre::Real& cursorTop, Ogre::Real& nextLineHeight)
-{
- 
- // Check to see if a markup code.
- if (text->text[index] != '%')
-  return false;
- 
- // Last two characters.
- if (index > text->text.size() - 2)
-  return false;
- 
- // % escape character.
- if (text->text[index+1] == '%')
- {
-  index+=1;
-  return true;
+  redraw();
+  mRedrawNeeded = false;
  }
  
- if (text->text[index+1] == 'R' || text->text[index+1] == 'r' )
- {
-  colour = text->colour;
-  index+=1;
-  return true;
- }
- 
- // Colours 0-7
- if (text->text[index+1] >= '0' && text->text[index+1] <= '8')
- {
-  Ogre::uint palette_index = text->text[index+1] - 48;
-  colour = mMarkupColour[palette_index];
-  index+=1;
-  return true;
- }
-  
- // Embedded Sprite
- if (text->text[index+1] == ':')
- {
-  size_t j = index+2;
-  for (;j < text->text.size();j++)
-  {
-   if (text->text[j] == '%')
-    break;
-  }
-  j--;
-  Ogre::String sprite_name = text->text.substr(index+2, j-index-1);
-  
-  ::Gorilla::Sprite* sprite = mAtlas->getSprite(sprite_name);
-  
-  if (sprite->spriteHeight > nextLineHeight)
-   nextLineHeight = sprite->spriteHeight;
-  
-  
-  Ogre::Real left, top, right, bottom, depth;
-
-  left = _vpx(cursorLeft);
-  top = _vpy(cursorTop);
-  right = _vpx(cursorLeft + sprite->spriteWidth);
-  bottom = _vpy(cursorTop + sprite->spriteHeight);
-  depth = _vpz(text->depth);
-  
-  Vertex tempVertex;
-  
-  
-  pushQuad(tempVertex, mSpriteData, left, top, bottom, right, depth, Ogre::ColourValue::White, sprite->uvLeft, sprite->uvTop, sprite->uvRight, sprite->uvBottom);
-  
-  cursorLeft += sprite->spriteWidth + (0 - mAtlas->getGlyphKerning());
-  
-  index += sprite_name.length() + 3;
-  return true;
- }
- 
- 
- return false;
+ for (size_t i=0;i < mVertices.size(); i++)
+  buffer.push_back(mVertices[i]);
 }
 
-void  Screen::_drawText(Screen::Text* text)
+void Renderable::pushQuad(const Quad& quad)
 {
  
- text->redrawRequested = false;
+ tLeft = quad.left;   tTop = quad.top;
+ tRight = quad.right; tBottom = quad.bottom;
+ vpX(tLeft);   vpY(tTop);
+ vpW(tRight);  vpH(tBottom);
+ tVertex.position.z = 0;
  
- mAllTextSize -= text->vertices.size();
+ // Left/Bottom
+ tVertex.position.x = tLeft; tVertex.position.y = tBottom;
+ tVertex.uv.x = quad.uvLeft; tVertex.uv.y = quad.uvBottom;
+ tVertex.colour = quad.colour[3];
+ mVertices.push_back(tVertex);
  
- text->vertices.remove_all();
+ // Right/Top
+ tVertex.position.x = tRight; tVertex.position.y = tTop;
+ tVertex.uv.x = quad.uvRight; tVertex.uv.y = quad.uvTop;
+ tVertex.colour = quad.colour[1];
+ mVertices.push_back(tVertex);
  
- Ogre::Real left, top, right, bottom, depth = _vpz(text->depth), cursorLeft, cursorTop, kerning;
+ // Left/Top
+ tVertex.position.x = tLeft; tVertex.position.y = tTop;
+ tVertex.uv.x = quad.uvLeft; tVertex.uv.y = quad.uvTop;
+ tVertex.colour = quad.colour[0];
+ mVertices.push_back(tVertex);
+
+ // Left/Bottom
+ tVertex.position.x = tLeft; tVertex.position.y = tBottom;
+ tVertex.uv.x = quad.uvLeft; tVertex.uv.y = quad.uvBottom;
+ tVertex.colour = quad.colour[3];
+ mVertices.push_back(tVertex);
+
+ // Right/Bottom
+ tVertex.position.x = tRight; tVertex.position.y = tBottom;
+ tVertex.uv.x = quad.uvRight; tVertex.uv.y = quad.uvBottom;
+ tVertex.colour = quad.colour[2];
+ mVertices.push_back(tVertex);
+
+ // Right/Top
+ tVertex.position.x = tRight; tVertex.position.y = tTop;
+ tVertex.uv.x = quad.uvRight; tVertex.uv.y = quad.uvTop;
+ tVertex.colour = quad.colour[1];
+ mVertices.push_back(tVertex);
+
+}
+
+Canvas::Canvas(Ogre::uint layer, Screen* screen)
+: Renderable(screen, layer), mNextRectangleID(0)
+{
+}
+
+Canvas::~Canvas()
+{
+}
+
+size_t Canvas::addRectangle(int left, int top, Ogre::uint width, Ogre::uint height, const Ogre::ColourValue& colour)
+{
+ Rectangle rect;
+ rect.id = mNextRectangleID++;
+ rect.quad.left = left;
+ rect.quad.top = top;
+ rect.quad.right = left + width;
+ rect.quad.bottom = top + height;
+ rect.quad.colour[0] = rect.quad.colour[1] = rect.quad.colour[2] = rect.quad.colour[3] = colour;
+ rect.quad.uvLeft = rect.quad.uvRight = mScreen->getAtlas()->getRectangleCoordsX();
+ rect.quad.uvTop = rect.quad.uvBottom = mScreen->getAtlas()->getRectangleCoordsY();
+ mRectangles[rect.id] = rect;
  
- unsigned char thisChar = 0, lastChar = 0;
+ mRedrawNeeded = true;
+ requestLayerRedraw();
+ return rect.id;
+}
+
+void Canvas::removeRectangle(size_t id)
+{
  
- cursorLeft = text->left;
- cursorTop = text->top;
+ std::map<size_t, Rectangle>::iterator it = mRectangles.find(id);
  
- Glyph* glyph = 0;
- Vertex tempVertex;
- Ogre::ColourValue workingColour = text->colour;
- Ogre::Real nextLineHeight = mAtlas->getGlyphLineHeight();
+ if (it == mRectangles.end())
+  return;
  
- text->knownWidth = 0;
- text->knownHeight = 0;
- 
- for (Ogre::uint i=0;i < text->text.size(); i++)
- {
-   
-  thisChar = text->text[i];
-  
-  if (thisChar == ' ')
-  {
-   cursorLeft += mAtlas->getGlyphSpaceLength();
-   lastChar = thisChar;
-   continue;
-  }
-  
-  if (thisChar == '\n')
-  {
-   cursorLeft = text->left;
-   cursorTop += nextLineHeight;
-   lastChar = thisChar;
-   nextLineHeight = mAtlas->getGlyphLineHeight();
-   continue;
-  }
-  
-  if (thisChar < mAtlas->getGlyphRangeBegin() || thisChar > mAtlas->getGlyphRangeEnd())
-   continue;
-  
-  if (_domarkup(text, i, workingColour, cursorLeft, cursorTop, nextLineHeight))
-   continue;
-  
-  glyph = mAtlas->getGlyph(thisChar);
-  if (glyph == 0)
-   continue;
-  
-  kerning = glyph->getKerning(lastChar);
-  
-  if (kerning == 0)
-   kerning = mAtlas->getGlyphKerning();
-  
-  left = cursorLeft + kerning;
-  top = cursorTop;
-  right = cursorLeft + kerning + glyph->glyphWidth;
-  bottom = cursorTop + glyph->glyphHeight;
-  
-  if (right >= mViewportWidth || top >= mViewportHeight)
-  {
-   lastChar = thisChar;
-   continue;
-  }
-  
-  if (text->knownWidth < (right - left))
-   text->knownWidth = right - left;
-  
-  if (text->knownHeight < (bottom - top))
-   text->knownHeight = bottom - top;
-  
-  left = _vpx(left);
-  top = _vpy(top);
-  right = _vpx(right);
-  bottom = _vpy(bottom);
-  cursorLeft += glyph->glyphAdvance + kerning;
-  
-  pushQuad(tempVertex, text->vertices, left, top, bottom, right, depth, workingColour, glyph->uvLeft, glyph->uvTop, glyph->uvRight, glyph->uvBottom);
-  
-  lastChar = thisChar;
- }
- 
- mAllTextSize += text->vertices.size();
+ mRectangles.erase(it);
+ mRedrawNeeded = true;
+ requestLayerRedraw();
  
 }
 
+void Canvas::setRectangleColour(size_t id, const Ogre::ColourValue& colour)
+{
 
-/////////////////////////////////////////////////////////////////////////////////
+ std::map<size_t, Rectangle>::iterator it = mRectangles.find(id);
+ 
+ if (it == mRectangles.end())
+  return;
+ 
+ (*it).second.quad.colour[0] = colour;
+ (*it).second.quad.colour[1] = colour;
+ (*it).second.quad.colour[2] = colour;
+ (*it).second.quad.colour[3] = colour;
+
+ mRedrawNeeded = true;
+ requestLayerRedraw();
+}
+
+void Canvas::setRectangleColour(size_t id, const Ogre::ColourValue& topLeft, const Ogre::ColourValue& topRight,const Ogre::ColourValue& bottomRight,const Ogre::ColourValue& bottomLeft)
+{
+
+ std::map<size_t, Rectangle>::iterator it = mRectangles.find(id);
+ 
+ if (it == mRectangles.end())
+  return;
+ 
+ (*it).second.quad.colour[0] = topLeft;
+ (*it).second.quad.colour[1] = topRight;
+ (*it).second.quad.colour[2] = bottomRight;
+ (*it).second.quad.colour[3] = bottomLeft;
+
+ mRedrawNeeded = true;
+ requestLayerRedraw();
+}
+
+void  Canvas::setRectanglePosition(size_t id, int left, int top)
+{
+
+ std::map<size_t, Rectangle>::iterator it = mRectangles.find(id);
+ 
+ if (it == mRectangles.end())
+  return;
+ 
+ (*it).second.quad.left = left;
+ (*it).second.quad.top = top;
+
+ mRedrawNeeded = true;
+ requestLayerRedraw();
+}
+
+void  Canvas::setRectangleSize(size_t id, Ogre::uint width, Ogre::uint height)
+{
+
+ std::map<size_t, Rectangle>::iterator it = mRectangles.find(id);
+ 
+ if (it == mRectangles.end())
+  return;
+ 
+ (*it).second.quad.right = (*it).second.quad.left + width;
+ (*it).second.quad.bottom = (*it).second.quad.top + height;
+
+ mRedrawNeeded = true;
+ requestLayerRedraw();
+}
 
 
+void  Canvas::setRectangleBackground(size_t id, const Ogre::String& sprite_name, bool resetColour)
+{
 
-} // namespace Gorilla
+ std::map<size_t, Rectangle>::iterator it = mRectangles.find(id);
+ 
+ if (it == mRectangles.end())
+  return;
+ 
+ Sprite* sprite = mScreen->getAtlas()->getSprite(sprite_name);
+ 
+ (*it).second.quad.uvLeft = sprite->uvLeft;
+ (*it).second.quad.uvTop = sprite->uvTop;
+ (*it).second.quad.uvBottom = sprite->uvBottom;
+ (*it).second.quad.uvRight = sprite->uvRight;
+
+ if (resetColour)
+ {
+  (*it).second.quad.colour[0] = Ogre::ColourValue::White;
+  (*it).second.quad.colour[1] = Ogre::ColourValue::White;
+  (*it).second.quad.colour[2] = Ogre::ColourValue::White;
+  (*it).second.quad.colour[3] = Ogre::ColourValue::White;
+ }
+
+ mRedrawNeeded = true;
+ requestLayerRedraw();
+}
+
+void  Canvas::clearRectangleBackground(size_t id)
+{
+
+ std::map<size_t, Rectangle>::iterator it = mRectangles.find(id);
+ 
+ if (it == mRectangles.end())
+  return;
+ 
+ (*it).second.quad.uvLeft = (*it).second.quad.uvRight = mScreen->getAtlas()->getRectangleCoordsX();
+ (*it).second.quad.uvTop = (*it).second.quad.uvBottom = mScreen->getAtlas()->getRectangleCoordsY();
+
+ mRedrawNeeded = true;
+ requestLayerRedraw();
+}
+
+
+void  Canvas::redraw()
+{
+ mVertices.remove_all();
+ for (std::map<size_t, Rectangle>::const_iterator it = mRectangles.begin(); it != mRectangles.end(); it++)
+  pushQuad((*it).second.quad);
+}
+
+
+}
