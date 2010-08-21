@@ -65,6 +65,11 @@ Ogre::ColourValue Gorilla::Text::tWorkingColour = Ogre::ColourValue();
  if (it == mBobs.end())return;\
  Bob* bob = &(*it).second;
 
+#define GET_BOB_OR_DIE_TRYING(ID, TRYING) \
+ std::map<size_t, Bob>::iterator it = mBobs.find(ID);\
+ if (it == mBobs.end())return TRYING;\
+ Bob* bob = &(*it).second;
+
 namespace Gorilla
 {
 
@@ -777,13 +782,7 @@ void Renderable::pushQuad(const Quad& quad, const Ogre::Radian& angle)
  
  tLeft = quad.left;   tTop = quad.top;
  tRight = quad.right; tBottom = quad.bottom;
- 
- if (angle.valueRadians() == 0)
- {
-  vpX(tLeft);   vpY(tTop);
-  vpW(tRight);  vpH(tBottom);
- }
- 
+  
  tVertex.position.z = 0;
  
  // Left/Bottom
@@ -822,22 +821,31 @@ void Renderable::pushQuad(const Quad& quad, const Ogre::Radian& angle)
  tVertex.colour = quad.colour[1];
  mVertices.push_back(tVertex);
  
-
- if (angle.valueRadians() != 0)
+ for (size_t i = mVertices.size()-6;i < mVertices.size();i++)
  {
   
-  for (size_t i=mVertices.size()-6;i < mVertices.size();i++)
+  if (angle.valueRadians() != 0)
   {
-   tA = mVertices[i].position.x;
-   tB = mVertices[i].position.y;
-   t1 = tA - quad.left;
-   t2 = tB - quad.top;
-   mVertices[i].position.x = Ogre::Math::Cos(angle) * t1 - Ogre::Math::Sin(angle) * t2 + quad.left;
-   mVertices[i].position.y = Ogre::Math::Sin(angle) * t1 + Ogre::Math::Cos(angle) * t2 + quad.top;
-   vpW(mVertices[i].position.x);
-   vpH(mVertices[i].position.y);
+
+    tA = mVertices[i].position.x;
+    tB = mVertices[i].position.y;
+    t1 = tA - quad.left;
+    t2 = tB - quad.top;
+    mVertices[i].position.x = Ogre::Math::Cos(angle) * t1 - Ogre::Math::Sin(angle) * t2 + quad.left;
+    mVertices[i].position.y = Ogre::Math::Sin(angle) * t1 + Ogre::Math::Cos(angle) * t2 + quad.top;
   }
+
+  vpW(mVertices[i].position.x);
+  vpH(mVertices[i].position.y);
+
+  if      (mVertices[i].position.x < mMin.x)   mMin.x = mVertices[i].position.x;
+  else if (mVertices[i].position.x > mMax.x)   mMax.x = mVertices[i].position.x;
+  
+  if      (mVertices[i].position.y < mMin.y)   mMin.y = mVertices[i].position.y;
+  else if (mVertices[i].position.y > mMax.y)   mMax.y = mVertices[i].position.y;
+  
  }
+ 
 }
 
 void  Renderable::pushLine(const Ogre::Vector2& a, const Ogre::Vector2& b, Ogre::Real thickness, const Ogre::ColourValue& colour)
@@ -879,13 +887,22 @@ void  Renderable::pushLine(const Ogre::Vector2& a, const Ogre::Vector2& b, Ogre:
  tVertex.position.x = aRight.x;  tVertex.position.y = aRight.y;
  mVertices.push_back(tVertex);
  
- for (size_t i=mVertices.size()-6;i < mVertices.size();i++)
- {
+ for (size_t i = mVertices.size()-6;i < mVertices.size();i++)
+ { 
+
+  if      (mVertices[i].position.x < mMin.x)   mMin.x = mVertices[i].position.x;
+  else if (mVertices[i].position.x > mMax.x)   mMax.x = mVertices[i].position.x;
+  
+  if      (mVertices[i].position.y < mMin.y)   mMin.y = mVertices[i].position.y;
+  else if (mVertices[i].position.y > mMax.y)   mMax.y = mVertices[i].position.y;
+  
   vpW(mVertices[i].position.x);
   vpH(mVertices[i].position.y);
+  
  }
+  
+  
  
- std::cout << "Pushing line\n";
 }
 
 void  Renderable::pushSprite(const Ogre::Vector2& position, const Ogre::Vector2& scale, Sprite* sprite, const Ogre::ColourValue& tint)
@@ -895,9 +912,6 @@ void  Renderable::pushSprite(const Ogre::Vector2& position, const Ogre::Vector2&
  tTop = position.y;
  tRight = tLeft + (sprite->spriteWidth * scale.x);
  tBottom = tTop + (sprite->spriteHeight * scale.y);
- 
- vpX(tLeft);   vpY(tTop);
- vpW(tRight);  vpH(tBottom);
  
  tVertex.position.z = 0;
  tVertex.colour = tint;
@@ -932,15 +946,26 @@ void  Renderable::pushSprite(const Ogre::Vector2& position, const Ogre::Vector2&
  tVertex.position.x = tRight; tVertex.position.y = tTop;
  tVertex.uv.x = sprite->uvRight; tVertex.uv.y = sprite->uvTop;
  mVertices.push_back(tVertex);
+ 
+ for (size_t i = mVertices.size()-6;i < mVertices.size();i++)
+ { 
+
+  if      (mVertices[i].position.x < mMin.x)   mMin.x = mVertices[i].position.x;
+  else if (mVertices[i].position.x > mMax.x)   mMax.x = mVertices[i].position.x;
+  
+  if      (mVertices[i].position.y < mMin.y)   mMin.y = mVertices[i].position.y;
+  else if (mVertices[i].position.y > mMax.y)   mMax.y = mVertices[i].position.y;
+  
+  vpW(mVertices[i].position.x);
+  vpH(mVertices[i].position.y);
+ }
+  
 }
 
 void  Renderable::pushGlyph(Glyph* glyph, Ogre::Real left, Ogre::Real top, const Ogre::ColourValue& colour)
 {
  tLeft = left;   tTop = top;
  tRight = left + glyph->glyphWidth; tBottom = top + glyph->glyphHeight;
- 
- vpX(tLeft);   vpY(tTop);
- vpW(tRight);  vpH(tBottom);
  
  tVertex.position.z = 0;
  tVertex.colour = colour;
@@ -974,6 +999,21 @@ void  Renderable::pushGlyph(Glyph* glyph, Ogre::Real left, Ogre::Real top, const
  tVertex.position.x = tRight; tVertex.position.y = tTop;
  tVertex.uv.x = glyph->uvRight; tVertex.uv.y = glyph->uvTop;
  mVertices.push_back(tVertex);
+ 
+ for (size_t i = mVertices.size()-6;i < mVertices.size();i++)
+ { 
+
+  if      (mVertices[i].position.x < mMin.x)   mMin.x = mVertices[i].position.x;
+  else if (mVertices[i].position.x > mMax.x)   mMax.x = mVertices[i].position.x;
+  
+  if      (mVertices[i].position.y < mMin.y)   mMin.y = mVertices[i].position.y;
+  else if (mVertices[i].position.y > mMax.y)   mMax.y = mVertices[i].position.y;
+  
+  vpW(mVertices[i].position.x);
+  vpH(mVertices[i].position.y);
+  
+ }
+  
  
 }
 
@@ -1118,6 +1158,16 @@ void  Canvas::setRectangleAngle(size_t id, const Ogre::Radian& angle)
  _redrawNeeded();  
 }
 
+void  Canvas::setRectangleMinMax(size_t id, const Ogre::Vector2& min, const Ogre::Vector2& max)
+{
+ GET_RECTANGLE_OR_DIE(id);
+ rect->quad.left = min.x;
+ rect->quad.top = min.y;
+ rect->quad.right = max.x;
+ rect->quad.bottom = max.y;
+ _redrawNeeded();
+}
+
 size_t Canvas::addLine(int x1, int y1, int x2, int y2, int thickness, const Ogre::ColourValue& colour)
 {
  Line line;
@@ -1198,7 +1248,9 @@ SpriteLayer::~SpriteLayer()
 
 void SpriteLayer::redraw()
 {
- mVertices.remove_all();
+ 
+ reset();
+ 
  for (std::map<size_t, Bob>::const_iterator it = mBobs.begin(); it != mBobs.end(); it++)
   pushSprite((*it).second.position, (*it).second.scale, (*it).second.sprite, (*it).second.tint);
 }
@@ -1237,7 +1289,7 @@ void SpriteLayer::removeSprite(size_t id)
  requestLayerRedraw();
 }
 
-void SpriteLayer::moveSprite(size_t id, int left, int top)
+void SpriteLayer::setSpritePosition(size_t id, int left, int top)
 {
  GET_BOB_OR_DIE(id)
  bob->position.x = left;
@@ -1245,7 +1297,7 @@ void SpriteLayer::moveSprite(size_t id, int left, int top)
  _redrawNeeded();
 }
 
-void SpriteLayer::changeSprite(size_t id, const Ogre::String& name)
+void SpriteLayer::setSprite(size_t id, const Ogre::String& name)
 {
  GET_BOB_OR_DIE(id);
  if (Sprite* sprite = mScreen->getAtlas()->getSprite(name))
@@ -1255,7 +1307,7 @@ void SpriteLayer::changeSprite(size_t id, const Ogre::String& name)
  }
 }
 
-void SpriteLayer::scaleSprite(size_t id, Ogre::Real scaleX, Ogre::Real scaleY)
+void SpriteLayer::setSpriteScale(size_t id, Ogre::Real scaleX, Ogre::Real scaleY)
 {
  GET_BOB_OR_DIE(id)
  
@@ -1263,6 +1315,25 @@ void SpriteLayer::scaleSprite(size_t id, Ogre::Real scaleX, Ogre::Real scaleY)
  bob->scale.y = scaleY;
  
  _redrawNeeded();
+}
+
+void SpriteLayer::getSpritePosition(size_t id, int& left, int& top)
+{
+ GET_BOB_OR_DIE(id)
+ left = bob->position.x;
+ top = bob->position.y;
+}
+
+Ogre::Vector2  SpriteLayer::getSpriteScale(size_t id)
+{
+ GET_BOB_OR_DIE_TRYING(id, Ogre::Vector2::ZERO)
+ return bob->scale;
+}
+
+Sprite* SpriteLayer::getSprite(size_t id)
+{
+ GET_BOB_OR_DIE_TRYING(id, 0);
+ return bob->sprite;
 }
 
 Text::Text(int left, int top, const Ogre::String& initialText, Ogre::uint layer, Screen* screen)
@@ -1274,9 +1345,7 @@ Text::Text(int left, int top, const Ogre::String& initialText, Ogre::uint layer,
  mDoFormatting = true;
  mDoMonospace = false;
  mColour = Ogre::ColourValue::White;
-
  _redrawNeeded();
- 
 }
 
 Text::~Text()
@@ -1286,7 +1355,8 @@ Text::~Text()
 void  Text::redraw()
 {
  
- mVertices.remove_all();
+ reset();
+ 
  if (mText.length() == 0)
   return;
  
@@ -1357,7 +1427,7 @@ void  Text::redraw()
    if (tA == 0)
     tA = mScreen->getAtlas()->getGlyphKerning();
   }
-  
+    
   pushGlyph(tGlyph, t1 + tA, t2, tWorkingColour);
   
   if (tMonospace)
@@ -1453,17 +1523,20 @@ void   Text::_doMarkup(size_t& index)
   
   t1 += sprite->spriteWidth + (0 - mScreen->getAtlas()->getGlyphKerning());
   index += sprite_name.length() + 3; // %:%
+  
   return;
- 
- 
+  
+  
  }
  
 }
 
 
 
+} // namespace Gorilla
 
-}
-
-
+#undef GET_SPRITE_OR_DIE
+#undef GET_RECTANGLE_OR_DIE
+#undef GET_LINE_OR_DIE
 #undef GET_BOB_OR_DIE
+#undef GET_BOB_OR_DIE_TRYING

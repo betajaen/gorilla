@@ -27,27 +27,11 @@
 #ifndef GORILLA_H
 #define GORILLA_H
 
-#pragma warning ( disable : 4244 )
-
-#include "OGRE/OgrePrerequisites.h"
-#include "OGRE/OgreCommon.h"
-#include "OGRE/OgreVector2.h"
-#include "OGRE/OgreVector3.h"
-#include "OGRE/OgreColourValue.h"
-#include "OGRE/OgreMaterial.h"
-#include "OGRE/OgreTexture.h"
-#include "OGRE/OgreFrameListener.h"
-#include "OGRE/OgreResourceGroupManager.h"
-#include "OGRE/OgreConfigFile.h"
-#include "OGRE/OgreHardwareBufferManager.h"
-#include "OGRE/OgreHardwareVertexBuffer.h"
-#include "OGRE/OgreSimpleRenderable.h"
-#include "OGRE/OgreRenderQueueListener.h"
-#include "OGRE/OgreSingleton.h"
+#include "OGRE/Ogre.h"
 
 namespace Gorilla
 {
- 
+  
  class Silverback;
  class TextureAtlas;
  class Screen;
@@ -91,14 +75,36 @@ namespace Gorilla
     Ogre::Math::RangeRandom(0,1),
     alpha); 
  }
-
+ 
+ struct Quad
+ {
+  Ogre::Real         left, top, right, bottom;          
+  Ogre::ColourValue  colour[4];                         // left/top, right/top, bottom/right, bottom/left
+  Ogre::Real         uvLeft, uvTop, uvRight, uvBottom;  
+  size_t             source;
+ };
+ 
+ struct Vertex
+ {
+  Ogre::Vector3      position;
+  Ogre::ColourValue  colour;
+  Ogre::Vector2      uv;
+ };
+ 
+ struct Kerning
+ {
+  Kerning(Ogre::uint c, Ogre::Real k) : character(c), kerning(k) {}
+  Ogre::uint  character;
+  Ogre::Real  kerning;
+ };
+ 
  template<typename T> class buffer
  {
-
+  
   public:
-
+  
    static const size_t npos = -1;
-
+  
    inline buffer() : mFirst(0), mLast(0), mEnd(0)
    { // constructor.
    }
@@ -222,13 +228,6 @@ namespace Gorilla
    
  };
  
- struct Kerning
- {
-  Kerning(Ogre::uint c, Ogre::Real k) : character(c), kerning(k) {}
-  Ogre::uint  character;
-  Ogre::Real  kerning;
- };
-
  class Glyph
  {
    
@@ -359,10 +358,9 @@ namespace Gorilla
      return mGlyphMonoWidth;
     }
     
+    void  refreshMarkupColours();
     
-    void   refreshMarkupColours();
-    
-    void   setMarkupColour(Ogre::uint colour_palette_index, const Ogre::ColourValue&);
+    void  setMarkupColour(Ogre::uint colour_palette_index, const Ogre::ColourValue&);
     
     Ogre::ColourValue  getMarkupColour(Ogre::uint colour_palette_index);
     
@@ -399,21 +397,6 @@ namespace Gorilla
     Ogre::ColourValue                mMarkupColour[10];
   };
   
- struct Quad
- {
-  Ogre::Real         left, top, right, bottom;          
-  Ogre::ColourValue  colour[4];                         // left/top, right/top, bottom/right, bottom/left
-  Ogre::Real         uvLeft, uvTop, uvRight, uvBottom;  
-  size_t             source;
- };
-
- 
- struct Vertex
- {
-  Ogre::Vector3      position;
-  Ogre::ColourValue  colour;
-  Ogre::Vector2      uv;
- };
 
  
  class Screen : public Ogre::RenderQueueListener
@@ -457,6 +440,17 @@ namespace Gorilla
      y *= mInvViewportHeight;
      y = 1 - (y * 2);
    }
+   
+   inline Ogre::Real  getViewportWidth() const
+   { 
+    return mViewportWidth;
+   }
+   
+   inline Ogre::Real  getViewportHeight() const
+   { 
+    return mViewportHeight;
+   }
+
    void  layerRedrawRequested(Ogre::uint layer);
 
    void  _registerListener();
@@ -550,6 +544,16 @@ namespace Gorilla
    
    virtual void     redraw() {}
    
+   inline Ogre::Vector2  getMin() const
+   {
+    return mMin;
+   }
+   
+   inline Ogre::Vector2  getMax() const
+   {
+    return mMax;
+   }
+   
   protected:
    
    inline void      pushQuad(const Quad& quad, const Ogre::Radian& angle);
@@ -566,12 +570,22 @@ namespace Gorilla
     requestLayerRedraw();
    }
    
+   inline void      reset()
+   {
+    mMin = Ogre::Vector2(mScreen->getViewportWidth(), mScreen->getViewportHeight());
+    mMax = Ogre::Vector2::ZERO;
+    
+    mVertices.remove_all();
+   }
+
    buffer<Vertex>   mVertices;
    
    Screen*          mScreen;
    
    bool             mRedrawNeeded;
-
+   
+   Ogre::Vector2    mMin, mMax;
+   
    // Static temporary variables.
    static Ogre::Real  tLeft, tRight, tTop, tBottom, t1, t2, tA,tB,tC,tD;
    static Vertex      tVertex;
@@ -599,6 +613,7 @@ namespace Gorilla
    void    setRectangleBackground(size_t id, const Ogre::String& sprite_name, bool resetColour = true);
    void    setRectangleAngle(size_t id, const Ogre::Degree&);
    void    setRectangleAngle(size_t id, const Ogre::Radian&);
+   void    setRectangleMinMax(size_t id, const Ogre::Vector2& min, const Ogre::Vector2& max);
    void    clearRectangleBackground(size_t id);
    
    size_t  addLine(int x1, int y1, int x2, int y2, int thickness, const Ogre::ColourValue& colour = Ogre::ColourValue::White);
@@ -645,11 +660,15 @@ namespace Gorilla
     
    public:
     
-    size_t  addSprite(int left, int top, const Ogre::String& name);
-    void    removeSprite(size_t id);
-    void    moveSprite(size_t id, int left, int top);
-    void    changeSprite(size_t id, const Ogre::String& name);
-    void    scaleSprite(size_t id, Ogre::Real scaleX, Ogre::Real scaleY);
+    size_t         addSprite(int left, int top, const Ogre::String& name);
+    void           removeSprite(size_t id);
+    void           setSpritePosition(size_t id, int left, int top);
+    void           setSprite(size_t id, const Ogre::String& name);
+    void           setSpriteScale(size_t id, Ogre::Real scaleX, Ogre::Real scaleY);
+    void           getSpritePosition(size_t, int& left, int& top);
+    Ogre::Vector2  getSpriteScale(size_t);
+    Sprite*        getSprite(size_t);
+
     
    protected:
     
@@ -683,8 +702,7 @@ namespace Gorilla
     void   setText(const Ogre::String& text)
     {
      mText = text;
-     mRedrawNeeded = true;
-     requestLayerRedraw();
+     _redrawNeeded();
     }
 
     void   move(int left, int top)
@@ -774,7 +792,10 @@ namespace Gorilla
     static Glyph*             tGlyph;
     static Ogre::ColourValue  tWorkingColour;
     
- };
-};
+ }; // Class Text
+ 
+ 
+} // namespace Gorilla
+
 
 #endif
