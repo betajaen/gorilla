@@ -27,6 +27,8 @@
 #ifndef GORILLA_H
 #define GORILLA_H
 
+#pragma warning ( disable : 4244 )
+
 #include "OGRE/OgrePrerequisites.h"
 #include "OGRE/OgreCommon.h"
 #include "OGRE/OgreVector2.h"
@@ -41,15 +43,41 @@
 #include "OGRE/OgreHardwareVertexBuffer.h"
 #include "OGRE/OgreSimpleRenderable.h"
 #include "OGRE/OgreRenderQueueListener.h"
+#include "OGRE/OgreSingleton.h"
 
 namespace Gorilla
 {
  
+ class Silverback;
+ class TextureAtlas;
  class Screen;
  class Renderable;
  class Canvas;
- 
+ class SpriteLayer;
+ class Text;
+ class Glyph;
+ class Sprite;
   
+ class Silverback : public Ogre::Singleton<Silverback>
+ {
+   
+  public:
+   
+   Silverback();
+   
+  ~Silverback();
+   
+   void  loadAtlas(const Ogre::String& name, const Ogre::String& group = Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+   Screen*  createScreen(Ogre::Viewport*, const Ogre::String& atlas);
+   void  destroyScreen(Screen*);
+   
+  protected:
+   
+   std::map<Ogre::String, TextureAtlas*>  mAtlases;
+   std::vector<Screen*>                   mScreens;
+   
+ };
+ 
  inline Ogre::ColourValue rgb(Ogre::uchar r, Ogre::uchar g, Ogre::uchar b, Ogre::uchar a = 255)
  {
   return Ogre::ColourValue(float(r) / 255.0f,float(g) / 255.0f,float(b) / 255.0f, float(a) / 255.0f);
@@ -64,7 +92,6 @@ namespace Gorilla
     alpha); 
  }
 
- // Slightly rewritten and stolen from NxOgre's Buffer class.
  template<typename T> class buffer
  {
 
@@ -270,7 +297,7 @@ namespace Gorilla
     {
      character = character - mGlyphRangeBegin;
      if (character > mGlyphRangeEnd)
-      return mNullGlyph;
+      return 0;
      return mGlyphs[character];
     }
     
@@ -278,7 +305,7 @@ namespace Gorilla
     {
      std::map<Ogre::String, Sprite*>::const_iterator it = mSprites.find(name);
      if (it == mSprites.end())
-      return mNullSprite;
+      return 0;
      return (*it).second;
     }
     
@@ -326,7 +353,19 @@ namespace Gorilla
     {
      return mGlyphRangeEnd;
     }
-
+    
+    inline Ogre::Real getGlyphMonoWidth() const
+    {
+     return mGlyphMonoWidth;
+    }
+    
+    
+    void   refreshMarkupColours();
+    
+    void   setMarkupColour(Ogre::uint colour_palette_index, const Ogre::ColourValue&);
+    
+    Ogre::ColourValue  getMarkupColour(Ogre::uint colour_palette_index);
+    
    protected:
     
     TextureAtlas(const Ogre::String& gorillaFile, const Ogre::String& group);
@@ -348,36 +387,16 @@ namespace Gorilla
     Ogre::Pass*                      mPass;
     std::vector<Glyph*>              mGlyphs;
     std::map<Ogre::String, Sprite*>  mSprites;
-    Glyph*                           mNullGlyph;
-    Sprite*                          mNullSprite;
     Ogre::uint                       mGlyphRangeBegin, mGlyphRangeEnd;
     Ogre::Real                       mGlyphScale;
     Ogre::Real                       mGlyphSpaceLength;
     Ogre::Real                       mGlyphLineHeight;
     Ogre::Real                       mGlyphBaseline;
     Ogre::Real                       mGlyphAllGlyphsKerning;
+    Ogre::Real                       mGlyphMonoWidth;
     Ogre::Vector2                    mRectangleCoords;
     Ogre::Vector2                    mInverseTextureSize;
-  };
-
-  class Silverback : public Ogre::Singleton<Silverback>
-  {
-    
-   public:
-    
-    Silverback();
-    
-   ~Silverback();
-    
-    void  loadAtlas(const Ogre::String& name, const Ogre::String& group = Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-    Screen*  createScreen(Ogre::Viewport*, const Ogre::String& atlas);
-    void  destroyScreen(Screen*);
-    
-   protected:
-    
-    std::map<Ogre::String, TextureAtlas*>  mAtlases;
-    std::vector<Screen*>                   mScreens;
-    
+    Ogre::ColourValue                mMarkupColour[10];
   };
   
  struct Quad
@@ -405,9 +424,12 @@ namespace Gorilla
    
   ~Screen();
    
-   Canvas*  createCanvas(int layer = 0);
+   Canvas*       createCanvas(int layer = 0);
    
-
+   SpriteLayer*  createSpriteLayer(int layer = 0);
+   
+   Text*         createText(int left, int top, const Ogre::String& initialText, int layer = 0);
+   
    inline void      vpX(Ogre::Real& x)
    {
      if (x < 0) // Becomes right.
@@ -530,9 +552,19 @@ namespace Gorilla
    
   protected:
    
-   inline void      pushQuad(const Quad& quad);
+   inline void      pushQuad(const Quad& quad, const Ogre::Radian& angle);
    
-   void             _redrawNeeded();
+   inline void      pushLine(const Ogre::Vector2& a, const Ogre::Vector2& b, Ogre::Real thickness, const Ogre::ColourValue& colour);
+   
+   inline void      pushSprite(const Ogre::Vector2& position, const Ogre::Vector2& scale, Sprite*, const Ogre::ColourValue& tint);
+   
+   inline void      pushGlyph(Glyph*, Ogre::Real left, Ogre::Real top, const Ogre::ColourValue& colour);
+   
+   inline void      _redrawNeeded()
+   {
+    mRedrawNeeded = true;
+    requestLayerRedraw();
+   }
    
    buffer<Vertex>   mVertices;
    
@@ -541,7 +573,7 @@ namespace Gorilla
    bool             mRedrawNeeded;
 
    // Static temporary variables.
-   static Ogre::Real  tLeft, tRight, tTop, tBottom;
+   static Ogre::Real  tLeft, tRight, tTop, tBottom, t1, t2, tA,tB,tC,tD;
    static Vertex      tVertex;
    
   private:
@@ -558,21 +590,40 @@ namespace Gorilla
   
   public:
    
-   size_t  addRectangle(int left, int top, Ogre::uint width, Ogre::uint height, const Ogre::ColourValue& colour);
+   size_t  addRectangle(int left, int top, Ogre::uint width, Ogre::uint height, const Ogre::ColourValue& colour = Ogre::ColourValue::White);
    void    removeRectangle(size_t id);
    void    setRectangleColour(size_t id, const Ogre::ColourValue& colour);
    void    setRectangleColour(size_t id, const Ogre::ColourValue& topLeft, const Ogre::ColourValue& topRight, const Ogre::ColourValue& bottomRight,const Ogre::ColourValue& bottomLeft);
    void    setRectanglePosition(size_t id, int left, int top);
    void    setRectangleSize(size_t id, Ogre::uint width, Ogre::uint height);
    void    setRectangleBackground(size_t id, const Ogre::String& sprite_name, bool resetColour = true);
+   void    setRectangleAngle(size_t id, const Ogre::Degree&);
+   void    setRectangleAngle(size_t id, const Ogre::Radian&);
    void    clearRectangleBackground(size_t id);
-
+   
+   size_t  addLine(int x1, int y1, int x2, int y2, int thickness, const Ogre::ColourValue& colour = Ogre::ColourValue::White);
+   void    removeLine(size_t);
+   void    setLineColour(size_t, const Ogre::ColourValue&);
+   void    setLineCoords(size_t, int x1, int y1, int x2, int y2);
+   void    setLineOrigin(size_t, int x1, int y1);
+   void    setLineEnd(size_t, int x2, int y2);
+   void    setLineThickness(size_t, int thickness);
+   
   protected:
    
    struct Rectangle
    {
-    Quad   quad;
-    size_t id;
+    Quad         quad;
+    size_t       id;
+    Ogre::Radian angle;
+   };
+   
+   struct Line
+   {
+    Ogre::Vector2     a,b;
+    Ogre::ColourValue colour;
+    Ogre::Real        thickness;
+    size_t            id;
    };
    
    Canvas(Ogre::uint layer, Screen*);
@@ -582,10 +633,148 @@ namespace Gorilla
    void  redraw();
    
    std::map<size_t, Rectangle> mRectangles;
-   size_t                      mNextRectangleID;
+   std::map<size_t, Line>      mLines;
+   size_t                      mNextRectangleID, mNextLineID;
    
  };
+ 
+ class SpriteLayer : public Renderable
+ {
+    
+   friend class Screen;
+    
+   public:
+    
+    size_t  addSprite(int left, int top, const Ogre::String& name);
+    void    removeSprite(size_t id);
+    void    moveSprite(size_t id, int left, int top);
+    void    changeSprite(size_t id, const Ogre::String& name);
+    void    scaleSprite(size_t id, Ogre::Real scaleX, Ogre::Real scaleY);
+    
+   protected:
+    
+    struct Bob // A homage to http://en.wikipedia.org/wiki/Blitter_object
+    {
+     Sprite*            sprite;
+     Ogre::Vector2      position, scale;
+     Ogre::ColourValue  tint;
+     size_t             id;
+    };
+    
+    SpriteLayer(Ogre::uint layer, Screen*);
+    
+   ~SpriteLayer();
+    
+    void  redraw();
+    
+    std::map<size_t, Bob> mBobs;
+    size_t                mNextBobID;
+   
+ };
+ 
+ class Text : public Renderable
+ {
+    
+   friend class Screen;
+    
+   public:
+    
+   
+    void   setText(const Ogre::String& text)
+    {
+     mText = text;
+     mRedrawNeeded = true;
+     requestLayerRedraw();
+    }
 
+    void   move(int left, int top)
+    {
+     mLeft = left;
+     mTop = top;
+     _redrawNeeded();
+    }
+
+    void   setTop(int top)
+    {
+     mTop = top;
+     _redrawNeeded();
+    }
+     
+    void   setLeft(int left)
+    {
+     mLeft = left;
+     _redrawNeeded();
+    }
+
+    void   setFormatted(bool val)
+    {
+     mDoFormatting = true;
+     _redrawNeeded();
+    }
+
+    void   setMonospaced(bool val)
+    {
+     mDoMonospace = val;
+     _redrawNeeded();
+    }
+
+    void   setColour(const Ogre::ColourValue& colour)
+    {
+     mColour = colour;
+     _redrawNeeded();
+    }
+    
+    Ogre::String getText() const
+    {
+     return mText;
+    }
+    
+    bool   isFormatted() const
+    {
+     return mDoFormatting;
+    }
+    
+    bool   isMonospace() const
+    {
+     return mDoMonospace;
+    }
+    
+    Ogre::ColourValue  getColour() const
+    {
+     return mColour;
+    }
+    
+    int   getTop() const
+    {
+     return mTop;
+    }
+    
+    int   getLeft() const
+    {
+     return mLeft;
+    }
+    
+   protected:
+    
+    Text(int left, int top, const Ogre::String& initialText, Ogre::uint layer, Screen*);
+    
+   ~Text();
+    
+    void  redraw();
+    
+    void  _doMarkup(size_t& index);
+    
+    Ogre::Real         mLeft, mTop;
+    Ogre::String       mText;
+    bool               mDoFormatting;
+    bool               mDoMonospace;
+    Ogre::ColourValue  mColour;
+    
+    static bool               tMonospace;
+    static Glyph*             tGlyph;
+    static Ogre::ColourValue  tWorkingColour;
+    
+ };
 };
 
 #endif

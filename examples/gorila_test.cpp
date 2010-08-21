@@ -67,13 +67,25 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
    mCanvas->setRectangleSize(id, 256,256);
    mCanvas->setRectangleBackground(id, "ogrehead");
    
-   Gorilla::Canvas* second = mScreen->createCanvas(15);
-   second->addRectangle(5,5, 400,400, Gorilla::rgb(0,255,0,150));
+   Gorilla::Canvas* second = mScreen->createCanvas(10);
+   second->addRectangle(0,0, 400,400, Gorilla::rgb(0,255,0,150));
 
 
-   Gorilla::Canvas* third = mScreen->createCanvas(4);
-   third->addRectangle(5,5, 600,200, Gorilla::rgb(0,0,255,150));
+   Gorilla::Canvas* third = mScreen->createCanvas(12);
+   size_t tid = third->addRectangle(400,400, 100,100, Gorilla::rgb(255,255,255,255));
+   third->setRectangleAngle(tid, Ogre::Degree(45));
+   third->setRectangleBackground(tid, "ogrehead");
+   third->addLine(400,400, 500,500, 1);
+   
+   Gorilla::SpriteLayer* sprites = mScreen->createSpriteLayer(13);
+   size_t ogreid = sprites->addSprite(0,0, "ogrehead");
+   sprites->scaleSprite(ogreid, 10, 10);
+  
+   Gorilla::Text* text = mScreen->createText(10,10, "T%1h%2is %3is %Rsome t%%ext, L%4OL%5Z.\nLook %6th%7is %8is s%9om%Re %MMonospaced%M text.\nW%2e%:ogrehead%e.asdasasdasd%1", 15);
 
+   text->setText("Yay");
+   text->setMonospaced(true);
+   text->setColour(Gorilla::rgb(255,0,255,255));
   }
   
  ~App()

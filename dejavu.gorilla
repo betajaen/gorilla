@@ -8,6 +8,7 @@ spacelength 6
 baseline 18
 scale 0.999
 kerning -0.5
+monowidth 15
 range 33 126
 glyph_33 1 0 8 23 7 
 glyph_34 9 0 10 23 8 
