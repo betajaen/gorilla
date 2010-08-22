@@ -745,7 +745,7 @@ SpriteLayer*  Screen::createSpriteLayer(int layer)
  return sprite_layer;
 }
 
-Text*  Screen::createText(int left, int top, const Ogre::String& initialText, int layer)
+Text*  Screen::createText(Ogre::Real left, Ogre::Real top, const Ogre::String& initialText, int layer)
 {
  Text* text = new Text(left, top, initialText, layer, this);
  mRenderables.push_back(text);
@@ -756,7 +756,7 @@ Text*  Screen::createText(int left, int top, const Ogre::String& initialText, in
 }
 
 Renderable::Renderable(Screen* screen, Ogre::uint layer)
-: mScreen(screen), mLayer(layer), mRedrawNeeded(false)
+: mScreen(screen), mLayer(layer), mRedrawNeeded(false), mIsVisible(true)
 {
 }
 
@@ -766,6 +766,9 @@ Renderable::~Renderable()
 
 void Renderable::render(buffer<Vertex>& buffer)
 {
+ 
+ if (mIsVisible == false)
+  return;
  
  if (mRedrawNeeded)
  {
@@ -1036,7 +1039,7 @@ void  Canvas::redraw()
 }
 
 
-size_t Canvas::addRectangle(int left, int top, Ogre::uint width, Ogre::uint height, const Ogre::ColourValue& colour)
+size_t Canvas::addRectangle(Ogre::Real left, Ogre::Real top, Ogre::uint width, Ogre::uint height, const Ogre::ColourValue& colour)
 {
  Rectangle rect;
  rect.id = mNextRectangleID++;
@@ -1095,7 +1098,7 @@ void Canvas::setRectangleColour(size_t id, const Ogre::ColourValue& topLeft, con
  
 }
 
-void  Canvas::setRectanglePosition(size_t id, int left, int top)
+void  Canvas::setRectanglePosition(size_t id, Ogre::Real left, Ogre::Real top)
 {
  GET_RECTANGLE_OR_DIE(id);
  rect->quad.left = left;
@@ -1255,7 +1258,7 @@ void SpriteLayer::redraw()
   pushSprite((*it).second.position, (*it).second.scale, (*it).second.sprite, (*it).second.tint);
 }
 
-size_t SpriteLayer::addSprite(int left, int top, const Ogre::String& name)
+size_t SpriteLayer::addSprite(Ogre::Real left, Ogre::Real top, const Ogre::String& name)
 {
  Sprite* sprite = mScreen->getAtlas()->getSprite(name);
  if (sprite == 0)
@@ -1289,7 +1292,7 @@ void SpriteLayer::removeSprite(size_t id)
  requestLayerRedraw();
 }
 
-void SpriteLayer::setSpritePosition(size_t id, int left, int top)
+void SpriteLayer::setSpritePosition(size_t id, Ogre::Real left, Ogre::Real top)
 {
  GET_BOB_OR_DIE(id)
  bob->position.x = left;
@@ -1336,7 +1339,7 @@ Sprite* SpriteLayer::getSprite(size_t id)
  return bob->sprite;
 }
 
-Text::Text(int left, int top, const Ogre::String& initialText, Ogre::uint layer, Screen* screen)
+Text::Text(Ogre::Real left, Ogre::Real top, const Ogre::String& initialText, Ogre::uint layer, Screen* screen)
 : Renderable(screen, layer)
 {
  mLeft = left;

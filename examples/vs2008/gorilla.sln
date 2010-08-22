@@ -1,7 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gorilla", "gorilla.vcproj", "{4722520A-274E-4071-9E3F-880C9E4F7928}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gorilla_console", "gorilla_console.vcproj", "{6DC84147-F5EB-400D-9361-473A4C2CDDCA}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gorilla_test", "gorilla.vcproj", "{4722520A-274E-4071-9E3F-880C9E4F7928}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -9,6 +11,10 @@ Global
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6DC84147-F5EB-400D-9361-473A4C2CDDCA}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6DC84147-F5EB-400D-9361-473A4C2CDDCA}.Debug|Win32.Build.0 = Debug|Win32
+		{6DC84147-F5EB-400D-9361-473A4C2CDDCA}.Release|Win32.ActiveCfg = Release|Win32
+		{6DC84147-F5EB-400D-9361-473A4C2CDDCA}.Release|Win32.Build.0 = Release|Win32
 		{4722520A-274E-4071-9E3F-880C9E4F7928}.Debug|Win32.ActiveCfg = Debug|Win32
 		{4722520A-274E-4071-9E3F-880C9E4F7928}.Debug|Win32.Build.0 = Debug|Win32
 		{4722520A-274E-4071-9E3F-880C9E4F7928}.Release|Win32.ActiveCfg = Release|Win32

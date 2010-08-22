@@ -411,7 +411,7 @@ namespace Gorilla
    
    SpriteLayer*  createSpriteLayer(int layer = 0);
    
-   Text*         createText(int left, int top, const Ogre::String& initialText, int layer = 0);
+   Text*         createText(Ogre::Real left, Ogre::Real top, const Ogre::String& initialText, int layer = 0);
    
    inline void      vpX(Ogre::Real& x)
    {
@@ -510,6 +510,29 @@ namespace Gorilla
    
   ~Renderable();
    
+   bool             isVisible() const
+   {
+    return mIsVisible;
+   }
+   
+   void             setVisible(bool is_visible)
+   {
+    mIsVisible = is_visible;
+    _redrawNeeded();
+   }
+   
+   void             show()
+   {
+    mIsVisible = true;
+    _redrawNeeded();
+   }
+   
+   void             hide()
+   {
+    mIsVisible = false;
+    _redrawNeeded();
+   }
+   
    Ogre::uint       getLayer() const
    {
     return  mLayer;
@@ -594,7 +617,8 @@ namespace Gorilla
     
    Ogre::uint       mLayer;
    
-
+   bool             mIsVisible;
+   
  };
  
  class Canvas : public Renderable
@@ -604,11 +628,11 @@ namespace Gorilla
   
   public:
    
-   size_t  addRectangle(int left, int top, Ogre::uint width, Ogre::uint height, const Ogre::ColourValue& colour = Ogre::ColourValue::White);
+   size_t  addRectangle(Ogre::Real left, Ogre::Real top, Ogre::uint width, Ogre::uint height, const Ogre::ColourValue& colour = Ogre::ColourValue::White);
    void    removeRectangle(size_t id);
    void    setRectangleColour(size_t id, const Ogre::ColourValue& colour);
    void    setRectangleColour(size_t id, const Ogre::ColourValue& topLeft, const Ogre::ColourValue& topRight, const Ogre::ColourValue& bottomRight,const Ogre::ColourValue& bottomLeft);
-   void    setRectanglePosition(size_t id, int left, int top);
+   void    setRectanglePosition(size_t id, Ogre::Real left, Ogre::Real top);
    void    setRectangleSize(size_t id, Ogre::uint width, Ogre::uint height);
    void    setRectangleBackground(size_t id, const Ogre::String& sprite_name, bool resetColour = true);
    void    setRectangleAngle(size_t id, const Ogre::Degree&);
@@ -660,9 +684,9 @@ namespace Gorilla
     
    public:
     
-    size_t         addSprite(int left, int top, const Ogre::String& name);
+    size_t         addSprite(Ogre::Real left, Ogre::Real top, const Ogre::String& name);
     void           removeSprite(size_t id);
-    void           setSpritePosition(size_t id, int left, int top);
+    void           setSpritePosition(size_t id, Ogre::Real left, Ogre::Real top);
     void           setSprite(size_t id, const Ogre::String& name);
     void           setSpriteScale(size_t id, Ogre::Real scaleX, Ogre::Real scaleY);
     void           getSpritePosition(size_t, int& left, int& top);
@@ -698,27 +722,33 @@ namespace Gorilla
     
    public:
     
-   
+    void   setPosition(const Ogre::Vector2& position)
+    {
+     mLeft = position.x;
+     mTop = position.y;
+     _redrawNeeded();
+    }
+    
     void   setText(const Ogre::String& text)
     {
      mText = text;
      _redrawNeeded();
     }
 
-    void   move(int left, int top)
+    void   move(Ogre::Real left, Ogre::Real top)
     {
      mLeft = left;
      mTop = top;
      _redrawNeeded();
     }
 
-    void   setTop(int top)
+    void   setTop(Ogre::Real top)
     {
      mTop = top;
      _redrawNeeded();
     }
      
-    void   setLeft(int left)
+    void   setLeft(Ogre::Real left)
     {
      mLeft = left;
      _redrawNeeded();
@@ -762,19 +792,19 @@ namespace Gorilla
      return mColour;
     }
     
-    int   getTop() const
+    Ogre::Real   getTop() const
     {
      return mTop;
     }
     
-    int   getLeft() const
+    Ogre::Real   getLeft() const
     {
      return mLeft;
     }
     
    protected:
     
-    Text(int left, int top, const Ogre::String& initialText, Ogre::uint layer, Screen*);
+    Text(Ogre::Real left, Ogre::Real top, const Ogre::String& initialText, Ogre::uint layer, Screen*);
     
    ~Text();
     
