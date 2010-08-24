@@ -60,10 +60,10 @@ void OgreConsole::shutdown()
  Ogre::Root::getSingletonPtr()->removeFrameListener(this);
  Ogre::LogManager::getSingleton().getDefaultLog()->removeListener(this);
  
-//mScreen->destroyCanvas(mCanvas);
-// mScreen->destroyText(mPromptText);
-// mScreen->destroyText(mConsoleText);
-
+ mScreen->destroy(mCanvas);
+ mScreen->destroy(mPromptText);
+ mScreen->destroy(mConsoleText);
+ 
 }
 
 

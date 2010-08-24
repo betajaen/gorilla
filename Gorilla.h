@@ -228,7 +228,7 @@ namespace Gorilla
    
  };
  
- class Glyph
+ class Glyph : public Ogre::GeneralAllocatedObject
  {
    
   public:
@@ -257,7 +257,7 @@ namespace Gorilla
    
  };
  
- class Sprite
+ class Sprite : public Ogre::GeneralAllocatedObject
  {
    
   public:
@@ -270,7 +270,7 @@ namespace Gorilla
    
  };
  
- class TextureAtlas
+ class TextureAtlas : public Ogre::GeneralAllocatedObject
  {
    
    friend class Silverback;
@@ -399,7 +399,7 @@ namespace Gorilla
   
 
  
- class Screen : public Ogre::RenderQueueListener
+ class Screen : public Ogre::RenderQueueListener, public Ogre::GeneralAllocatedObject
  { 
   public:
    
@@ -412,6 +412,8 @@ namespace Gorilla
    SpriteLayer*  createSpriteLayer(int layer = 0);
    
    Text*         createText(Ogre::Real left, Ogre::Real top, const Ogre::String& initialText, int layer = 0);
+   
+   void          destroy(Renderable*);
    
    inline void      vpX(Ogre::Real& x)
    {
@@ -501,14 +503,19 @@ namespace Gorilla
  };
  
 
- class Renderable
+ class Renderable : public Ogre::GeneralAllocatedObject
  {
    
   public:
    
    Renderable(Screen*, Ogre::uint layer);
    
-  ~Renderable();
+   virtual ~Renderable();
+   
+   inline  Screen*  getScreen() const
+   {
+    return mScreen;
+   }
    
    bool             isVisible() const
    {
@@ -581,11 +588,14 @@ namespace Gorilla
    
    inline void      pushQuad(const Quad& quad, const Ogre::Radian& angle);
    
+   inline void      pushBox(const Quad& quad);
+   
    inline void      pushLine(const Ogre::Vector2& a, const Ogre::Vector2& b, Ogre::Real thickness, const Ogre::ColourValue& colour);
    
    inline void      pushSprite(const Ogre::Vector2& position, const Ogre::Vector2& scale, Sprite*, const Ogre::ColourValue& tint);
    
    inline void      pushGlyph(Glyph*, Ogre::Real left, Ogre::Real top, const Ogre::ColourValue& colour);
+   
    
    inline void      _redrawNeeded()
    {
@@ -626,27 +636,49 @@ namespace Gorilla
   
   friend class Screen;
   
+  protected:
+   
+   struct Rectangle;
+   struct Line;
+   struct Caption;
+   
   public:
    
-   size_t  addRectangle(Ogre::Real left, Ogre::Real top, Ogre::uint width, Ogre::uint height, const Ogre::ColourValue& colour = Ogre::ColourValue::White);
+   size_t  addRectangle(Ogre::Real left, Ogre::Real top, Ogre::Real width, Ogre::Real height, const Ogre::ColourValue& colour = Ogre::ColourValue::White);
    void    removeRectangle(size_t id);
    void    setRectangleColour(size_t id, const Ogre::ColourValue& colour);
    void    setRectangleColour(size_t id, const Ogre::ColourValue& topLeft, const Ogre::ColourValue& topRight, const Ogre::ColourValue& bottomRight,const Ogre::ColourValue& bottomLeft);
    void    setRectanglePosition(size_t id, Ogre::Real left, Ogre::Real top);
-   void    setRectangleSize(size_t id, Ogre::uint width, Ogre::uint height);
+   void    setRectangleSize(size_t id, Ogre::Real width, Ogre::Real height);
    void    setRectangleBackground(size_t id, const Ogre::String& sprite_name, bool resetColour = true);
    void    setRectangleAngle(size_t id, const Ogre::Degree&);
    void    setRectangleAngle(size_t id, const Ogre::Radian&);
    void    setRectangleMinMax(size_t id, const Ogre::Vector2& min, const Ogre::Vector2& max);
    void    clearRectangleBackground(size_t id);
    
-   size_t  addLine(int x1, int y1, int x2, int y2, int thickness, const Ogre::ColourValue& colour = Ogre::ColourValue::White);
+   size_t  addLine(Ogre::Real x1, Ogre::Real y1, Ogre::Real x2, Ogre::Real y2, Ogre::Real thickness, const Ogre::ColourValue& colour = Ogre::ColourValue::White);
    void    removeLine(size_t);
    void    setLineColour(size_t, const Ogre::ColourValue&);
-   void    setLineCoords(size_t, int x1, int y1, int x2, int y2);
-   void    setLineOrigin(size_t, int x1, int y1);
-   void    setLineEnd(size_t, int x2, int y2);
-   void    setLineThickness(size_t, int thickness);
+   void    setLineCoords(size_t, Ogre::Real x1, Ogre::Real y1, Ogre::Real x2, Ogre::Real y2);
+   void    setLineOrigin(size_t, Ogre::Real x1, Ogre::Real y1);
+   void    setLineEnd(size_t, Ogre::Real x2, Ogre::Real y2);
+   void    setLineThickness(size_t, Ogre::Real thickness);
+   
+   size_t  addCaption(Ogre::Real left, Ogre::Real top, const Ogre::String&);
+   void    removeCaption(size_t);
+   void    setCaptionPosition(size_t, Ogre::Real left, Ogre::Real top);
+   void    setCaptionText(size_t, const Ogre::String& text);
+   void    setCaptionHorizontalClip(size_t, Ogre::Real clip);
+   void    setCaptionColour(size_t, const Ogre::ColourValue&);
+   
+   Ogre::Vector2 getCaptionSize(size_t);
+   void    _calculateCaptionSize(Caption*);
+   
+   size_t    addBox(Ogre::Real left, Ogre::Real top, Ogre::Real width, Ogre::Real height, const Ogre::ColourValue& = Ogre::ColourValue::White);
+   void    removeBox(size_t);
+   void    setBoxPosition(size_t, Ogre::Real left, Ogre::Real top);
+   void    setBoxSize(size_t, Ogre::Real width, Ogre::Real height);
+   void    setBoxColour(size_t, const Ogre::ColourValue&);
    
   protected:
    
@@ -665,15 +697,33 @@ namespace Gorilla
     size_t            id;
    };
    
+   struct Caption
+   {
+    Ogre::Real        left, top, width, height;
+    Ogre::String      text;
+    Ogre::ColourValue colour;
+    Ogre::Real        horizontalClip;
+    size_t            id;
+   };
+   
+   struct Box
+   {
+    Quad   quad;
+    size_t id;
+   };
+   
    Canvas(Ogre::uint layer, Screen*);
    
   ~Canvas();
    
    void  redraw();
+   void  _drawCaption(Caption*);
    
    std::map<size_t, Rectangle> mRectangles;
    std::map<size_t, Line>      mLines;
-   size_t                      mNextRectangleID, mNextLineID;
+   std::map<size_t, Caption>   mCaptions;
+   std::map<size_t, Box>       mBoxes;
+   size_t                      mNextRectangleID, mNextLineID, mNextCaptionID, mNextBoxID;
    
  };
  
@@ -689,7 +739,7 @@ namespace Gorilla
     void           setSpritePosition(size_t id, Ogre::Real left, Ogre::Real top);
     void           setSprite(size_t id, const Ogre::String& name);
     void           setSpriteScale(size_t id, Ogre::Real scaleX, Ogre::Real scaleY);
-    void           getSpritePosition(size_t, int& left, int& top);
+    Ogre::Vector2  getSpritePosition(size_t);
     Ogre::Vector2  getSpriteScale(size_t);
     Sprite*        getSprite(size_t);
 

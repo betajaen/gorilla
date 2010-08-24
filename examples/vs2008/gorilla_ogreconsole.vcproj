@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="gorilla_test"
-	ProjectGUID="{4722520A-274E-4071-9E3F-880C9E4F7928}"
-	RootNamespace="gorilla"
+	Name="gorilla_console"
+	ProjectGUID="{6DC84147-F5EB-400D-9361-473A4C2CDDCA}"
+	RootNamespace="gorilla_console"
 	TargetFrameworkVersion="196613"
 	>
 	<Platforms>
@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(OGRE_HOME)/include&quot;;&quot;$(OGRE_HOME)/boost_1_42&quot;;&quot;$(SolutionDir)\..\&quot;;&quot;$(SolutionDir)\..\..\&quot;"
+				AdditionalIncludeDirectories="&quot;$(OGRE_HOME)/include&quot;;&quot;$(OGRE_HOME)/boost_1_42&quot;;&quot;$(SolutionDir)\..\&quot;;&quot;$(SolutionDir)\..\..\&quot;;&quot;$(SolutionDir)\..\..\extensions\&quot;"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -113,7 +113,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;$(OGRE_HOME)/include&quot;;&quot;$(OGRE_HOME)/boost_1_42&quot;;&quot;$(SolutionDir)\..\&quot;;&quot;$(SolutionDir)\..\..\&quot;"
+				AdditionalIncludeDirectories="&quot;$(OGRE_HOME)/include&quot;;&quot;$(OGRE_HOME)/boost_1_42&quot;;&quot;$(SolutionDir)\..\&quot;;&quot;$(SolutionDir)\..\..\&quot;;&quot;$(SolutionDir)\..\..\extensions\&quot;"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
@@ -165,15 +165,23 @@
 	</References>
 	<Files>
 		<File
-			RelativePath="..\gorila_test.cpp"
-			>
-		</File>
-		<File
 			RelativePath="..\..\Gorilla.cpp"
 			>
 		</File>
 		<File
 			RelativePath="..\..\Gorilla.h"
+			>
+		</File>
+		<File
+			RelativePath="..\gorilla_ogreconsole.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\..\extensions\OgreConsoleForGorilla.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\..\extensions\OgreConsoleForGorilla.h"
 			>
 		</File>
 	</Files>

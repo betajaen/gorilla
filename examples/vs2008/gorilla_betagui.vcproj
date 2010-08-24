@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="gorilla_console"
-	ProjectGUID="{6DC84147-F5EB-400D-9361-473A4C2CDDCA}"
-	RootNamespace="gorilla_console"
+	Name="gorilla_betagui"
+	ProjectGUID="{A60B7341-3A06-4ED4-9FC2-A82A706E6E5F}"
+	RootNamespace="gorilla_betagui"
 	TargetFrameworkVersion="196613"
 	>
 	<Platforms>
@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(OGRE_HOME)/include&quot;;&quot;$(OGRE_HOME)/boost_1_42&quot;;&quot;$(SolutionDir)\..\&quot;;&quot;$(SolutionDir)\..\..\&quot;"
+				AdditionalIncludeDirectories="&quot;$(OGRE_HOME)/include&quot;;&quot;$(OGRE_HOME)/boost_1_42&quot;;&quot;$(SolutionDir)\..\&quot;;&quot;$(SolutionDir)\..\..\&quot;;&quot;$(SolutionDir)\..\..\extensions\&quot;"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -165,6 +165,14 @@
 	</References>
 	<Files>
 		<File
+			RelativePath="..\..\extensions\BetaGUI4.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\..\extensions\BetaGUI4.h"
+			>
+		</File>
+		<File
 			RelativePath="..\..\Gorilla.cpp"
 			>
 		</File>
@@ -173,15 +181,7 @@
 			>
 		</File>
 		<File
-			RelativePath=".\gorilla_console_example.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\..\extensions\OgreConsoleForGorilla.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\..\extensions\OgreConsoleForGorilla.h"
+			RelativePath="..\gorilla_betagui.cpp"
 			>
 		</File>
 	</Files>

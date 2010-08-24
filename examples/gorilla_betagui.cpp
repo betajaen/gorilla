@@ -2,53 +2,20 @@
 #include <OIS/OIS.h>
  
 #include "Gorilla.h"
-#include "OgreConsoleForGorilla.h"
+#include "BetaGUI4.h"
 
 #include <sstream>
 
 #pragma warning ( disable : 4244 )
 
-void whoami(Ogre::StringVector&)
-{
- OgreConsole::getSingleton().print("Your you!");
-}
-
-void version(Ogre::StringVector&)
-{
- std::stringstream s;
- s << "Ogre " << OGRE_VERSION_MAJOR << "." << OGRE_VERSION_MINOR << "." << OGRE_VERSION_PATCH << " '" << OGRE_VERSION_NAME << "'";
- OgreConsole::getSingleton().print(s.str());
-}
-
-void make(Ogre::StringVector& vec)
-{
- if (vec.size() == 1)
-  OgreConsole::getSingleton().print("Make you what?");
- else
- {
-  Ogre::String item_to_make = vec[1];
-  Ogre::StringUtil::toLowerCase(item_to_make);
-  if (item_to_make == "sandwich")
-   OgreConsole::getSingleton().print("Make it yourself!");
-  else if (item_to_make == "universe")
-   OgreConsole::getSingleton().print("Boom!");
-  else if (item_to_make == "ogre")
-   OgreConsole::getSingleton().print("I need a Daddy and Mommy Ogre");
-  else if (item_to_make == "gorilla")
-   OgreConsole::getSingleton().print("He wouldn't like that");
-  else
-   OgreConsole::getSingleton().print("Go check your fridge.");
- }
-}
-
-class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::MouseListener
+class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::MouseListener, public BetaGUI::Callback
 {
   
  public:
   
   Gorilla::Silverback*    mGorilla;
   Gorilla::Screen*        mScreen;
-  OgreConsole*            mConsole;
+  BetaGUI::GUI*           mGUI;
   
   Gorilla::Text*          mFPS;
   Ogre::Real              mTimer;
@@ -63,18 +30,25 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
    // Initialise Gorilla
    mGorilla = new Gorilla::Silverback();
    mGorilla->loadAtlas("dejavu");
-   mScreen = mGorilla->createScreen(mViewport, "dejavu");
-   mFPS = mScreen->createText(10,10, "FPS: 0, Batches: 0", 15);
+   
+   // FPS Counter (on a seperate screen)
+   Gorilla::Screen* fpsScreen = mGorilla->createScreen(mViewport, "dejavu");
+   mFPS = fpsScreen->createText(1, mViewport->getActualHeight() - 24, "0 (0)", 15);
 
-   mConsole = new OgreConsole();
-   mConsole->init(mScreen);
-   mConsole->addCommand("whoami", whoami);
-   mConsole->addCommand("version", version);
-   mConsole->addCommand("make", make);
+   // Do BetaGUI!
+
+   mScreen = mGorilla->createScreen(mViewport, "dejavu");
+   mGUI = new BetaGUI::GUI(mScreen, this);
+   BetaGUI::Window* window = mGUI->createWindow("Hello! This is a lot of text here.", Ogre::Vector2(100,100));
+   window->createButton(Ogre::Vector2(5,15), "This is a button");
+   window->createTextBox(Ogre::Vector2(5,40), "1234");
+   window->createProgress(Ogre::Vector2(5,70), 0.35);
+   window->createLabel(Ogre::Vector2(5,100), "This is a label");
   }
   
  ~App()
   {
+   delete mGUI;
    delete mGorilla;
    delete mRoot;
   }
@@ -89,48 +63,50 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
    if (mKeyboard->isKeyDown(OIS::KC_ESCAPE))
      return false;
    mMouse->capture();
-
+   
    mTimer += evt.timeSinceLastFrame;
    if (mTimer > 1.0f / 60.0f)
    {
     mTimer = 0;
     std::stringstream s;
-    s << "FPS: " << mWindow->getLastFPS() << ", Batches: " << mRoot->getRenderSystem()->_getBatchCount() << "\n";
-    mFPS->setTop(mViewport->getActualHeight() - 20);
+    s << "F " << int(mWindow->getLastFPS()) << " B " << mRoot->getRenderSystem()->_getBatchCount() << " T " << mWindow->getTriangleCount();
+    mFPS->setTop(mViewport->getActualHeight() - 24);
     mFPS->setText(s.str());
     
    }
+
    return true;
   }
   
   bool keyPressed( const OIS::KeyEvent &e )
   {
-   mConsole->onKeyPressed(e);
+   if (e.key == OIS::KC_RETURN || e.key == OIS::KC_NUMPADENTER)
+    mGUI->checkKey('\n');
+   else
+    mGUI->checkKey(e.text);
    return true;
   }
   
   bool keyReleased( const OIS::KeyEvent &e )
   {
-   if (e.key == OIS::KC_F1)
-   {
-    mConsole->setVisible(!mConsole->isVisible());
-    return true;
-   }
    return true;
   }
   
   bool mouseMoved( const OIS::MouseEvent &arg )
   {
+   mGUI->checkMouse(arg.state.X.abs, arg.state.Y.abs, arg.state.buttonDown(OIS::MB_Left));
    return true;
   }
   
   bool mousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id )
   {
+   mGUI->checkMouse(arg.state.X.abs, arg.state.Y.abs, arg.state.buttonDown(OIS::MB_Left));
    return true;
   }
   
   bool mouseReleased( const OIS::MouseEvent &arg, OIS::MouseButtonID id )
   {
+   mGUI->checkMouse(arg.state.X.abs, arg.state.Y.abs, arg.state.buttonDown(OIS::MB_Left));
    return true;
   }
   
@@ -224,8 +200,8 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
        Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
     
    Ogre::TextureUnitState* tus = material->getTechnique(0)->getPass(0)->createTextureUnitState("DynamicTexture");
-   tus->setScrollAnimation(0.005, 0.0025);
-   tus->setRotateAnimation(0.009);
+   tus->setScrollAnimation(0.005f, 0.0025f);
+   tus->setRotateAnimation(0.009f);
    material->getTechnique(0)->getPass(0)->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
    
    Ogre::Plane plane(Ogre::Vector3::UNIT_Y, 0);
@@ -252,7 +228,6 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
   OIS::InputManager*      mInputManager;
   OIS::Keyboard*          mKeyboard;
   OIS::Mouse*             mMouse;
-  
   
 };
 
