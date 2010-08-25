@@ -60,6 +60,11 @@ Ogre::ColourValue Gorilla::Text::tWorkingColour = Ogre::ColourValue();
  if (it == mLines.end())return;\
  Line* line = &(*it).second;
 
+#define GET_LINE_OR_DIE_TRYING(ID, TRYING) \
+ std::map<size_t, Line>::const_iterator it = mLines.find(ID);\
+ if (it == mLines.end())return TRYING;\
+ const Line* line = &(*it).second;
+
 #define GET_BOB_OR_DIE(ID) \
  std::map<size_t, Bob>::iterator it = mBobs.find(ID);\
  if (it == mBobs.end())return;\
@@ -81,9 +86,9 @@ Ogre::ColourValue Gorilla::Text::tWorkingColour = Ogre::ColourValue();
  Box* box = &(*it).second;
 
 #define GET_CAPTION_OR_DIE_TRYING(ID, TRYING) \
- std::map<size_t, Caption>::iterator it = mCaptions.find(ID);\
+ std::map<size_t, Caption>::const_iterator it = mCaptions.find(ID);\
  if (it == mCaptions.end())return TRYING;\
- Caption* caption = &(*it).second;
+ const Caption* caption = &(*it).second;
 
 #define PUSH_VERTEX_NOUV(X, Y)                                  \
  tVertex.position.x = X; tVertex.position.y = Y;                \
@@ -1087,7 +1092,7 @@ void  Renderable::pushBox(const Quad& quad)
  PUSH_VERTEX_NOUV(tRight+1, tBottom);
  PUSH_VERTEX_NOUV(tRight+1, tTop-1);
  
- //  D -- C
+ //  D - C
 
  PUSH_VERTEX_NOUV(tLeft, tBottom+1);
  PUSH_VERTEX_NOUV(tRight+1, tBottom);
@@ -1109,20 +1114,8 @@ void  Renderable::pushBox(const Quad& quad)
  PUSH_VERTEX_NOUV(tLeft, tBottom+1);
  PUSH_VERTEX_NOUV(tLeft, tTop-1);
  
-/*
- PUSH_VERTEX_NOUV(tRight, tTop);
- PUSH_VERTEX_NOUV(tRight, tBottom);
- PUSH_VERTEX_NOUV(tRight+1, tTop+1);
  
- PUSH_VERTEX_NOUV(tRight, tBottom);
- PUSH_VERTEX_NOUV(tLeft, tBottom);
- PUSH_VERTEX_NOUV(tRight+1, tBottom+1);
-  
- PUSH_VERTEX_NOUV(tLeft, tBottom);
- PUSH_VERTEX_NOUV(tLeft, tTop);
- PUSH_VERTEX_NOUV(tLeft-1, tBottom-1);
-*/
- for (size_t i = mVertices.size()-4*6;i < mVertices.size();i++)
+ for (size_t i = mVertices.size()-(4*6);i < mVertices.size();i++)
  {
   
   vpW(mVertices[i].position.x);
@@ -1343,6 +1336,16 @@ void  Canvas::setLineCoords(size_t id, Ogre::Real x1, Ogre::Real y1, Ogre::Real 
  _redrawNeeded();
 }
 
+void  Canvas::setLineCoords(size_t id, const Ogre::Vector4& coords)
+{
+ GET_LINE_OR_DIE(id)
+ line->a.x = coords.x;
+ line->a.y = coords.y;
+ line->b.x = coords.z;
+ line->b.y = coords.w;
+ _redrawNeeded();
+}
+
 void  Canvas::setLineOrigin(size_t id, Ogre::Real x1, Ogre::Real y1)
 {
  GET_LINE_OR_DIE(id)
@@ -1365,6 +1368,25 @@ void  Canvas::setLineThickness(size_t id, Ogre::Real thickness)
  line->thickness = thickness;
  _redrawNeeded();
 }
+
+Ogre::ColourValue Canvas::getLineColour(size_t id) const
+{
+ GET_LINE_OR_DIE_TRYING(id, Ogre::ColourValue::White);
+ return line->colour;
+}
+
+Ogre::Vector4  Canvas::getLineCoords(size_t id) const
+{
+ GET_LINE_OR_DIE_TRYING(id, Ogre::Vector4(0,0,0,0) );
+ return Ogre::Vector4(line->a.x, line->a.y, line->b.x, line->b.y);
+}
+
+Ogre::Real  Canvas::getLineThickness(size_t id) const
+{
+ GET_LINE_OR_DIE_TRYING(id, 0.0f);
+ return line->thickness;
+}
+
 
 
 size_t  Canvas::addBox(Ogre::Real left, Ogre::Real top, Ogre::Real width, Ogre::Real height, const Ogre::ColourValue& colour)
@@ -1433,7 +1455,7 @@ void  Canvas::setBoxColour(size_t id, const Ogre::ColourValue& colour)
  _redrawNeeded();
 }
 
-size_t Canvas::addCaption(Ogre::Real left, Ogre::Real top, const Ogre::String& text)
+size_t Canvas::addCaption(Ogre::Real left, Ogre::Real top, const Ogre::String& text, const Ogre::ColourValue& colour)
 {
  Caption caption;
  caption.id = mNextRectangleID++;
@@ -1443,7 +1465,7 @@ size_t Canvas::addCaption(Ogre::Real left, Ogre::Real top, const Ogre::String& t
  caption.width = 0;
  caption.height = 0;
  caption.horizontalClip = -1;
- caption.colour = Ogre::ColourValue::White;
+ caption.colour = colour;
  mCaptions[caption.id] = caption;
  
  _redrawNeeded();
@@ -1493,12 +1515,32 @@ void  Canvas::setCaptionColour(size_t id, const Ogre::ColourValue& colour)
 
 Ogre::Vector2 Canvas::getCaptionSize(size_t id)
 {
- GET_CAPTION_OR_DIE_TRYING(id, Ogre::Vector2::ZERO)
- 
+ std::map<size_t, Caption>::iterator it = mCaptions.find(id);
+ if (it == mCaptions.end())return Ogre::Vector2::ZERO;
+ Caption* caption = &(*it).second;
+
  if (caption->width == 0 && caption->text.length() != 0)
   _calculateCaptionSize(caption);
  
  return Ogre::Vector2(caption->width, caption->height);
+}
+
+Ogre::Vector2 Canvas::getCaptionPosition(size_t id) const
+{
+ GET_CAPTION_OR_DIE_TRYING(id, Ogre::Vector2::ZERO);
+ return Ogre::Vector2(caption->left, caption->top);
+}
+
+Ogre::String  Canvas::getCaptionString(size_t id) const
+{
+ GET_CAPTION_OR_DIE_TRYING(id, Ogre::StringUtil::BLANK);
+ return caption->text;
+}
+
+Ogre::ColourValue Canvas::getCaptionColour(size_t id) const
+{
+ GET_CAPTION_OR_DIE_TRYING(id, Ogre::ColourValue::White);
+ return caption->colour;
 }
 
 void Canvas::_drawCaption(Caption* caption)
@@ -1892,5 +1934,10 @@ void   Text::_doMarkup(size_t& index)
 #undef GET_SPRITE_OR_DIE
 #undef GET_RECTANGLE_OR_DIE
 #undef GET_LINE_OR_DIE
+#undef GET_LINE_OR_DIE_TRYING
 #undef GET_BOB_OR_DIE
 #undef GET_BOB_OR_DIE_TRYING
+#undef GET_CAPTION_OR_DIE
+#undef GET_BOX_OR_DIE
+#undef GET_CAPTION_OR_DIE_TRYING
+#undef PUSH_VERTEX_NOUV

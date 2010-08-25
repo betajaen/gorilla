@@ -33,7 +33,7 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
    mCanvas = mScreen->createCanvas(14);
    mFPS = mScreen->createText(10,10, "FPS: 0, Batches: 0", 15);
    mFPSBackground = mCanvas->addRectangle(10,10, 128,15, Gorilla::rgb(255,0,0,255));
-
+   
   }
   
  ~App()

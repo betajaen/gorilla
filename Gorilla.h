@@ -52,8 +52,9 @@ namespace Gorilla
   ~Silverback();
    
    void  loadAtlas(const Ogre::String& name, const Ogre::String& group = Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+   
    Screen*  createScreen(Ogre::Viewport*, const Ogre::String& atlas);
-   void  destroyScreen(Screen*);
+   void     destroyScreen(Screen*);
    
   protected:
    
@@ -596,7 +597,6 @@ namespace Gorilla
    
    inline void      pushGlyph(Glyph*, Ogre::Real left, Ogre::Real top, const Ogre::ColourValue& colour);
    
-   
    inline void      _redrawNeeded()
    {
     mRedrawNeeded = true;
@@ -660,17 +660,24 @@ namespace Gorilla
    void    removeLine(size_t);
    void    setLineColour(size_t, const Ogre::ColourValue&);
    void    setLineCoords(size_t, Ogre::Real x1, Ogre::Real y1, Ogre::Real x2, Ogre::Real y2);
+   void    setLineCoords(size_t, const Ogre::Vector4& coords);
    void    setLineOrigin(size_t, Ogre::Real x1, Ogre::Real y1);
    void    setLineEnd(size_t, Ogre::Real x2, Ogre::Real y2);
    void    setLineThickness(size_t, Ogre::Real thickness);
+   Ogre::ColourValue getLineColour(size_t id) const;
+   Ogre::Vector4  getLineCoords(size_t id) const;
+   Ogre::Real  getLineThickness(size_t id) const;
    
-   size_t  addCaption(Ogre::Real left, Ogre::Real top, const Ogre::String&);
+   
+   size_t  addCaption(Ogre::Real left, Ogre::Real top, const Ogre::String&, const Ogre::ColourValue& colour = Ogre::ColourValue::White);
    void    removeCaption(size_t);
    void    setCaptionPosition(size_t, Ogre::Real left, Ogre::Real top);
    void    setCaptionText(size_t, const Ogre::String& text);
    void    setCaptionHorizontalClip(size_t, Ogre::Real clip);
    void    setCaptionColour(size_t, const Ogre::ColourValue&);
-   
+   Ogre::Vector2 getCaptionPosition(size_t) const;
+   Ogre::String  getCaptionString(size_t) const;
+   Ogre::ColourValue getCaptionColour(size_t) const;
    Ogre::Vector2 getCaptionSize(size_t);
    void    _calculateCaptionSize(Caption*);
    
@@ -679,6 +686,9 @@ namespace Gorilla
    void    setBoxPosition(size_t, Ogre::Real left, Ogre::Real top);
    void    setBoxSize(size_t, Ogre::Real width, Ogre::Real height);
    void    setBoxColour(size_t, const Ogre::ColourValue&);
+   Ogre::Vector2 getBoxPosition(size_t) const;
+   Ogre::Vector2 getBoxSize(size_t) const;
+   Ogre::ColourValue getBoxColour(size_t) const;
    
   protected:
    
