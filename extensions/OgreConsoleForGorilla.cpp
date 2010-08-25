@@ -99,8 +99,11 @@ void OgreConsole::onKeyPressed(const OIS::KeyEvent &arg)
 
  else if (arg.key == OIS::KC_BACK)
  {
-  prompt.erase(prompt.end() - 1); //=prompt.substr(0,prompt.length()-1);
-  mUpdatePrompt = true;
+  if (prompt.size())
+  {
+   prompt.erase(prompt.end() - 1); //=prompt.substr(0,prompt.length()-1);
+   mUpdatePrompt = true;
+  }
  }
  else if (arg.key == OIS::KC_PGUP)
  {

@@ -19,16 +19,17 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
   
   Gorilla::Text*          mFPS;
   Ogre::Real              mTimer;
+  bool                    mShutdown;
   
   enum Refs
   {
-   MENU_ABOUT,
+   MENU_EXPLODE,
    MENU_QUIT,
-   QUIT,
    ADJUST_ROT_SPEED,
+   MAKE_SANDWICH
   };
 
-  App() : mNextUpdate(0), mTimer(0)
+  App() : mNextUpdate(0), mTimer(0), mShutdown(false)
   {
    
    _makeOgre();
@@ -44,36 +45,27 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
    mFPS = fpsScreen->createText(1, mViewport->getActualHeight() - 24, "0 (0)", 15);
 
    // Do BetaGUI!
-
    mScreen = mGorilla->createScreen(mViewport, "dejavu");
    mGUI = new BetaGUI::GUI(mScreen, this);
-   BetaGUI::Window* window = mGUI->createWindow("BetaGUI", Ogre::Vector2(10,10), Ogre::Vector2(200,500));
+   BetaGUI::Window* window = mGUI->createWindow("BetaGUI", Ogre::Vector2(10,10), Ogre::Vector2(200,300));
    BetaGUI::MenuItems file_menu;
-   file_menu.push_back(BetaGUI::MenuItem("About", MENU_ABOUT));
+   file_menu.push_back(BetaGUI::MenuItem("Explode!", MENU_EXPLODE));
    file_menu.push_back(BetaGUI::MenuItem("Quit", MENU_QUIT));
    window->createPopup(Ogre::Vector2(0,0), "File", file_menu);
    
    window->createLabel(Ogre::Vector2(0,25), "Rot.");
    window->createTextBox(Ogre::Vector2(60,25), "0.0005", 8, ADJUST_ROT_SPEED);
-
-/*
-   window->createButton(Ogre::Vector2(5,10), "This is a button");
-   window->createTextBox(Ogre::Vector2(5,40), "1234");
-   window->createProgress(Ogre::Vector2(5,70), 0.35f);
-   window->createLabel(Ogre::Vector2(5,100), "This is a label");
-   BetaGUI::MenuItems items;
-   items.push_back(BetaGUI::MenuItem("Open", 0));
-   items.push_back(BetaGUI::MenuItem("Save", 1));
-   items.push_back(BetaGUI::MenuItem("Save As", 2));
-   items.push_back(BetaGUI::MenuItem("Quit", 3));
-   window->createPopup(Ogre::Vector2(5,130), "This is a popup", items);
+   
+   window->createLabel(Ogre::Vector2(5,70), "Sandwich maker");
    BetaGUI::MenuItems choice_items;
-   choice_items.push_back(BetaGUI::MenuItem("one",1));
-   choice_items.push_back(BetaGUI::MenuItem("two",2));
-   choice_items.push_back(BetaGUI::MenuItem("three",3));
-   choice_items.push_back(BetaGUI::MenuItem("four",4));
-   window->createChoice(Ogre::Vector2(5,160), choice_items);
-*/
+   choice_items.push_back(BetaGUI::MenuItem("jam",1));
+   choice_items.push_back(BetaGUI::MenuItem("peanut",2));
+   choice_items.push_back(BetaGUI::MenuItem("banana",3));
+   choice_items.push_back(BetaGUI::MenuItem("cheese",4));
+   window->createChoice(Ogre::Vector2(5,100), choice_items);
+   window->createButton(Ogre::Vector2(70,100), "Make it!", MAKE_SANDWICH);
+   window->createProgress(Ogre::Vector2(5,130), 0.55f);
+   
   }
   
  ~App()
@@ -83,19 +75,38 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
    delete mRoot;
   }
   
-  void onTextEntered(BetaGUI::TextBox* box, size_t ref)
+
+  void onButtonPressed(BetaGUI::Widget*, size_t widget_ref)
   {
-   if (ref == ADJUST_ROT_SPEED)
+   if (widget_ref == MAKE_SANDWICH)
+    std::cout << "Made. Go find it in your fridge\n";
+  }
+  
+  void onTextEntered(BetaGUI::TextBox* box, size_t widget_ref)
+  {
+   if (widget_ref == ADJUST_ROT_SPEED)
    {
     Ogre::Real val = Ogre::StringConverter::parseReal(box->getValue());
     tus->setRotateAnimation(val);
    }
   }
   
+  void onChoice(BetaGUI::Choice*, size_t widget_ref, size_t menu_item)
+  {
+  }
+  
+  void onMenuSelected(BetaGUI::Popup*, size_t widget_ref, size_t menu_item)
+  {
+   if (menu_item == MENU_EXPLODE)
+    std::cout << "BOOOOOM!\n";
+   if (menu_item == MENU_QUIT)
+    mShutdown = true;
+  }
+  
   bool frameStarted(const Ogre::FrameEvent& evt)
   {
    
-   if (mWindow->isClosed())
+   if (mWindow->isClosed() || mShutdown)
     return false;
    
    mKeyboard->capture();

@@ -32,8 +32,11 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
    mScreen = mGorilla->createScreen(mViewport, "dejavu");
    mCanvas = mScreen->createCanvas(14);
    mFPS = mScreen->createText(10,10, "FPS: 0, Batches: 0", 15);
-   mFPSBackground = mCanvas->addRectangle(10,10, 128,15, Gorilla::rgb(255,0,0,255));
+   mFPSBackground = mCanvas->addRectangle(10,10, 128,15, Gorilla::rgb(255, 69, 0,255));
    
+   size_t ogre = mCanvas->addRectangle(64,64,48*4,48*4);
+   mCanvas->setRectangleBackground(ogre, "ogrehead");
+  
   }
   
  ~App()
@@ -116,7 +119,7 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
    mSceneMgr = mRoot->createSceneManager(Ogre::ST_GENERIC);
    mCamera = mSceneMgr->createCamera("Camera");
    mViewport = mWindow->addViewport(mCamera);
-   mViewport->setBackgroundColour(Gorilla::rgb(13, 13, 13));
+   mViewport->setBackgroundColour(Gorilla::rgb(173,216,230));
    
    rgm->initialiseAllResourceGroups();
   }

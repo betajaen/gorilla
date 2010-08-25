@@ -71,13 +71,13 @@ namespace BetaGUI
    
    ~Callback() {}
    
-   virtual void onButtonPressed(Widget*, size_t) {}
+   virtual void onButtonPressed(Widget*, size_t widget_ref) {}
    
-   virtual void onTextEntered(TextBox*, size_t) {}
+   virtual void onTextEntered(TextBox*, size_t widget_ref) {}
     
-   virtual void onChoice(Choice*, size_t) {}
+   virtual void onChoice(Choice*, size_t widget_ref, size_t menu_item) {}
    
-   virtual void onMenuSelected(Popup*, size_t) {}
+   virtual void onMenuSelected(Popup*, size_t widget_ref, size_t menu_item) {}
    
  };
  

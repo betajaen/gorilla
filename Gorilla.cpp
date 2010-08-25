@@ -721,8 +721,17 @@ void  Screen::renderQueueEnded(Ogre::uint8 queueGroupId, const Ogre::String& inv
  if (queueGroupId == Ogre::RENDER_QUEUE_OVERLAY)
  {
   
-  // TODO: Check Viewport size here, if changed then call _redraw all
-  
+  if (mViewport->getActualWidth() != mViewportWidth || mViewport->getActualHeight() != mViewportHeight)
+  {
+   
+   mViewportWidth = mViewport->getActualWidth();
+   mViewportHeight = mViewport->getActualHeight();
+   mInvViewportWidth = 1.0f / mViewportWidth;
+   mInvViewportHeight = 1.0f / mViewportHeight;
+   
+   _redrawAll();
+  }
+
   // Check to see if redraw needed here.
   if ( mLayerRedrawNeeded == true)
   {

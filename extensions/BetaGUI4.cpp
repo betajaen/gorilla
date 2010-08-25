@@ -675,7 +675,7 @@ Button::~Button()
 
 bool Button::activate()
 {
- std::cout << "Clicked!\n";
+ mWindow->getGUI()->getCallback()->onButtonPressed(this, mRef);
  return false; // Don't want focus.
 }
 
@@ -831,7 +831,7 @@ bool Popup::activate()
 
 void Popup::onMenuSelection(size_t ref)
 {
- mWindow->getGUI()->getCallback()->onMenuSelected(this, ref);
+ mWindow->getGUI()->getCallback()->onMenuSelected(this, mRef, ref);
 }
 
 Choice*  Window::createChoice(const Ogre::Vector2& position, const MenuItems& items, size_t ref)
@@ -867,7 +867,6 @@ bool Choice::activate()
 
 void Choice::onMenuSelection(size_t ref)
 {
- 
  for (size_t i=0;i < mItems.size();i++)
  {
   if (ref == mItems[i].ref)
@@ -877,7 +876,7 @@ void Choice::onMenuSelection(size_t ref)
   }
  }
  
- mWindow->getGUI()->getCallback()->onChoice(this, ref);
+ mWindow->getGUI()->getCallback()->onChoice(this, mRef, ref);
 }
 
 } // BetaGUI
