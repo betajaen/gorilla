@@ -368,6 +368,7 @@ namespace Gorilla
    protected:
     
     TextureAtlas(const Ogre::String& gorillaFile, const Ogre::String& group);
+    
    ~TextureAtlas();
     
     void  _reset();
@@ -415,34 +416,6 @@ namespace Gorilla
    
    void          destroy(Renderable*);
    
-   inline void      vpX(Ogre::Real& x)
-   {
-     if (x < 0) // Becomes right.
-      x = mViewportWidth + x;
-     
-     vpW(x);
-   }
-   
-   inline void      vpY(Ogre::Real& y)
-   {
-     if (y < 0) // Becomes bottom.
-      y = mViewportHeight + y;
-     
-     vpH(y);
-   }
-   
-   inline void      vpW(Ogre::Real& x)
-   {
-     x *= mInvViewportWidth;
-     x = (x * 2) - 1;
-   }
-   
-   inline void      vpH(Ogre::Real& y)
-   {
-     y *= mInvViewportHeight;
-     y = 1 - (y * 2);
-   }
-   
    inline Ogre::Real  getViewportWidth() const
    { 
     return mViewportWidth;
@@ -452,9 +425,42 @@ namespace Gorilla
    { 
     return mViewportHeight;
    }
+   
+   inline TextureAtlas* getAtlas() const
+   {
+    return mAtlas;
+   }
+   
+   inline void  _getViewportX(Ogre::Real& x)
+   {
+     if (x < 0) // Becomes right.
+      x = mViewportWidth + x;
+     
+     _getViewportX2(x);
+   }
+   
+   inline void  _getViewportY(Ogre::Real& y)
+   {
+     if (y < 0) // Becomes bottom.
+      y = mViewportHeight + y;
+     
+     _getViewportY2(y);
+   }
+   
+   inline void  _getViewportX2(Ogre::Real& x)
+   {
+     x *= mInvViewportWidth;
+     x = (x * 2) - 1;
+   }
+   
+   inline void  _getViewportY2(Ogre::Real& y)
+   {
+     y *= mInvViewportHeight;
+     y = 1 - (y * 2);
+   }
 
-   void  layerRedrawRequested(Ogre::uint layer);
-
+   void  _forceViewportChange();
+   
    void  _registerListener();
    void  _unregisterListener();
 
@@ -462,6 +468,7 @@ namespace Gorilla
    void  _destroyBuffer();
    void  _checkBuffer(size_t requestedSize);
 
+   void  _layerRedrawRequested(Ogre::uint layer);
    void  _calculateLayers();
    void  _redrawAll();
    void  _redrawLayer(Ogre::uint id);
@@ -471,8 +478,6 @@ namespace Gorilla
    void  _render();
    
    void  renderQueueEnded(Ogre::uint8 queueGroupId, const Ogre::String& invocation, bool& repeatThisInvocation);
-   
-   inline TextureAtlas*     getAtlas() const { return mAtlas; }
    
   protected:
    
@@ -491,10 +496,6 @@ namespace Gorilla
    TextureAtlas*            mAtlas;
    std::vector<Renderable*> mRenderables;            // Master copy of all Renderables.
    
-   // Go through the renderables, get depth of each then add to Depths.
-   // Then lock the buffer, then each renderable in depth order, tell them to render
-   // to a shared vertex.
-   // unlock buffer.
    buffer<Renderable*>      mLayers[16];             // Pointers to Renderables in QuadBuffer sorted by Depth.
    buffer<Vertex>           mVertexLayerBuffer[16];  // Compiled vertex layer for each depth.
    bool                     mRedrawLayerNeeded[16];  // If a layer needs a full redraw.
@@ -559,29 +560,29 @@ namespace Gorilla
     return mMax;
    }
    
-   inline void      vpX(Ogre::Real& x)
+   inline void      _getViewportX(Ogre::Real& x)
    {
-    return mScreen->vpX(x);
+    return mScreen->_getViewportX(x);
    }
    
-   inline void      vpY(Ogre::Real& y)
+   inline void      _getViewportY(Ogre::Real& y)
    {
-    return mScreen->vpY(y);
+    return mScreen->_getViewportY(y);
    }
    
-   inline void      vpW(Ogre::Real& w)
+   inline void      _getViewportX2(Ogre::Real& w)
    {
-    return mScreen->vpW(w);
+    return mScreen->_getViewportX2(w);
    }
    
-   inline void      vpH(Ogre::Real& h)
+   inline void      _getViewportY2(Ogre::Real& h)
    {
-    return mScreen->vpH(h);
+    return mScreen->_getViewportY2(h);
    }
    
    inline void      requestLayerRedraw()
    {
-    mScreen->layerRedrawRequested(mLayer);
+    mScreen->_layerRedrawRequested(mLayer);
    }
    
    void render(buffer<Vertex>&);

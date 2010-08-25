@@ -687,7 +687,7 @@ void  Screen::_redrawLayer(Ogre::uint id)
  
 }
 
-void  Screen::layerRedrawRequested(Ogre::uint layer)
+void  Screen::_layerRedrawRequested(Ogre::uint layer)
 {
  mLayerRedrawNeeded = true;
  mRedrawLayerNeeded[layer] = true;
@@ -714,6 +714,16 @@ void  Screen::_copyToVertexBuffer()
  
  mVertexBuffer->unlock();
  mRenderOp.vertexData->vertexCount = mKnownVertexCount;
+}
+
+void  Screen::_forceViewportChange()
+{
+ mViewportWidth = mViewport->getActualWidth();
+ mViewportHeight = mViewport->getActualHeight();
+ mInvViewportWidth = 1.0f / mViewportWidth;
+ mInvViewportHeight = 1.0f / mViewportHeight;
+
+ _redrawAll();
 }
 
 void  Screen::renderQueueEnded(Ogre::uint8 queueGroupId, const Ogre::String& invocation, bool& repeatThisInvocation)
@@ -890,8 +900,8 @@ void Renderable::pushQuad(const Quad& quad, const Ogre::Radian& angle)
     mVertices[i].position.y = Ogre::Math::Sin(angle) * t1 + Ogre::Math::Cos(angle) * t2 + quad.top;
   }
 
-  vpW(mVertices[i].position.x);
-  vpH(mVertices[i].position.y);
+  _getViewportX2(mVertices[i].position.x);
+  _getViewportY2(mVertices[i].position.y);
 
   if      (mVertices[i].position.x < mMin.x)   mMin.x = mVertices[i].position.x;
   else if (mVertices[i].position.x > mMax.x)   mMax.x = mVertices[i].position.x;
@@ -951,8 +961,8 @@ void  Renderable::pushLine(const Ogre::Vector2& a, const Ogre::Vector2& b, Ogre:
   if      (mVertices[i].position.y < mMin.y)   mMin.y = mVertices[i].position.y;
   else if (mVertices[i].position.y > mMax.y)   mMax.y = mVertices[i].position.y;
   
-  vpW(mVertices[i].position.x);
-  vpH(mVertices[i].position.y);
+  _getViewportX2(mVertices[i].position.x);
+  _getViewportY2(mVertices[i].position.y);
   
  }
   
@@ -1011,8 +1021,8 @@ void  Renderable::pushSprite(const Ogre::Vector2& position, const Ogre::Vector2&
   if      (mVertices[i].position.y < mMin.y)   mMin.y = mVertices[i].position.y;
   else if (mVertices[i].position.y > mMax.y)   mMax.y = mVertices[i].position.y;
   
-  vpW(mVertices[i].position.x);
-  vpH(mVertices[i].position.y);
+  _getViewportX2(mVertices[i].position.x);
+  _getViewportY2(mVertices[i].position.y);
  }
   
 }
@@ -1064,8 +1074,8 @@ void  Renderable::pushGlyph(Glyph* glyph, Ogre::Real left, Ogre::Real top, const
   if      (mVertices[i].position.y < mMin.y)   mMin.y = mVertices[i].position.y;
   else if (mVertices[i].position.y > mMax.y)   mMax.y = mVertices[i].position.y;
   
-  vpW(mVertices[i].position.x);
-  vpH(mVertices[i].position.y);
+  _getViewportX2(mVertices[i].position.x);
+  _getViewportY2(mVertices[i].position.y);
   
  }
   
@@ -1127,8 +1137,8 @@ void  Renderable::pushBox(const Quad& quad)
  for (size_t i = mVertices.size()-(4*6);i < mVertices.size();i++)
  {
   
-  vpW(mVertices[i].position.x);
-  vpH(mVertices[i].position.y);
+  _getViewportX2(mVertices[i].position.x);
+  _getViewportY2(mVertices[i].position.y);
 
   if      (mVertices[i].position.x < mMin.x)   mMin.x = mVertices[i].position.x;
   else if (mVertices[i].position.x > mMax.x)   mMax.x = mVertices[i].position.x;
