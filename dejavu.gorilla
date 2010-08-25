@@ -203,12 +203,6 @@ glyph_103 105 -3
 mousepointer 54 464 15 22
 ogrehead 0 464 48 48
 cursor 79 466 10 18
-button_left 1 419 11 24
-button_middle 17 419 7 24
-button_right 29 419 11 24
-textbox_left 88 419 5 24
-textbox_middle 101 419 5 24
-textbox_right 121 419 5 24
 resizer 11 446 10 10
 shadow_n 110 460 1 5
 shadow_ne 111 460 5 5
