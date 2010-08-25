@@ -531,14 +531,14 @@ Example Usage
 Simple FPS monitor
 ------------------
 
-### Member variables
+Member variables
     
     Gorilla::Silverback*  mGorilla;
     Gorilla::Screen*      mScreen;
     Gorilla::Text*        mFPS;
     Ogre::Real            mFPSTimer;
 
-### Create function
+Create function
     
     mGorilla = new Gorilla::Silverback();
     mGorilla->loadAtlas("dejavu");
@@ -546,7 +546,7 @@ Simple FPS monitor
     mFPS = mScreen->createText(10,10, "", 15);
     mFPSTimer = 0;
 
-### Update function
+Update function
     
     mTimer += evt.timeSinceLastFrame;
     if (mTimer > 1.0f / 60.0f)
@@ -555,3 +555,6 @@ Simple FPS monitor
      mFPS->setText("FPS: " + Ogre::StringConverter::toString(mWindow->getLastFPS()));
     }
 
+---
+
+END
