@@ -50,11 +50,11 @@ everything in one batch.
 
 Gorilla can support
 
-* Filled (Solid, Gradient or Sprite-based) Rectangles (Rectangle)
-* Outlined Rectangles (Box)
-* Lines with n-thickness (Line)
-* Sprites
-* Simple and Formatted Text (Captions and Text)
+* Filled (Solid, Gradient or Sprite-based) Rectangles (Canvas Rectangles)
+* Outlined Rectangles (Canvas Boxes)
+* Lines with n-thickness (Canvas Lines)
+* Sprites (SpriteLayer Sprites)
+* Plain and formatted text (Canvas Captions and Text)
 
 Beastie only uses Ogre as a dependency, and is developed with Ogre 1.7 in mind;  
 but should work with any 1.x version.
@@ -76,7 +76,7 @@ Silverback is a singleton so should be created roughly after Root is created and
 
 To create the Silverback, just create an instance
 
-  mSilverback = new Gorilla::Silverback();
+    mSilverback = new Gorilla::Silverback();
 
 
 TextureAtlas
@@ -88,7 +88,7 @@ The TextureAtlas file represents a `.gorilla` file which contains all the needed
 
 To load in a `.gorilla` file simply, load it in.
 
-  mSilverback->loadAtlas("dejavu")
+    mSilverback->loadAtlas("dejavu")
   
 This will reference the "dejavu.gorilla" file in the General ResourceGroup. The dejavu.gorilla file and accompanying image file may then be stored in a sub-directory or compressed file, assuming Ogre can access it.
 
@@ -99,5 +99,54 @@ A screen is a container class for all 2D operations upon the RenderWindow, it is
 
 Screens need a Viewport to render too, and will get the SceneManager from the Viewport's Camera to listen for drawing updates. All Screen drawings are done after the RENDER_QUEUE_OVERLAY renderqueue.
 
-  Gorilla::Screen* screen = mSilverback->createScreen(mViewport, "dejavu");
+    Gorilla::Screen* screen = mSilverback->createScreen(mViewport, "dejavu");
+
+
+Canvas, Text and SpriteLayers
+=============================
+
+There are three main types of operations that are drawn onto the screen;
+
+* Canvas
+* Text
+* SpriteLayer
+
+Like Screen's you can have many Canvases, Text or SpriteLayers. Collectively these are known as Renderables. As all of these belong to a single Screen, they are all rendered in the same single batch.
+
+To help with z-ordering, renderables are assigned to a layer from 0-15. Renderables on layer 0 are rendered first and on 15 rendered last. This means that anything on layer 15 will be "on top" of layer 14, 13 on 12, 12 on 10 and so on.
+
+Handles
+-------
+
+In the Canvas and SpriteLayer classes, portions of these are handled by size_t types known as "handles", or if you wish an internal id for a line, box, sprite, etc.
+
+To change a line colour for example; you need to pass on the new colour, and the handle of the line you wish to change, to the Canvas, setLineColour function. 
+
+Canvas
+------
+
+The Canvas class is the bulk of Gorilla, it is used to draw Rectangles, Boxes, Lines and non-formatted single lined text known as Captions. Typically for the shape drawing operations a single white pixel is reserved on the Texture which the shapes use the UV coordinates for. Captions (like its big brother Text) use the Glyphs from the TextureAtlas.
+
+    screen->createCanvas(3)   // where 3 is the layer number, 0 is default.
+
+Text
+----
+
+Text is a renderable which it's sole purpose is to draw a large block of text that may cover multiple lines, be in different colours and even have sprites inserted within the text itself.
+
+Text is reserved for "big" things; such as messages, command prompts, rather than little things than the health of the player (which would probably be done in a Canvas using a Caption).
+
+Text uses a markup system to change colours (these are set/fetched from the TextureAtlas palette), to inserting sprites into the text.
+
+A sample of the markup is as follows:
+
+    Wow look at this %4scary%R picture of an Ogre! %:ogre_head%
+
+Which means draw the text, but for "scary" render it in colour 4, and after "Ogre!" put the sprite "ogre_head" there.
+
+
+SpriteLayer
+-----------
+
+A SpriteLayer is to draw 2D quads on the screen known as sprites. You may use sprites for a number of things from displaying the inventory of the player, to a full mini 2D shoot 'em up.
 
