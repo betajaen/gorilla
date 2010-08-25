@@ -308,40 +308,40 @@ Set the rectangle coordinates using min/max coordinates. Where min is the coordi
 
 min/max is measured in pixels
 
-### size_t  addLine(Ogre::Real x1, Ogre::Real y1, Ogre::Real x2, Ogre::Real y2, Ogre::Real thickness, const Ogre::ColourValue& colour);
+### size_t  addLine(Ogre::Real x1, Ogre::Real y1, Ogre::Real x2, Ogre::Real y2, Ogre::Real thickness, const Ogre::ColourValue& colour)
    
 Add a line at x1,y1 and draw it to x2,y2, with a given thickness. If the colour is omitted then the line colour is assumed to be white.
 
-### void removeLine(size_t)
+### void removeLine(size_t id)
 
 Remove a line by the given handle
 
-### void setLineColour(size_t, const Ogre::ColourValue&)
+### void setLineColour(size_t id, const Ogre::ColourValue&)
 
 Change the line colour to something else.
 
-### void setLineCoords(size_t, Ogre::Real x1, Ogre::Real y1, Ogre::Real x2, Ogre::Real y2)
+### void setLineCoords(size_t id, Ogre::Real x1, Ogre::Real y1, Ogre::Real x2, Ogre::Real y2)
 
 Change the line coordinates to something else.
 
-### void setLineCoords(size_t, const Ogre::Vector4& coords)
+### void setLineCoords(size_t id, const Ogre::Vector4& coords)
 
-Change the line coordinates to something else; using a Vector4.
+Change the line coordinates to something else using a Vector4.
 
     x --> x1
     y --> y1
     z --> x2
     w --> y2
 
-### void setLineOrigin(size_t, Ogre::Real x1, Ogre::Real y1)
+### void setLineOrigin(size_t id, Ogre::Real x1, Ogre::Real y1)
 
 Change the line origin (x1,y1) to something else.
 
-### void setLineEnd(size_t, Ogre::Real x2, Ogre::Real y2)
+### void setLineEnd(size_t id, Ogre::Real x2, Ogre::Real y2)
 
 Change the line end (x2,y2) to something else
 
-### void setLineThickness(size_t, Ogre::Real thickness)
+### void setLineThickness(size_t id, Ogre::Real thickness)
 
 Set the line thickness (in pixels)
 
@@ -368,41 +368,41 @@ Add a piece of text at left/top. If the colour is omitted then the line colour i
 
 Note: Captions ignore markup and all special characters including newlines `\n`.
 
-### void removeCaption(size_t);
+### void removeCaption(size_t id)
 
 Remove a caption
 
-### void setCaptionPosition(size_t, Ogre::Real left, Ogre::Real top)
+### void setCaptionPosition(size_t id, Ogre::Real left, Ogre::Real top)
 
 Set a caption's position
 
-### void setCaptionText(size_t, const Ogre::String& text)
+### void setCaptionText(size_t id, const Ogre::String& text)
 
 Change the text of a caption
 
-### void setCaptionHorizontalClip(size_t, Ogre::Real clip)
+### void setCaptionHorizontalClip(size_t id, Ogre::Real clip)
 
 When a caption is drawn across the screen, it should stop drawing after it's reached "clip".
 
 clip is measured in pixels, where the text should stop being drawn.
 
-### void    setCaptionColour(size_t, const Ogre::ColourValue&)
+### void    setCaptionColour(size_t id, const Ogre::ColourValue&)
 
 Set the colour of the caption
 
-### Ogre::Vector2 getCaptionPosition(size_t) const
+### Ogre::Vector2 getCaptionPosition(size_t id) const
 
 Get the caption's position
 
-### Ogre::String  getCaptionString(size_t) const
+### Ogre::String  getCaptionString(size_t id) const
 
 Get the text being drawn by the caption
 
-### Ogre::ColourValue getCaptionColour(size_t) const
+### Ogre::ColourValue getCaptionColour(size_t id) const
 
 Get the colour of the caption
 
-### Ogre::Vector2 getCaptionSize(size_t)
+### Ogre::Vector2 getCaptionSize(size_t id)
 
 Get the complete size of the caption, measured in pixels.
 
@@ -410,31 +410,31 @@ Get the complete size of the caption, measured in pixels.
 
 Add a box (outlined rectangle) at left/top with the size of width/height. If the colour is omitted then the line colour is assumed to be white.
 
-### void  removeBox(size_t);
+### void  removeBox(size_t id)
 
 Remove a box
 
-### void  setBoxPosition(size_t, Ogre::Real left, Ogre::Real top)
+### void  setBoxPosition(size_t id, Ogre::Real left, Ogre::Real top)
 
 Move a box to a new position
 
-### void  setBoxSize(size_t, Ogre::Real width, Ogre::Real height)
+### void  setBoxSize(size_t id, Ogre::Real width, Ogre::Real height)
 
 Set a box's new size
 
-### void  setBoxColour(size_t, const Ogre::ColourValue&)
+### void  setBoxColour(size_t id, const Ogre::ColourValue&)
 
 Set a box's colour
 
-### Ogre::Vector2  getBoxPosition(size_t) const
+### Ogre::Vector2  getBoxPosition(size_t id) const
 
 Get a box's position
 
-### Ogre::Vector2  getBoxSize(size_t) const
+### Ogre::Vector2  getBoxSize(size_t id) const
 
 Get a box's size
 
-### Ogre::ColourValue  getBoxColour(size_t) const
+### Ogre::ColourValue  getBoxColour(size_t id) const
  
 Get a box's colour
 
@@ -497,11 +497,11 @@ Get the X position
 SpriteLayer
 -----------
 
-### size_t  addSprite(Ogre::Real left, Ogre::Real top, const Ogre::String& name);
+### size_t  addSprite(Ogre::Real left, Ogre::Real top, const Ogre::String& name)
 
 Add a sprite at left/top. Set the sprite image to name which is fetched from the TextureAtlas.
 
-### void  removeSprite(size_t id);
+### void  removeSprite(size_t id)
 
 Remove a sprite.
 
@@ -517,11 +517,41 @@ Change the image of a sprite to another one.
 
 Set the scale of the sprite
 
-### Ogre::Vector2  getSpritePosition(size_t)
+### Ogre::Vector2  getSpritePosition(size_t id)
 
 Get a Sprite's position
 
-### Ogre::Vector2  getSpriteScale(size_t)
+### Ogre::Vector2  getSpriteScale(size_t id)
 
 Get a sprite's scale
+
+Example Usage
+=============
+
+Simple FPS monitor
+------------------
+
+### Member variables
+    
+    Gorilla::Silverback*  mGorilla;
+    Gorilla::Screen*  mScreen;
+    Gorilla::Text*  mFPS;
+    Ogre::Real      mFPSTimer;
+
+### Create function
+    
+    mGorilla = new Gorilla::Silverback();
+    mGorilla->loadAtlas("dejavu");
+    mScreen = mGorilla->createScreen(mViewport, "dejavu");
+    mFPS = mScreen->createText(10,10, "", 15);
+    mFPSTimer = 0;
+
+### Update function
+
+   mTimer += evt.timeSinceLastFrame;
+   if (mTimer > 1.0f / 60.0f)
+   {
+    mTimer = 0;
+    mFPS->setText("FPS: " + Ogre::StringConverter::toString(mWindow->getLastFPS()));
+   }
 
