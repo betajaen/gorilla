@@ -159,37 +159,37 @@ Classes
 Silverback
 ----------
 
-### `void loadAtlas(const Ogre::String& name, const Ogre::String& group)`
+### void loadAtlas(const Ogre::String& name, const Ogre::String& group)
 
 Create a TextureAtlas from a ".gorilla" file. Name is the name of
 the TextureAtlas, as well as the first part of the filename of the gorilla file; i.e. name.gorilla, the gorilla file can be loaded from a different resource group if you give that name as the second argument, otherwise it will assume to be "General".
 
-### `Screen*  createScreen(Ogre::Viewport*, const Ogre::String& atlas)`
+### Screen*  createScreen(Ogre::Viewport*, const Ogre::String& atlas)
 
 Create a Screen using a Viewport and a name of a previously loaded TextureAtlas. Both must exist. The screen will register itself as a RenderQueueListener to the SceneManager that has the Camera which is tied to the Viewport.
 
 Each screen is considered a new batch. To reduce your batch count in Gorilla, reduce the number of screens you use.
 
-### `void  destroyScreen(Screen*);`
+### void  destroyScreen(Screen*);
 
 Destroy an existing screen (and contents).
 
 Screen
 ------
 
-### `Canvas*  createCanvas(int layer)`
+### Canvas*  createCanvas(int layer)
 
 Create a new Canvas to draw too. If layer is omitted then "0" is assumed to be the layer, otherwise layer id must be between 0 and 15.
 
 As with screens there can be many Canvases per screen.
 
-### `SpriteLayer*  createSpriteLayer(int layer)`
+### SpriteLayer*  createSpriteLayer(int layer)
 
 Create a new SpriteLayer for Sprites.  If layer is omitted then "0" is assumed to be the layer, otherwise layer id must be between 0 and 15.
 
 As with screens there can be many SpriteLayers per screen.
 
-### `Text*  createText(Ogre::Real left, Ogre::Real top, const Ogre::String& initialText, int layer)`
+### Text*  createText(Ogre::Real left, Ogre::Real top, const Ogre::String& initialText, int layer)
 
 Create a formatted text on the screen, with the coordinates given as left and top. initialText can be blank if desired.
 
@@ -204,7 +204,7 @@ If layer is omitted then "0" is assumed to be the layer, otherwise layer id must
                     be changed to the height of the sprite.
     %%              Insert a percentage sign %.
 
-### `void  destroy(Renderable*)`
+### void  destroy(Renderable*)
    
 Destroy (and destroy its contents) of a Canvas, SpriteLayer or Text.
 
@@ -212,33 +212,33 @@ Destroy (and destroy its contents) of a Canvas, SpriteLayer or Text.
 Renderable (inherited by Canvas, SpriteLayer and Text)
 ------------------------------------------------------
 
-### `bool isVisible()`
+### bool isVisible()
 
 Is the Renderable visible?
 
-### `void setVisible(bool is_visible)`
+### void setVisible(bool is_visible)
 
 Set the Renderable to invisible or visible. If the Renderable is marked invisible, then it will not be drawn. The triangle count may go down, but the batch count will not.
 
-### `void show()`
+### void show()
 
-Equilvant to `setVisible(true)`
+Equilvant to setVisible(true)
 
-### `void hide()`
+### void hide()
 
-Equilvant to `setVisible(false)`
+Equilvant to setVisible(false)
 
-### `Ogre::uint getLayer()`
+### Ogre::uint getLayer()
 
 Get the layer id from 0 to 15.
 
-### `Ogre::Vector2 getMin()`
+### Ogre::Vector2 getMin()
 
 Get the nearest vertex drawn to the top-left of the screen.
 
 These units are in screen coordinates, and can only be given to functions that accept those units.
 
-### `Ogre::Vector2 getMax()`
+### Ogre::Vector2 getMax()
 
 Get the nearest vertex drawn to the bottom-right of the screen.
 
@@ -248,7 +248,7 @@ These units are in screen coordinates, and can only be given to functions that a
 Canvas (inherits Renderable)
 ----------------------------
 
-### `size_t addRectangle(Ogre::Real left, Ogre::Real top, Ogre::Real width, Ogre::Real height, const Ogre::ColourValue& colour)`
+### size_t addRectangle(Ogre::Real left, Ogre::Real top, Ogre::Real width, Ogre::Real height, const Ogre::ColourValue& colour)
 
 Creates a filled rectangle (of colour) at left,top with the size of width, height. A handle is returned that represents that rectangle for future use.
 
@@ -256,75 +256,75 @@ If colour is omitted then White is assumed to be the colour of the rectangle
 
 left/top/width/height is measured in pixels.
 
-### `void removeRectangle(size_t id)`
+### void removeRectangle(size_t id)
 
 Remove a rectangle with given handle
 
-###  `void setRectangleColour(size_t id, const Ogre::ColourValue& colour)`
+###  void setRectangleColour(size_t id, const Ogre::ColourValue& colour)
 
 Set the rectangle's colour to something else.
 
-###  `void setRectangleColour(size_t id, const Ogre::ColourValue& topLeft, const Ogre::ColourValue& topRight, const Ogre::ColourValue& bottomRight,const Ogre::ColourValue& bottomLeft)`
+###  void setRectangleColour(size_t id, const Ogre::ColourValue& topLeft, const Ogre::ColourValue& topRight, const Ogre::ColourValue& bottomRight,const Ogre::ColourValue& bottomLeft)
 
 Set each the colour of each corner of the rectangle individually, if colours are different then a gradient between those colours will be drawn.
 
-### `void setRectanglePosition(size_t id, Ogre::Real left, Ogre::Real top)`
+### void setRectanglePosition(size_t id, Ogre::Real left, Ogre::Real top)
 
 Set the rectangle's position to somewhere else
 
 left/top is measured in pixels.
 
-### `void setRectangleSize(size_t id, Ogre::Real width, Ogre::Real height)`
+### void setRectangleSize(size_t id, Ogre::Real width, Ogre::Real height)
 
 width/height is measured in pixels.
 
 Set the rectangle's size
 
-### `void setRectangleBackground(size_t id, const Ogre::String& sprite_name, bool resetColour)`
+### void setRectangleBackground(size_t id, const Ogre::String& sprite_name, bool resetColour)
 
 Instead of using a solid colour, use a sprite instead. If the rectangle is a different size to the sprite, then the sprite will be stretched.
 
 If resetColour is true then the Colour is set to white again, otherwise the existing colour may tint/recolour the sprite. By default this argument is true.
 
-### `void clearRectangleBackground(size_t id)`
+### void clearRectangleBackground(size_t id)
 
 Use a solid colour again.
 
-### `void setRectangleAngle(size_t id, const Ogre::Degree&)`
+### void setRectangleAngle(size_t id, const Ogre::Degree&)
 
 Change the angle of the rectangle in degrees.
 
 Note: The point of rotation is the top-left corner of the rectangle.
 
-### `void setRectangleAngle(size_t id, const Ogre::Radian&)`
+### void setRectangleAngle(size_t id, const Ogre::Radian&)
 
 Change the angle of the rectangle in radians
 
 Note: The point of rotation is the top-left corner of the rectangle.
 
-### `void setRectangleMinMax(size_t id, const Ogre::Vector2& min, const Ogre::Vector2& max)`
+### void setRectangleMinMax(size_t id, const Ogre::Vector2& min, const Ogre::Vector2& max)
 
 Set the rectangle coordinates using min/max coordinates. Where min is the coordinate of the top-left corner of the rectangle and max is the coordinate of the bottom-right corner of the rectangle..
 
 min/max is measured in pixels
 
-### `size_t  addLine(Ogre::Real x1, Ogre::Real y1, Ogre::Real x2, Ogre::Real y2, Ogre::Real thickness, const Ogre::ColourValue& colour);
+### size_t  addLine(Ogre::Real x1, Ogre::Real y1, Ogre::Real x2, Ogre::Real y2, Ogre::Real thickness, const Ogre::ColourValue& colour);
    
 Add a line at x1,y1 and draw it to x2,y2, with a given thickness. If the colour is omitted then the line colour is assumed to be white.
 
-### `void removeLine(size_t)`
+### void removeLine(size_t)
 
 Remove a line by the given handle
 
-### `void setLineColour(size_t, const Ogre::ColourValue&)`
+### void setLineColour(size_t, const Ogre::ColourValue&)
 
 Change the line colour to something else.
 
-### `void setLineCoords(size_t, Ogre::Real x1, Ogre::Real y1, Ogre::Real x2, Ogre::Real y2)`
+### void setLineCoords(size_t, Ogre::Real x1, Ogre::Real y1, Ogre::Real x2, Ogre::Real y2)
 
 Change the line coordinates to something else.
 
-### `void setLineCoords(size_t, const Ogre::Vector4& coords)`
+### void setLineCoords(size_t, const Ogre::Vector4& coords)
 
 Change the line coordinates to something else; using a Vector4.
 
@@ -333,23 +333,23 @@ Change the line coordinates to something else; using a Vector4.
     z --> x2
     w --> y2
 
-### `void setLineOrigin(size_t, Ogre::Real x1, Ogre::Real y1)`
+### void setLineOrigin(size_t, Ogre::Real x1, Ogre::Real y1)
 
 Change the line origin (x1,y1) to something else.
 
-### `void setLineEnd(size_t, Ogre::Real x2, Ogre::Real y2)`
+### void setLineEnd(size_t, Ogre::Real x2, Ogre::Real y2)
 
 Change the line end (x2,y2) to something else
 
-### `void setLineThickness(size_t, Ogre::Real thickness)`
+### void setLineThickness(size_t, Ogre::Real thickness)
 
 Set the line thickness (in pixels)
 
-### `Ogre::ColourValue getLineColour(size_t id) const`
+### Ogre::ColourValue getLineColour(size_t id) const
 
 Get the colour of a line
 
-### `Ogre::Vector4 getLineCoords(size_t id) const`
+### Ogre::Vector4 getLineCoords(size_t id) const
 
 Get the coordinates of a line as a Vector4
 
@@ -358,8 +358,170 @@ Get the coordinates of a line as a Vector4
     z --> x2
     w --> y2
 
-### `Ogre::Real getLineThickness(size_t id) const`
+### Ogre::Real getLineThickness(size_t id) const
 
 Get the line thickenss (in pixels)
 
+### size_t addCaption(Ogre::Real left, Ogre::Real top, const Ogre::String&, const Ogre::ColourValue&)
+
+Add a piece of text at left/top. If the colour is omitted then the line colour is assumed to be white.
+
+Note: Captions ignore markup and all special characters including newlines `\n`.
+
+### void removeCaption(size_t);
+
+Remove a caption
+
+### void setCaptionPosition(size_t, Ogre::Real left, Ogre::Real top)
+
+Set a caption's position
+
+### void setCaptionText(size_t, const Ogre::String& text)
+
+Change the text of a caption
+
+### void setCaptionHorizontalClip(size_t, Ogre::Real clip)
+
+When a caption is drawn across the screen, it should stop drawing after it's reached "clip".
+
+clip is measured in pixels, where the text should stop being drawn.
+
+### void    setCaptionColour(size_t, const Ogre::ColourValue&)
+
+Set the colour of the caption
+
+### Ogre::Vector2 getCaptionPosition(size_t) const
+
+Get the caption's position
+
+### Ogre::String  getCaptionString(size_t) const
+
+Get the text being drawn by the caption
+
+### Ogre::ColourValue getCaptionColour(size_t) const
+
+Get the colour of the caption
+
+### Ogre::Vector2 getCaptionSize(size_t)
+
+Get the complete size of the caption, measured in pixels.
+
+### size_t  addBox(Ogre::Real left, Ogre::Real top, Ogre::Real width, Ogre::Real height, const Ogre::ColourValue&)
+
+Add a box (outlined rectangle) at left/top with the size of width/height. If the colour is omitted then the line colour is assumed to be white.
+
+### void  removeBox(size_t);
+
+Remove a box
+
+### void  setBoxPosition(size_t, Ogre::Real left, Ogre::Real top)
+
+Move a box to a new position
+
+### void  setBoxSize(size_t, Ogre::Real width, Ogre::Real height)
+
+Set a box's new size
+
+### void  setBoxColour(size_t, const Ogre::ColourValue&)
+
+Set a box's colour
+
+### Ogre::Vector2  getBoxPosition(size_t) const
+
+Get a box's position
+
+### Ogre::Vector2  getBoxSize(size_t) const
+
+Get a box's size
+
+### Ogre::ColourValue  getBoxColour(size_t) const
+ 
+Get a box's colour
+
+Text (inherit's Renderable)
+---------------------------
+
+### void  setPosition(const Ogre::Vector2& position)
+
+Set the position of the Text
+
+### void  setText(const Ogre::String& text)
+
+Set the text
+
+### void  setTop(Ogre::Real top)
+
+Set the Y position of the text
+
+### void  setLeft(Ogre::Real left)
+
+Set the X position of the text
+
+### void  setFormatted(bool val)
+
+Should the text use markup?
+
+### void  setMonospaced(bool val)
+
+Should the text ignore glyph width and kerning, and use a fixed width instead.
+
+### void  setColour(const Ogre::ColourValue& colour)
+
+Set the base colour of the text
+
+### Ogre::String  getText() const
+
+Get the text
+
+### bool  isFormatted() const
+
+Is markup being used?
+
+### bool   isMonospace() const
+
+Is the text monospaced?
+
+### Ogre::ColourValue  getColour() const
+
+Get the base colour of the text
+
+### Ogre::Real  getTop() const
+
+Get the Y position
+
+### Ogre::Real  getLeft() const
+
+Get the X position
+
+
+SpriteLayer
+-----------
+
+### size_t  addSprite(Ogre::Real left, Ogre::Real top, const Ogre::String& name);
+
+Add a sprite at left/top. Set the sprite image to name which is fetched from the TextureAtlas.
+
+### void  removeSprite(size_t id);
+
+Remove a sprite.
+
+### void  setSpritePosition(size_t id, Ogre::Real left, Ogre::Real top)
+
+Set the position of a sprite
+
+### void  setSprite(size_t id, const Ogre::String& name)
+
+Change the image of a sprite to another one.
+
+### void  setSpriteScale(size_t id, Ogre::Real scaleX, Ogre::Real scaleY)
+
+Set the scale of the sprite
+
+### Ogre::Vector2  getSpritePosition(size_t)
+
+Get a Sprite's position
+
+### Ogre::Vector2  getSpriteScale(size_t)
+
+Get a sprite's scale
 

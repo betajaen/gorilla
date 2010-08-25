@@ -403,7 +403,7 @@ namespace Gorilla
  class Screen : public Ogre::RenderQueueListener, public Ogre::GeneralAllocatedObject
  { 
    
-  friend class Silverback
+  friend class Silverback;
    
   public:
    
@@ -796,13 +796,6 @@ namespace Gorilla
     void   setText(const Ogre::String& text)
     {
      mText = text;
-     _redrawNeeded();
-    }
-
-    void   move(Ogre::Real left, Ogre::Real top)
-    {
-     mLeft = left;
-     mTop = top;
      _redrawNeeded();
     }
 
