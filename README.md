@@ -56,7 +56,7 @@ Gorilla can support
 * Sprites (SpriteLayer Sprites)
 * Plain and formatted text (Canvas Captions and Text)
 
-Beastie only uses Ogre as a dependency, and is developed with Ogre 1.7 in mind;  
+Gorilla only uses Ogre as a dependency, and is developed with Ogre 1.7 in mind;  
 but should work with any 1.x version.
 
 
