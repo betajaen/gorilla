@@ -39,10 +39,20 @@ namespace BetaGUI
  class Button;
  class TextBox;
  class Progress;
- class Choice;
  class Label;
  class Popup;
+ class Choice;
  class Menu;
+ 
+ struct MenuItem
+ {
+  MenuItem() {}
+  MenuItem(const Ogre::String _caption, size_t _ref = 0) : caption(_caption), ref(_ref) {}
+  Ogre::String caption;
+  size_t       ref;
+ };
+ 
+ typedef std::vector<MenuItem> MenuItems;
  
  enum WidgetType
  {
@@ -67,7 +77,7 @@ namespace BetaGUI
     
    virtual void onChoice(Choice*, size_t) {}
    
-   virtual void onMenuSelected(Menu*, size_t) {}
+   virtual void onMenuSelected(Popup*, size_t) {}
    
  };
  
@@ -80,6 +90,11 @@ namespace BetaGUI
    Ogre::String       resizerSprite;
    Ogre::Real         titleHeight, titleOffsetX, resizerSize;
   } window;
+  
+  struct menu_dt
+  {
+   Ogre::ColourValue background, backgroundActive, colour, colourActive, border;
+  } menu;
   
   struct WidgetDesign
   {
@@ -134,11 +149,24 @@ namespace BetaGUI
     return mScreen;
    }
    
+   inline  Callback* getCallback()
+   {
+    return mCallback;
+   }
+   
    Window* createWindow(const Ogre::String& title, const Ogre::Vector2& position, const Ogre::Vector2& size = Ogre::Vector2(320, 200));
    
    bool    checkMouse(Ogre::Real x, Ogre::Real y, bool LMBIsDown);
    
    void    checkKey(Ogre::uchar);
+   
+   Menu*   getMenu() const { return mMenu; }
+   
+   void    setMenuMode(bool v) { mMenuMode = v; }
+   
+   bool    getMenuMode() const { return mMenuMode; }
+   
+   Ogre::Vector2  getMousePosition() const;
    
   protected:
    
@@ -149,6 +177,8 @@ namespace BetaGUI
    Design*                      mDesign;
    Callback*                    mCallback;
    Window*                      mExclusiveWindow;
+   Menu*                        mMenu;
+   bool                         mMenuMode;
    
  };
  
@@ -166,9 +196,11 @@ namespace BetaGUI
    
    inline          Design*  getDesign() const { return mDesign; }
    Button*         createButton(const Ogre::Vector2& position, const Ogre::String& caption, size_t ref = 0);
-   TextBox*        createTextBox(const Ogre::Vector2& position, const Ogre::String& caption, Ogre::uint maxDisplayedCharacters = 8, size_t ref = 0);
+   TextBox*        createTextBox(const Ogre::Vector2& position, const Ogre::String& caption, Ogre::uint length = 8, size_t ref = 0);
    Progress*       createProgress(const Ogre::Vector2& position, Ogre::Real amountDone);
    Label*          createLabel(const Ogre::Vector2& position, const Ogre::String& caption);
+   Popup*          createPopup(const Ogre::Vector2& position, const Ogre::String& caption, const MenuItems& items, size_t ref = 0);
+   Choice*         createChoice(const Ogre::Vector2& position, const MenuItems& items, size_t ref = 0);
    
    inline          Gorilla::Canvas* getCanvas() const { return mCanvas; }
    void            setActiveWidget(Widget*);
@@ -184,7 +216,8 @@ namespace BetaGUI
    inline          Ogre::Real getX() const { return mPosition.x; }
    inline          Ogre::Real getY() const { return mPosition.y; }
    void            defocus();
-
+   inline          GUI* getGUI() const { return mGUI; }
+   
    void  _processMoving(Ogre::Real x, Ogre::Real y, bool LMBIsDown);
    
    void  _processResizing(Ogre::Real x, Ogre::Real y, bool LMBIsDown);
@@ -220,7 +253,7 @@ namespace BetaGUI
    
   public:
    
-   Widget(const Ogre::Vector2& position, WidgetType type, Window*);
+   Widget(const Ogre::Vector2& position, WidgetType type, Window*, size_t ref);
    
   ~Widget();
    
@@ -232,8 +265,12 @@ namespace BetaGUI
    
    bool checkMouse(Ogre::Real x, Ogre::Real y);
    
-   virtual void  checkKey(Ogre::uchar) {}
+   virtual void checkKey(Ogre::uchar) {}
    
+   virtual void onKeyPress(Ogre::uchar) {}
+   
+   virtual void onMenuSelection(size_t ref) {}
+
    virtual void drawOnce() {}
    
    void hover() 
@@ -252,9 +289,6 @@ namespace BetaGUI
    
    virtual void deactivate() {}
    
-   virtual void onKeyPress(Ogre::uchar) {}
-   
-   Button*  createButton(const Ogre::Vector2& position, const Ogre::String& caption, size_t ref = 0);
    
   protected:
    
@@ -269,6 +303,7 @@ namespace BetaGUI
    Ogre::Vector2          mPosition, mSize;
    Design::WidgetDesign*  mDesign;
    bool                   mIsHovered, mIsActivate;
+   size_t                 mRef;
  };
  
  class Button : public Widget
@@ -299,6 +334,8 @@ namespace BetaGUI
    void deactivate();
    
    void  checkKey(Ogre::uchar);
+   
+   inline Ogre::String getValue() const { return mCaptionText; }
    
   protected:
    
@@ -339,7 +376,84 @@ namespace BetaGUI
    void setText(const Ogre::String&);
    
  };
+ 
+ class Popup : public Widget
+ {
+   
+  public:
+   
+   Popup(const Ogre::Vector2& position, const Ogre::String& caption, const MenuItems&, size_t ref, Window* parent);
+   
+  ~Popup();
+   
+   bool activate();
   
+  void onMenuSelection(size_t ref);
+  
+  protected:
+   
+   MenuItems mItems;
+   
+ };
+ 
+ class Choice : public Widget
+ {
+   
+  public:
+   
+   Choice(const Ogre::Vector2& position, const MenuItems&, size_t ref, Window* parent);
+   
+  ~Choice();
+   
+   bool activate();
+   
+   void onMenuSelection(size_t ref);
+   
+  protected:
+   
+   MenuItems mItems;
+   
+ };
+
+ class Menu
+ {
+   
+  public:
+   
+   struct Item
+   {
+    Ogre::String text;
+    size_t       textID, ref;
+   };
+   
+   typedef std::vector<Item>            Items;
+   typedef std::vector<Item>::iterator  ItemIterator;
+   
+   Menu(GUI*);
+  ~Menu();
+   
+   void begin(Widget* reportWidget, Ogre::Real x, Ogre::Real y);
+   void add(const Ogre::String& caption, size_t);
+   void end();
+   
+   bool checkMouse(Ogre::Real x, Ogre::Real y, bool LMBIsDown);
+   
+   void _clear();
+   
+  protected:
+    
+   GUI*             mGUI;
+   Gorilla::Canvas* mCanvas;
+   bool             mMode;
+   size_t           mMenuRect, mMenuSelectionRect;
+   Design*          mDesign;
+   Widget*          mReportWidget;
+   Items            mItems;
+   Ogre::Vector2    mPosition, mSize;
+   Ogre::Real       mNextRowY;
+ };
+ 
+ 
 }
 
 #endif

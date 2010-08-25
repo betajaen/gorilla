@@ -46,6 +46,12 @@ void GUI::userDesign()
  mDesign->window.resizerSize = 10;
  mDesign->window.titleOffsetX = 5;
 
+ mDesign->menu.background = Gorilla::rgb(241,241,241,200);
+ mDesign->menu.backgroundActive = Gorilla::rgb(115,205,16,255);
+ mDesign->menu.border = Gorilla::rgb(128,128,128,255);
+ mDesign->menu.colour = Gorilla::rgb(64,64,64);
+ mDesign->menu.colourActive = Gorilla::rgb(255,255,255);
+
  Design::WidgetDesign* button = new Design::WidgetDesign();
  mDesign->widgets[WT_Button] = button;
  button->hasBorder = true;
@@ -83,6 +89,23 @@ void GUI::userDesign()
  label->hasCaption = true;
  label->colour = Gorilla::rgb(75,75,75,200);
  
+ Design::WidgetDesign* popup = new Design::WidgetDesign();
+ mDesign->widgets[WT_Popup] = popup;
+ popup->hasBackground = false;
+ popup->hasCaption = true;
+ popup->colour = Gorilla::rgb(0,0,255,200);
+ 
+ Design::WidgetDesign* choice = new Design::WidgetDesign();
+ mDesign->widgets[WT_Choice] = choice;
+ choice->hasBorder = true;
+ choice->hasCaption = true;
+ choice->backgroundT = Gorilla::rgb(221,221,221,255);
+ choice->backgroundB = Gorilla::rgb(200,200,200,255);
+ choice->colour = Gorilla::rgb(32,32,32,200);
+ choice->borderColour = Gorilla::rgb(128,128,128);
+ choice->paddingSides = 4;
+ choice->paddingTopBottom = 1;
+ choice->borderColourActive = Gorilla::rgb(255,0,132,255);
 }
 
 
@@ -91,6 +114,8 @@ GUI::GUI(Gorilla::Screen* screen, Callback* callback, bool useMousePointer)
 {
  mDesign = new Design();
  userDesign();
+ mMenu = new Menu(this);
+ 
  if (useMousePointer)
  {
   mMousePointerLayer = mScreen->createSpriteLayer(15);
@@ -106,7 +131,7 @@ GUI::~GUI()
  }
  // Delete windows here.
  delete mDesign;
- 
+ delete mMenu;
 }
 
 bool GUI::checkMouse(Ogre::Real x, Ogre::Real y, bool LMBIsDown)
@@ -116,6 +141,10 @@ bool GUI::checkMouse(Ogre::Real x, Ogre::Real y, bool LMBIsDown)
  if (mMousePointerLayer)
   mMousePointerLayer->setSpritePosition(mMousePointerID, x, y);
  
+ if (mMenuMode)
+ {
+  return mMenu->checkMouse(x,y, LMBIsDown);
+ }
  
  for (WindowIterator it = mWindows.begin(); it != mWindows.end(); it++)
   if ((*it)->checkMouse(x,y, LMBIsDown))
@@ -126,10 +155,119 @@ bool GUI::checkMouse(Ogre::Real x, Ogre::Real y, bool LMBIsDown)
 
 void GUI::checkKey(Ogre::uchar c)
 {
+ if (mMenuMode)
+  return;
+ 
  if (mExclusiveWindow == 0)
   return;
  
  mExclusiveWindow->checkKey(c);
+}
+
+Ogre::Vector2 GUI::getMousePosition() const
+{
+ if (mMousePointerLayer == 0)
+  return Ogre::Vector2::ZERO;
+ 
+ return mMousePointerLayer->getSpritePosition(mMousePointerID);
+}
+
+
+Menu::Menu(GUI* gui)
+: mGUI(gui)
+{
+ mCanvas = mGUI->getScreen()->createCanvas(14);
+ mDesign = mGUI->getDesign();
+}
+
+Menu::~Menu()
+{
+}
+
+void Menu::begin(Widget* reportWidget, Ogre::Real x, Ogre::Real y)
+{
+ _clear();
+ mPosition.x = x;
+ mPosition.y = y;
+ mSize.x = 0;
+ mSize.y = 0;
+ mNextRowY = 0;
+ mReportWidget = reportWidget;
+}
+
+void Menu::add(const Ogre::String& caption, size_t ref)
+{
+ Item item;
+ item.ref = ref;
+ item.text = caption;
+ item.textID = mCanvas->addCaption(mPosition.x, mPosition.y + mNextRowY, item.text);
+ mCanvas->setCaptionColour(item.textID, mDesign->menu.colour);
+
+ Ogre::Vector2 captionSize = mCanvas->getCaptionSize(item.textID);
+ if (captionSize.x > mSize.x)
+  mSize.x = captionSize.x;
+ mNextRowY += mCanvas->getScreen()->getAtlas()->getGlyphLineHeight();
+ mItems.push_back(item);
+}
+
+void Menu::end()
+{
+ mSize.y = mNextRowY;
+ mMenuRect = mCanvas->addRectangle(mPosition.x, mPosition.y, mSize.x, mSize.y, mDesign->menu.background);
+ mMenuSelectionRect = mCanvas->addRectangle(mPosition.x, 0, mSize.x, 0, mDesign->menu.backgroundActive);
+ mGUI->setMenuMode(true);
+}
+
+bool Menu::checkMouse(Ogre::Real x, Ogre::Real y, bool LMBIsDown)
+{
+ if (( (x >= mPosition.x && y >= mPosition.y) && (x <= mPosition.x + mSize.x && y <= mPosition.y + + mSize.y) ))
+ {
+  int itemNb = ((y - mPosition.y) / mSize.y) * mItems.size();
+  
+  if (itemNb > mItems.size() || itemNb < 0)
+  {
+   mCanvas->setRectanglePosition(mMenuSelectionRect, 0, 0);
+   mCanvas->setRectangleSize(mMenuSelectionRect, 0, 0);
+   return true;
+  }
+  
+  Ogre::Real relY = itemNb * mCanvas->getScreen()->getAtlas()->getGlyphLineHeight();
+  mCanvas->setRectanglePosition(mMenuSelectionRect, mPosition.x, mPosition.y + relY);
+  mCanvas->setRectangleSize(mMenuSelectionRect, mSize.x, mCanvas->getScreen()->getAtlas()->getGlyphLineHeight());
+  
+
+  if (LMBIsDown)
+  {
+   size_t ref = mItems[itemNb].ref;
+   _clear();
+   mGUI->setMenuMode(false);
+   mReportWidget->onMenuSelection(ref);
+  }
+ }
+ else
+ {
+  if (LMBIsDown)
+  {
+   // Kill menu
+   _clear();
+   mGUI->setMenuMode(false);
+  }
+  else
+  {
+   mCanvas->setRectanglePosition(mMenuSelectionRect, 0, 0);
+   mCanvas->setRectangleSize(mMenuSelectionRect, 0, 0);
+  }
+ }
+ return true;
+}
+
+void Menu::_clear()
+{
+ for (size_t i=0;i < mItems.size();i++)
+  mCanvas->removeCaption(mItems[i].textID);
+ mItems.clear();
+ mCanvas->removeRectangle(mMenuRect);
+ mCanvas->removeRectangle(mMenuSelectionRect);
 }
 
 Window* GUI::createWindow(const Ogre::String& title, const Ogre::Vector2& position, const Ogre::Vector2& size)
@@ -251,6 +389,7 @@ Widget*  Window::getHoverWidget()
 
 bool  Window::checkMouse(Ogre::Real x, Ogre::Real y, bool LMBIsDown)
 {
+  
   Ogre::Real relX = x - mPosition.x;
   Ogre::Real relY = y - mPosition.y;
   
@@ -428,8 +567,8 @@ void  Window::_processResizing(Ogre::Real x, Ogre::Real y, bool LMBIsDown)
  }
 }
 
-Widget::Widget(const Ogre::Vector2& position, WidgetType type, Window* window)
-: mPosition(position), mType(type), mWindow(window), mWidgetRect(-1), mCaption(-1), mBorderBox(-1), mCaptionLimit(0), mIsHovered(false), mIsActivate(false)
+Widget::Widget(const Ogre::Vector2& position, WidgetType type, Window* window, size_t ref)
+: mPosition(position), mType(type), mWindow(window), mWidgetRect(-1), mCaption(-1), mBorderBox(-1), mCaptionLimit(0), mIsHovered(false), mIsActivate(false), mRef(ref)
 {
  mCanvas = mWindow->getCanvas();
 }
@@ -524,7 +663,7 @@ Button*  Window::createButton(const Ogre::Vector2& position, const Ogre::String&
 }
 
 Button::Button(const Ogre::Vector2& position, const Ogre::String& caption, size_t ref, Window* parent)
-: Widget(position, WT_Button, parent)
+: Widget(position, WT_Button, parent, ref)
 {
  mCaptionText = caption;
  initialise();
@@ -548,7 +687,7 @@ TextBox*  Window::createTextBox(const Ogre::Vector2& position, const Ogre::Strin
 }
 
 TextBox::TextBox(const Ogre::Vector2& position, const Ogre::String& value, Ogre::uint maxNumberCharactersShown, size_t ref, Window* parent)
-: Widget(position, WT_TextBox, parent), mNbCharactersShown(maxNumberCharactersShown), mIsActive(false)
+: Widget(position, WT_TextBox, parent, ref), mNbCharactersShown(maxNumberCharactersShown), mIsActive(false)
 {
  mCaptionLimit = mNbCharactersShown * mWindow->getCanvas()->getScreen()->getAtlas()->getGlyphMonoWidth(); 
  mCaptionText = value;
@@ -569,8 +708,8 @@ bool TextBox::activate()
 void TextBox::deactivate()
 {
  mIsActive = false;
- std::cout << "Call textbox listener with new value" << mCaptionText << "\n";
  mCanvas->setCaptionText(mCaption, mCaptionText);
+ mWindow->getGUI()->getCallback()->onTextEntered(this, mRef);
 }
 
 void TextBox::checkKey(Ogre::uchar c)
@@ -604,7 +743,7 @@ Progress*  Window::createProgress(const Ogre::Vector2& position, Ogre::Real amou
 }
 
 Progress::Progress(const Ogre::Vector2& position, Ogre::Real amountDone, Window* parent)
-: Widget(position, WT_Progress, parent), mAmountDone(amountDone)
+: Widget(position, WT_Progress, parent, 0), mAmountDone(amountDone)
 {
  mSize.x = 101;
  mSize.y = 15;
@@ -645,7 +784,7 @@ Label*  Window::createLabel(const Ogre::Vector2& position, const Ogre::String& t
 }
 
 Label::Label(const Ogre::Vector2& position, const Ogre::String& text, Window* parent)
-: Widget(position, WT_Label, parent)
+: Widget(position, WT_Label, parent, 0)
 {
  mCaptionText = text;
  initialise();
@@ -660,5 +799,85 @@ void Label::setText(const Ogre::String& text)
  mCanvas->setCaptionText(mCaption, text);
 }
 
+Popup*  Window::createPopup(const Ogre::Vector2& position, const Ogre::String& caption, const MenuItems& items, size_t ref)
+{
+ Popup* popup = new Popup(position, caption, items, ref, this);
+ mWidgets.push_back(popup);
+ return popup;
+}
+
+Popup::Popup(const Ogre::Vector2& position, const Ogre::String& caption, const MenuItems& items, size_t ref, Window* parent)
+: Widget(position, WT_Popup, parent, ref), mItems(items)
+{
+ mCaptionText = caption;
+ initialise();
+}
+
+Popup::~Popup()
+{
+}
+
+bool Popup::activate()
+{
+ Menu* menu = mWindow->getGUI()->getMenu();
+ Ogre::Vector2 mousePos = mWindow->getGUI()->getMousePosition();
+ menu->begin(this, mousePos.x, mousePos.y);
+ for (size_t i=0;i < mItems.size();i++)
+  menu->add(mItems[i].caption, mItems[i].ref);
+ menu->end();
+ 
+ return false;
+}
+
+void Popup::onMenuSelection(size_t ref)
+{
+ mWindow->getGUI()->getCallback()->onMenuSelected(this, ref);
+}
+
+Choice*  Window::createChoice(const Ogre::Vector2& position, const MenuItems& items, size_t ref)
+{
+ Choice* choice = new Choice(position, items, ref, this);
+ mWidgets.push_back(choice);
+ return choice;
+}
+
+Choice::Choice(const Ogre::Vector2& position, const MenuItems& items, size_t ref, Window* parent)
+: Widget(position, WT_Choice, parent, ref), mItems(items)
+{
+ mCaptionText = mItems[0].caption;
+ mCaptionLimit = mItems[0].caption.size() * mWindow->getGUI()->getScreen()->getAtlas()->getGlyphMonoWidth();
+ initialise();
+}
+
+Choice::~Choice()
+{
+}
+
+bool Choice::activate()
+{
+ Menu* menu = mWindow->getGUI()->getMenu();
+ Ogre::Vector2 mousePos = mWindow->getGUI()->getMousePosition();
+ menu->begin(this, mousePos.x, mousePos.y);
+ for (size_t i=0;i < mItems.size();i++)
+  menu->add(mItems[i].caption, mItems[i].ref);
+ menu->end();
+ 
+ return false;
+}
+
+void Choice::onMenuSelection(size_t ref)
+{
+ 
+ for (size_t i=0;i < mItems.size();i++)
+ {
+  if (ref == mItems[i].ref)
+  {
+   mCaptionText = mItems[i].caption;
+   mCanvas->setCaptionText(mCaption, mCaptionText);
+  }
+ }
+ 
+ mWindow->getGUI()->getCallback()->onChoice(this, ref);
+}
 
 } // BetaGUI

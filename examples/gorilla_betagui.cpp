@@ -20,6 +20,14 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
   Gorilla::Text*          mFPS;
   Ogre::Real              mTimer;
   
+  enum Refs
+  {
+   MENU_ABOUT,
+   MENU_QUIT,
+   QUIT,
+   ADJUST_ROT_SPEED,
+  };
+
   App() : mNextUpdate(0), mTimer(0)
   {
    
@@ -39,11 +47,33 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
 
    mScreen = mGorilla->createScreen(mViewport, "dejavu");
    mGUI = new BetaGUI::GUI(mScreen, this);
-   BetaGUI::Window* window = mGUI->createWindow("Hello! This is a lot of text here.", Ogre::Vector2(100,100));
-   window->createButton(Ogre::Vector2(5,15), "This is a button");
+   BetaGUI::Window* window = mGUI->createWindow("BetaGUI", Ogre::Vector2(10,10), Ogre::Vector2(200,500));
+   BetaGUI::MenuItems file_menu;
+   file_menu.push_back(BetaGUI::MenuItem("About", MENU_ABOUT));
+   file_menu.push_back(BetaGUI::MenuItem("Quit", MENU_QUIT));
+   window->createPopup(Ogre::Vector2(0,0), "File", file_menu);
+   
+   window->createLabel(Ogre::Vector2(0,25), "Rot.");
+   window->createTextBox(Ogre::Vector2(60,25), "0.0005", 8, ADJUST_ROT_SPEED);
+
+/*
+   window->createButton(Ogre::Vector2(5,10), "This is a button");
    window->createTextBox(Ogre::Vector2(5,40), "1234");
-   window->createProgress(Ogre::Vector2(5,70), 0.35);
+   window->createProgress(Ogre::Vector2(5,70), 0.35f);
    window->createLabel(Ogre::Vector2(5,100), "This is a label");
+   BetaGUI::MenuItems items;
+   items.push_back(BetaGUI::MenuItem("Open", 0));
+   items.push_back(BetaGUI::MenuItem("Save", 1));
+   items.push_back(BetaGUI::MenuItem("Save As", 2));
+   items.push_back(BetaGUI::MenuItem("Quit", 3));
+   window->createPopup(Ogre::Vector2(5,130), "This is a popup", items);
+   BetaGUI::MenuItems choice_items;
+   choice_items.push_back(BetaGUI::MenuItem("one",1));
+   choice_items.push_back(BetaGUI::MenuItem("two",2));
+   choice_items.push_back(BetaGUI::MenuItem("three",3));
+   choice_items.push_back(BetaGUI::MenuItem("four",4));
+   window->createChoice(Ogre::Vector2(5,160), choice_items);
+*/
   }
   
  ~App()
@@ -51,6 +81,15 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
    delete mGUI;
    delete mGorilla;
    delete mRoot;
+  }
+  
+  void onTextEntered(BetaGUI::TextBox* box, size_t ref)
+  {
+   if (ref == ADJUST_ROT_SPEED)
+   {
+    Ogre::Real val = Ogre::StringConverter::parseReal(box->getValue());
+    tus->setRotateAnimation(val);
+   }
   }
   
   bool frameStarted(const Ogre::FrameEvent& evt)
@@ -199,7 +238,7 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
        "DynamicTextureMaterial", // name
        Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
     
-   Ogre::TextureUnitState* tus = material->getTechnique(0)->getPass(0)->createTextureUnitState("DynamicTexture");
+   tus = material->getTechnique(0)->getPass(0)->createTextureUnitState("DynamicTexture");
    tus->setScrollAnimation(0.005f, 0.0025f);
    tus->setRotateAnimation(0.009f);
    material->getTechnique(0)->getPass(0)->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
@@ -228,6 +267,7 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
   OIS::InputManager*      mInputManager;
   OIS::Keyboard*          mKeyboard;
   OIS::Mouse*             mMouse;
+  Ogre::TextureUnitState* tus;
   
 };
 
