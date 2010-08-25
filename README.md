@@ -115,6 +115,8 @@ Like Screen's you can have many Canvases, Text or SpriteLayers. Collectively the
 
 To help with z-ordering, renderables are assigned to a layer from 0-15. Renderables on layer 0 are rendered first and on 15 rendered last. This means that anything on layer 15 will be "on top" of layer 14, 13 on 12, 12 on 10 and so on.
 
+**Please note:** everything in Gorilla unless specified is measured in *pixels* and not screen coordinates.
+
 Handles
 -------
 
@@ -149,4 +151,215 @@ SpriteLayer
 -----------
 
 A SpriteLayer is to draw 2D quads on the screen known as sprites. You may use sprites for a number of things from displaying the inventory of the player, to a full mini 2D shoot 'em up.
+
+
+Classes
+=======
+
+Silverback
+----------
+
+### `void loadAtlas(const Ogre::String& name, const Ogre::String& group)`
+
+Create a TextureAtlas from a ".gorilla" file. Name is the name of
+the TextureAtlas, as well as the first part of the filename of the gorilla file; i.e. name.gorilla, the gorilla file can be loaded from a different resource group if you give that name as the second argument, otherwise it will assume to be "General".
+
+### `Screen*  createScreen(Ogre::Viewport*, const Ogre::String& atlas)`
+
+Create a Screen using a Viewport and a name of a previously loaded TextureAtlas. Both must exist. The screen will register itself as a RenderQueueListener to the SceneManager that has the Camera which is tied to the Viewport.
+
+Each screen is considered a new batch. To reduce your batch count in Gorilla, reduce the number of screens you use.
+
+### `void  destroyScreen(Screen*);`
+
+Destroy an existing screen (and contents).
+
+Screen
+------
+
+### `Canvas*  createCanvas(int layer)`
+
+Create a new Canvas to draw too. If layer is omitted then "0" is assumed to be the layer, otherwise layer id must be between 0 and 15.
+
+As with screens there can be many Canvases per screen.
+
+### `SpriteLayer*  createSpriteLayer(int layer)`
+
+Create a new SpriteLayer for Sprites.  If layer is omitted then "0" is assumed to be the layer, otherwise layer id must be between 0 and 15.
+
+As with screens there can be many SpriteLayers per screen.
+
+### `Text*  createText(Ogre::Real left, Ogre::Real top, const Ogre::String& initialText, int layer)`
+
+Create a formatted text on the screen, with the coordinates given as left and top. initialText can be blank if desired.
+
+If layer is omitted then "0" is assumed to be the layer, otherwise layer id must be between 0 and 15.
+
+#### Markup codes.
+
+    %x              Change Text Colour (x = 0..9), See TextureAtlas::getPaletteColour
+    %R              Reset Text Colour to normal
+    %M              Switch to monospace mode of writing (ignore kerning and fixed glyph width).
+    %:spritename%   Insert a sprite named "spritename" here. Line height for this line only will
+                    be changed to the height of the sprite.
+    %%              Insert a percentage sign %.
+
+### `void  destroy(Renderable*)`
+   
+Destroy (and destroy its contents) of a Canvas, SpriteLayer or Text.
+
+
+Renderable (inherited by Canvas, SpriteLayer and Text)
+------------------------------------------------------
+
+### `bool isVisible()`
+
+Is the Renderable visible?
+
+### `void setVisible(bool is_visible)`
+
+Set the Renderable to invisible or visible. If the Renderable is marked invisible, then it will not be drawn. The triangle count may go down, but the batch count will not.
+
+### `void show()`
+
+Equilvant to `setVisible(true)`
+
+### `void hide()`
+
+Equilvant to `setVisible(false)`
+
+### `Ogre::uint getLayer()`
+
+Get the layer id from 0 to 15.
+
+### `Ogre::Vector2 getMin()`
+
+Get the nearest vertex drawn to the top-left of the screen.
+
+These units are in screen coordinates, and can only be given to functions that accept those units.
+
+### `Ogre::Vector2 getMax()`
+
+Get the nearest vertex drawn to the bottom-right of the screen.
+
+These units are in screen coordinates, and can only be given to functions that accept those units.
+
+
+Canvas (inherits Renderable)
+----------------------------
+
+### `size_t addRectangle(Ogre::Real left, Ogre::Real top, Ogre::Real width, Ogre::Real height, const Ogre::ColourValue& colour)`
+
+Creates a filled rectangle (of colour) at left,top with the size of width, height. A handle is returned that represents that rectangle for future use.
+
+If colour is omitted then White is assumed to be the colour of the rectangle
+
+left/top/width/height is measured in pixels.
+
+### `void removeRectangle(size_t id)`
+
+Remove a rectangle with given handle
+
+###  `void setRectangleColour(size_t id, const Ogre::ColourValue& colour)`
+
+Set the rectangle's colour to something else.
+
+###  `void setRectangleColour(size_t id, const Ogre::ColourValue& topLeft, const Ogre::ColourValue& topRight, const Ogre::ColourValue& bottomRight,const Ogre::ColourValue& bottomLeft)`
+
+Set each the colour of each corner of the rectangle individually, if colours are different then a gradient between those colours will be drawn.
+
+### `void setRectanglePosition(size_t id, Ogre::Real left, Ogre::Real top)`
+
+Set the rectangle's position to somewhere else
+
+left/top is measured in pixels.
+
+### `void setRectangleSize(size_t id, Ogre::Real width, Ogre::Real height)`
+
+width/height is measured in pixels.
+
+Set the rectangle's size
+
+### `void setRectangleBackground(size_t id, const Ogre::String& sprite_name, bool resetColour)`
+
+Instead of using a solid colour, use a sprite instead. If the rectangle is a different size to the sprite, then the sprite will be stretched.
+
+If resetColour is true then the Colour is set to white again, otherwise the existing colour may tint/recolour the sprite. By default this argument is true.
+
+### `void clearRectangleBackground(size_t id)`
+
+Use a solid colour again.
+
+### `void setRectangleAngle(size_t id, const Ogre::Degree&)`
+
+Change the angle of the rectangle in degrees.
+
+Note: The point of rotation is the top-left corner of the rectangle.
+
+### `void setRectangleAngle(size_t id, const Ogre::Radian&)`
+
+Change the angle of the rectangle in radians
+
+Note: The point of rotation is the top-left corner of the rectangle.
+
+### `void setRectangleMinMax(size_t id, const Ogre::Vector2& min, const Ogre::Vector2& max)`
+
+Set the rectangle coordinates using min/max coordinates. Where min is the coordinate of the top-left corner of the rectangle and max is the coordinate of the bottom-right corner of the rectangle..
+
+min/max is measured in pixels
+
+### `size_t  addLine(Ogre::Real x1, Ogre::Real y1, Ogre::Real x2, Ogre::Real y2, Ogre::Real thickness, const Ogre::ColourValue& colour);
+   
+Add a line at x1,y1 and draw it to x2,y2, with a given thickness. If the colour is omitted then the line colour is assumed to be white.
+
+### `void removeLine(size_t)`
+
+Remove a line by the given handle
+
+### `void setLineColour(size_t, const Ogre::ColourValue&)`
+
+Change the line colour to something else.
+
+### `void setLineCoords(size_t, Ogre::Real x1, Ogre::Real y1, Ogre::Real x2, Ogre::Real y2)`
+
+Change the line coordinates to something else.
+
+### `void setLineCoords(size_t, const Ogre::Vector4& coords)`
+
+Change the line coordinates to something else; using a Vector4.
+
+    x --> x1
+    y --> y1
+    z --> x2
+    w --> y2
+
+### `void setLineOrigin(size_t, Ogre::Real x1, Ogre::Real y1)`
+
+Change the line origin (x1,y1) to something else.
+
+### `void setLineEnd(size_t, Ogre::Real x2, Ogre::Real y2)`
+
+Change the line end (x2,y2) to something else
+
+### `void setLineThickness(size_t, Ogre::Real thickness)`
+
+Set the line thickness (in pixels)
+
+### `Ogre::ColourValue getLineColour(size_t id) const`
+
+Get the colour of a line
+
+### `Ogre::Vector4 getLineCoords(size_t id) const`
+
+Get the coordinates of a line as a Vector4
+
+    x --> x1
+    y --> y1
+    z --> x2
+    w --> y2
+
+### `Ogre::Real getLineThickness(size_t id) const`
+
+Get the line thickenss (in pixels)
+
 

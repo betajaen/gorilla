@@ -402,11 +402,10 @@ namespace Gorilla
  
  class Screen : public Ogre::RenderQueueListener, public Ogre::GeneralAllocatedObject
  { 
+   
+  friend class Silverback
+   
   public:
-   
-   Screen(Ogre::Viewport*, TextureAtlas*);
-   
-  ~Screen();
    
    Canvas*       createCanvas(int layer = 0);
    
@@ -477,6 +476,10 @@ namespace Gorilla
    
   protected:
    
+   Screen(Ogre::Viewport*, TextureAtlas*);
+   
+  ~Screen();
+   
    Ogre::RenderSystem*      mRenderSystem;
    Ogre::SceneManager*      mSceneMgr;
    Ogre::Viewport*          mViewport;
@@ -518,32 +521,42 @@ namespace Gorilla
     return mScreen;
    }
    
-   bool             isVisible() const
+   bool isVisible() const
    {
     return mIsVisible;
    }
    
-   void             setVisible(bool is_visible)
+   void setVisible(bool is_visible)
    {
     mIsVisible = is_visible;
     _redrawNeeded();
    }
    
-   void             show()
+   void show()
    {
     mIsVisible = true;
     _redrawNeeded();
    }
    
-   void             hide()
+   void hide()
    {
     mIsVisible = false;
     _redrawNeeded();
    }
    
-   Ogre::uint       getLayer() const
+   Ogre::uint getLayer() const
    {
     return  mLayer;
+   }
+   
+   inline Ogre::Vector2  getMin() const
+   {
+    return mMin;
+   }
+   
+   inline Ogre::Vector2  getMax() const
+   {
+    return mMax;
    }
    
    inline void      vpX(Ogre::Real& x)
@@ -571,19 +584,10 @@ namespace Gorilla
     mScreen->layerRedrawRequested(mLayer);
    }
    
-   void             render(buffer<Vertex>&);
+   void render(buffer<Vertex>&);
    
    virtual void     redraw() {}
    
-   inline Ogre::Vector2  getMin() const
-   {
-    return mMin;
-   }
-   
-   inline Ogre::Vector2  getMax() const
-   {
-    return mMax;
-   }
    
   protected:
    
