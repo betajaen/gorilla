@@ -534,9 +534,9 @@ Simple FPS monitor
 ### Member variables
     
     Gorilla::Silverback*  mGorilla;
-    Gorilla::Screen*  mScreen;
-    Gorilla::Text*  mFPS;
-    Ogre::Real      mFPSTimer;
+    Gorilla::Screen*      mScreen;
+    Gorilla::Text*        mFPS;
+    Ogre::Real            mFPSTimer;
 
 ### Create function
     
@@ -547,11 +547,11 @@ Simple FPS monitor
     mFPSTimer = 0;
 
 ### Update function
-
-   mTimer += evt.timeSinceLastFrame;
-   if (mTimer > 1.0f / 60.0f)
-   {
-    mTimer = 0;
-    mFPS->setText("FPS: " + Ogre::StringConverter::toString(mWindow->getLastFPS()));
-   }
+    
+    mTimer += evt.timeSinceLastFrame;
+    if (mTimer > 1.0f / 60.0f)
+    {
+     mTimer = 0;
+     mFPS->setText("FPS: " + Ogre::StringConverter::toString(mWindow->getLastFPS()));
+    }
 
