@@ -501,13 +501,13 @@ namespace Gorilla
  Silverback::~Silverback()
  {
   
-  // OGRE_DELETE Screens.
+  // Delete Screens.
   for (std::vector<Screen*>::iterator it = mScreens.begin(); it != mScreens.end(); it++)
    OGRE_DELETE (*it);
   
   mScreens.clear();
   
-  // OGRE_DELETE Atlases.
+  // Delete Atlases.
   for (std::map<Ogre::String, TextureAtlas*>::iterator it = mAtlases.begin(); it != mAtlases.end(); it++)
    OGRE_DELETE (*it).second;
   mAtlases.clear();
@@ -682,7 +682,8 @@ namespace Gorilla
   
   for (size_t i=0;i < mLayers[id].size();i++)
   {
-   mLayers[id][i]->_render(mVertexLayerBuffer[id]);
+   if (mLayers[id][i]->mVisible)
+    mLayers[id][i]->_render(mVertexLayerBuffer[id]);
   }
   
  }
@@ -800,7 +801,7 @@ namespace Gorilla
  
  
  Layer::Layer(Ogre::uint index, Screen* screen)
- : mIndex(index), mScreen(screen)
+ : mIndex(index), mScreen(screen), mVisible(true)
  {
  }
  
@@ -809,6 +810,9 @@ namespace Gorilla
   destroyAllRectangles();
   destroyAllPolygons();
   destroyAllLineLists();
+  destroyAllQuadLists();
+  destroyAllCaptions();
+  destroyAllMarkupTexts();
  }
  
  void Layer::_markDirty()

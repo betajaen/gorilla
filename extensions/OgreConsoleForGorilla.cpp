@@ -45,7 +45,7 @@ void OgreConsole::init(Gorilla::Screen* screen)
    mConsoleText->width(mScreen->getViewportWidth() - 10);
    mPromptText = mLayer->createCaption(10,10, "> _");
    mDecoration = mLayer->createRectangle(8,8, mScreen->getViewportWidth() - 16, mLayer->_getGlyphHeight());
-   mDecoration->background_gradient(Gorilla::Gradient_NorthSouth, Gorilla::rgb(64,64,64,128), Gorilla::rgb(64,64,64,128));
+   mDecoration->background_gradient(Gorilla::Gradient_NorthSouth, Gorilla::rgb(128,128,128,128), Gorilla::rgb(64,64,64,128));
    mDecoration->border(2, Gorilla::rgb(128,128,128,128));
    
    mIsInitialised = true;
@@ -226,9 +226,7 @@ bool OgreConsole::frameEnded(const Ogre::FrameEvent &evt)
 void OgreConsole::setVisible(bool isVisible)
 {
  mIsVisible = isVisible;
- //mLayer->setVisible(mIsVisible);
- //mPromptText->setVisible(mIsVisible);
- //mConsoleText->setVisible(mIsVisible);
+ mLayer->setVisible(mIsVisible);
 }
 
 void OgreConsole::addCommand(const Ogre::String &command, OgreConsoleFunctionPtr func)

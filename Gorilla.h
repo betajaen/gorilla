@@ -867,6 +867,45 @@ namespace Gorilla
     typedef Ogre::vector<MarkupText*>::type           MarkupTexts;
     typedef Ogre::VectorIterator<MarkupTexts>         MarkupTextIterator;
     
+    /*! function. isVisible
+        desc.
+            Is the layer being drawn on screen or not?
+    */
+    inline  bool isVisible() const
+    {
+     return mVisible;
+    }
+    
+    /*! function. setVisible
+        desc.
+            Show or hide the layer
+    */
+    inline void setVisible(bool isVisible)
+    {
+     mVisible = isVisible;
+     _markDirty();
+    }
+    
+    /*! function. show
+        desc.
+            Show the layer
+    */
+    inline void show()
+    {
+     mVisible = true;
+     _markDirty();
+    }
+
+    /*! function. hide
+        desc.
+            hide the layer
+    */
+    inline void hide()
+    {
+     mVisible = false;
+     _markDirty();
+    }
+    
     /*! function. createRectangle
         desc.
             Creates a rectangle.
@@ -1199,6 +1238,7 @@ namespace Gorilla
     Captions                 mCaptions;
     MarkupTexts              mMarkupTexts;
     Screen*                  mScreen;
+    bool                     mVisible;
     
   };
   
