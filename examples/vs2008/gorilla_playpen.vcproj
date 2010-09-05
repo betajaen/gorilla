@@ -58,6 +58,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				PerUserRedirection="false"
 				AdditionalDependencies="OgreMain_d.lib OIS_d.lib"
 				AdditionalLibraryDirectories="&quot;$(OGRE_HOME)/lib/Debug/&quot;;&quot;$(OGRE_HOME)/boost_1_42/lib/&quot;"
 				GenerateDebugInformation="true"

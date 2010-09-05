@@ -8,6 +8,8 @@
 
 #pragma warning ( disable : 4244 )
 
+bool quitApp = false;
+
 void whoami(Ogre::StringVector&)
 {
  OgreConsole::getSingleton().print("Your you!");
@@ -41,6 +43,11 @@ void make(Ogre::StringVector& vec)
  }
 }
 
+void quit(Ogre::StringVector&)
+{
+ quitApp = true;
+}
+
 class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::MouseListener
 {
   
@@ -50,7 +57,8 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
   Gorilla::Screen*        mScreen;
   OgreConsole*            mConsole;
   
-  Gorilla::Text*          mFPS;
+  Gorilla::Layer*         mFPSLayer;
+  Gorilla::Caption*       mFPS;
   Ogre::Real              mTimer;
   
   App() : mNextUpdate(0), mTimer(0)
@@ -64,13 +72,16 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
    mGorilla = new Gorilla::Silverback();
    mGorilla->loadAtlas("dejavu");
    mScreen = mGorilla->createScreen(mViewport, "dejavu");
-   mFPS = mScreen->createText(10,10, "FPS: 0, Batches: 0", 15);
+   
+   mFPSLayer = mScreen->createLayer(14);
+   mFPS = mFPSLayer->createCaption(10,10, Ogre::StringUtil::BLANK);
 
    mConsole = new OgreConsole();
    mConsole->init(mScreen);
    mConsole->addCommand("whoami", whoami);
    mConsole->addCommand("version", version);
    mConsole->addCommand("make", make);
+   mConsole->addCommand("quit", quit);
   }
   
  ~App()
@@ -82,7 +93,7 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
   bool frameStarted(const Ogre::FrameEvent& evt)
   {
    
-   if (mWindow->isClosed())
+   if (mWindow->isClosed() || quitApp)
     return false;
    
    mKeyboard->capture();
@@ -96,8 +107,8 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
     mTimer = 0;
     std::stringstream s;
     s << "FPS: " << mWindow->getLastFPS() << ", Batches: " << mRoot->getRenderSystem()->_getBatchCount() << "\n";
-    mFPS->setTop(mViewport->getActualHeight() - 20);
-    mFPS->setText(s.str());
+    mFPS->top(mViewport->getActualHeight() - 20);
+    mFPS->text(s.str());
     
    }
    return true;

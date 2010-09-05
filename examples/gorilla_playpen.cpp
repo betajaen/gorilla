@@ -12,36 +12,85 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
   
  public:
   
-  Gorilla::Silverback*    mGorilla;
+  Ogre::Real              mTimer, mTimer2;
+  Gorilla::Silverback*    mSilverback;
   Gorilla::Screen*        mScreen;
-  Gorilla::Canvas*        mCanvas;
-  Gorilla::Text*          mFPS;
-  size_t                  mFPSBackground;
+  Gorilla::Layer*        mLayer;
   
-  Ogre::Real              mTimer;
+  Gorilla::Polygon* poly;
+  Gorilla::LineList*       list;
+  Gorilla::Caption*        caption;
+  Gorilla::Rectangle*      rect;
+  Gorilla::QuadList*       quads;
+  Gorilla::MarkupText*     markup;
   
-  App() : mNextUpdate(0), mTimer(0)
+  App() : mNextUpdate(0), mTimer(0), mTimer2(0)
   {
    
    _makeOgre();
    _makeOIS();
+
+  // Create Silverback and load in dejavu
+  mSilverback = new Gorilla::Silverback();
+  mSilverback->loadAtlas("dejavu");
+  mScreen = mSilverback->createScreen(mViewport, "dejavu");
+
+  // Create our drawing layer
+  mLayer = mScreen->createLayer(0);
+
+  // Create a rectangle with a pink border and no background.
+  rect = mLayer->createRectangle(10,10,500,100);
+  rect->border(5, Gorilla::Colours::Pink);
+  rect->no_background();
+
+  // Create a closed line loop.
+  list = mLayer->createLineList();
+  list->begin();
+  list->position(100,100);
+  list->position(100,200);
+  list->position(50,200);
+  list->end(true);
+
+  // Create a polygon with coco as the background and a OrangeRed border
+  poly = mLayer->createPolygon(250,250, 250, 8);
+  poly->background_image("coco");
+  poly->border_width(12);
+  poly->border_colour(Gorilla::Colours::OrangeRed);
+
+  // Create a QuadList with various bits in it.
+  quads = mLayer->createQuadList();
+  quads->begin();
+  quads->gradient(100,100,  300,300, Gorilla::Gradient_NorthSouth, Gorilla::Colours::Aqua, Gorilla::Colours::Red);
+  quads->border(100,100, 300,300, 10,Gorilla::Colours::Pink, Gorilla::Colours::Red, Gorilla::Colours::Blue, Gorilla::Colours::Green);
+  quads->glyph(100,100, 'A', Gorilla::Colours::BlueViolet);
+  quads->end();
    
-   // Initialise Gorilla
-   mGorilla = new Gorilla::Silverback();
-   mGorilla->loadAtlas("dejavu");
-   mScreen = mGorilla->createScreen(mViewport, "dejavu");
-   mCanvas = mScreen->createCanvas(14);
-   mFPS = mScreen->createText(10,10, "FPS: 0, Batches: 0", 15);
-   mFPSBackground = mCanvas->addRectangle(10,10, 128,15, Gorilla::rgb(255, 69, 0,255));
    
-   size_t ogre = mCanvas->addRectangle(64,64,48*4,48*4);
-   mCanvas->setRectangleBackground(ogre, "ogrehead");
-  
+   caption = mLayer->createCaption(10,10, "This is some left-aligned text");
+   caption->size(500, 100);
+   caption->colour(Gorilla::Colours::White);
+   caption->background(Gorilla::Colours::Burlywood);
+   
+   caption = mLayer->createCaption(10,10, "This is some right-aligned text");
+   caption->size(500, 100);
+   caption->align(Gorilla::TextAlign_Right);
+   caption->vertical_align(Gorilla::VerticalAlign_Middle);
+   caption->colour(Gorilla::Colours::White);
+   
+   caption = mLayer->createCaption(10,10, "This is some centered-aligned text");
+   caption->size(500, 100);
+   caption->align(Gorilla::TextAlign_Centre);
+   caption->vertical_align(Gorilla::VerticalAlign_Bottom);
+   caption->colour(Gorilla::Colours::White);
+   
+   markup = mLayer->createMarkupText(50,250, "Wow this i%%s a t%2o%3n o%4f t%%ext h%Rere isn't it?\nI mean really!And this is some %MMonospaced Text!!11%M. Yeah! %:coco% yeah!\nThat was coco.");
+
   }
   
  ~App()
   {
-   delete mGorilla;
+   std::cout << "\n** Average FPS is " << mWindow->getAverageFPS() << "\n\n";
+   delete mSilverback;
    delete mRoot;
   }
   
@@ -55,17 +104,25 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
    if (mKeyboard->isKeyDown(OIS::KC_ESCAPE))
      return false;
    mMouse->capture();
-   
    mTimer += evt.timeSinceLastFrame;
-   if (mTimer > 1.0f / 60.0f)
+   mTimer2 += evt.timeSinceLastFrame;
+   
+     
+
+   if (mTimer >= 1.0f)
    {
+    //rect->background_colour(  Ogre::ColourValue(Ogre::Math::RangeRandom(0,1), 0,0, 1)  );
+    //rect->colour(
+    poly->sides(poly->sides() + 1);
+    if (poly->sides() == 16)
+     poly->sides(3);
     mTimer = 0;
-    std::stringstream s;
-    s << "FPS: " << mWindow->getLastFPS() << ", Batches: " << mRoot->getRenderSystem()->_getBatchCount() << "\n";
-    mFPS->setText(s.str());
-    
-    mCanvas->setRectangleMinMax(mFPSBackground, mFPS->getMin(), mFPS->getMax());
-    
+   }
+   
+   if (mTimer2 >= 1.0f/60.0f)
+   {
+    poly->angle(poly->angle() + Ogre::Radian(0.015f));
+    mTimer2 = 0;
    }
    
    return true;
@@ -102,11 +159,20 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
    
    mRoot = new Ogre::Root("","");
    mRoot->addFrameListener(this);
+   
+#if 1
   #ifdef _DEBUG
    mRoot->loadPlugin("RenderSystem_Direct3D9_d");
   #else
    mRoot->loadPlugin("RenderSystem_Direct3D9");
   #endif
+#else
+  #ifdef _DEBUG
+   mRoot->loadPlugin("RenderSystem_GL_d.dll");
+  #else
+   mRoot->loadPlugin("RenderSystem_GL.dll");
+  #endif
+#endif
    
    mRoot->setRenderSystem(mRoot->getAvailableRenderers()[0]);
    
@@ -119,7 +185,7 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
    mSceneMgr = mRoot->createSceneManager(Ogre::ST_GENERIC);
    mCamera = mSceneMgr->createCamera("Camera");
    mViewport = mWindow->addViewport(mCamera);
-   mViewport->setBackgroundColour(Gorilla::rgb(173,216,230));
+   mViewport->setBackgroundColour(Gorilla::webcolour(Gorilla::Colours::FireBrick));
    
    rgm->initialiseAllResourceGroups();
   }

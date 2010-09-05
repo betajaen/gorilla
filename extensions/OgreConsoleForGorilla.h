@@ -59,18 +59,19 @@ class OgreConsole : public Ogre::Singleton<OgreConsole>, Ogre::FrameListener, Og
     void  updateConsole();
     void  updatePrompt();
     
-    bool               mIsVisible;
-    bool               mIsInitialised;
-    Gorilla::Screen*   mScreen;
-    Gorilla::Text*     mConsoleText;
-    Gorilla::Text*     mPromptText;
-    Gorilla::Canvas*   mCanvas;
-    size_t             mConsoleBackground;
-    
-    bool               mUpdateConsole;
-    bool               mUpdatePrompt;
+    bool                 mIsVisible;
+    bool                 mIsInitialised;
+    Gorilla::Screen*     mScreen;
+    Gorilla::Layer*      mLayer;
+    Gorilla::Caption*    mPromptText;
+    Gorilla::MarkupText* mConsoleText;
+    Gorilla::Rectangle*  mDecoration;
 
-    int                mStartline;
+    
+    bool                 mUpdateConsole;
+    bool                 mUpdatePrompt;
+
+    int                     mStartline;
     std::list<Ogre::String>      lines;
     Ogre::String            prompt;
     std::map<Ogre::String, OgreConsoleFunctionPtr>  commands;

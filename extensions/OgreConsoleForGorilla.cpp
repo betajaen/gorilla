@@ -40,14 +40,17 @@ void OgreConsole::init(Gorilla::Screen* screen)
    
    // Create gorilla things here.
    mScreen = screen;
-   mConsoleText = mScreen->createText(0,0, "", 15);
-   mPromptText = mScreen->createText(0, 0, "%3> %R_", 15);
-   mCanvas = mScreen->createCanvas(14);
-   mConsoleBackground = mCanvas->addRectangle(0,0, mScreen->getViewportWidth(), mScreen->getAtlas()->getGlyphLineHeight(), Gorilla::rgb(15,15,15,50));
-
+   mLayer = mScreen->createLayer(15);
+   mConsoleText = mLayer->createMarkupText(10,10, Ogre::StringUtil::BLANK);
+   mConsoleText->width(mScreen->getViewportWidth() - 10);
+   mPromptText = mLayer->createCaption(10,10, "> _");
+   mDecoration = mLayer->createRectangle(8,8, mScreen->getViewportWidth() - 16, mLayer->_getGlyphHeight());
+   mDecoration->background_gradient(Gorilla::Gradient_NorthSouth, Gorilla::rgb(64,64,64,128), Gorilla::rgb(64,64,64,128));
+   mDecoration->border(2, Gorilla::rgb(128,128,128,128));
+   
    mIsInitialised = true;
    
-   print("OgreConsole Activated. Press F1 to show/hide.");
+   print("%5Ogre%R%6Console%0 Activated. Press F1 to show/hide.%R");
 }
 
 void OgreConsole::shutdown()
@@ -60,9 +63,7 @@ void OgreConsole::shutdown()
  Ogre::Root::getSingletonPtr()->removeFrameListener(this);
  Ogre::LogManager::getSingleton().getDefaultLog()->removeListener(this);
  
- mScreen->destroy(mCanvas);
- mScreen->destroy(mPromptText);
- mScreen->destroy(mConsoleText);
+ mScreen->destroy(mLayer);
  
 }
 
@@ -171,21 +172,26 @@ void OgreConsole::updateConsole()
   lcount++;
   text << (*i) << "\n";
  }
- mConsoleText->setText(text.str());
+ mConsoleText->text(text.str());
  
  // Move prompt downwards.
- mPromptText->setTop(lcount * mScreen->getAtlas()->getGlyphLineHeight());
+ mPromptText->top(10 + (lcount * mLayer->_getGlyphHeight()));
  
  // Change background height so it covers the text and prompt
- mCanvas->setRectangleSize(mConsoleBackground, mScreen->getViewportWidth(), (lcount+1) * mScreen->getAtlas()->getGlyphLineHeight());
+ mDecoration->height(((lcount+1) * mScreen->getAtlas()->getGlyphLineHeight()) + 4);
+ 
+ mConsoleText->width(mScreen->getViewportWidth() - 20);
+ mDecoration->width(mScreen->getViewportWidth() - 16);
+ mPromptText->width(mScreen->getViewportWidth() - 20);
+ 
 }
 
 void OgreConsole::updatePrompt()
 {
  mUpdatePrompt = false;
  std::stringstream text;
- text << "%3> %R" << prompt << "_";
- mPromptText->setText(text.str());
+ text << "> " << prompt << "_";
+ mPromptText->text(text.str());
 }
 
 void OgreConsole::print(const Ogre::String &text)
@@ -220,9 +226,9 @@ bool OgreConsole::frameEnded(const Ogre::FrameEvent &evt)
 void OgreConsole::setVisible(bool isVisible)
 {
  mIsVisible = isVisible;
- mCanvas->setVisible(mIsVisible);
- mPromptText->setVisible(mIsVisible);
- mConsoleText->setVisible(mIsVisible);
+ //mLayer->setVisible(mIsVisible);
+ //mPromptText->setVisible(mIsVisible);
+ //mConsoleText->setVisible(mIsVisible);
 }
 
 void OgreConsole::addCommand(const Ogre::String &command, OgreConsoleFunctionPtr func)

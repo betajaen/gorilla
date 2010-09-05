@@ -6,7 +6,7 @@ rectangle 510 510
 lineheight 22
 spacelength 6
 baseline 18
-scale 0.999
+scale 1.0
 kerning -0.5
 monowidth 15
 range 33 126
@@ -196,7 +196,6 @@ glyph_58 119 -1
 glyph_46 121 -2
 glyph_58 121 -1
 glyph_112 112 -2
-glyph_103 114 -3
 glyph_103 105 -3
 
 [Sprites]
@@ -204,6 +203,7 @@ mousepointer 54 464 15 22
 ogrehead 0 464 48 48
 cursor 79 466 10 18
 resizer 11 446 10 10
+coco 3 367 64 64
 shadow_n 110 460 1 5
 shadow_ne 111 460 5 5
 shadow_e 111 465 5 1
