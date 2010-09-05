@@ -11,9 +11,20 @@ h1
 
 .section h2
 {
-    margin-top: 23pt;
-    font-size:24pt;
-    color:#777;
+    font-size:36pt;
+    color:#444;
+    padding-top:32px;
+    border-top:1px solid #aaa;
+    background: url("../images/section_background.png") top center no-repeat #f0f0f0;
+    text-align: center;
+    text-shadow: 1px 1px 1px #333;
+}
+
+.section hr
+{
+    border: 0;
+    background: url("../images/hr.png") top left repeat-x;
+    margin-bottom:1em;
 }
 
 .section h3
@@ -22,15 +33,28 @@ h1
     margin-bottom:11.5pt;
     font-size:16pt;
 }
+
+.section h3.mini
+{
+    font-weight: bolder;
+    font-size: 10pt;
+    margin:0;
+    border-bottom:1px solid #ccc;
+}
+
 .section
 {
     font-size:11.5pt;
     font-family: helvetica, arial;
     line-height:1.5;
+    padding-bottom:96px;
+    background: url("../images/stripes.png") bottom left repeat-x #f0f0f0;
 }
 
 .section p
 {
+    padding-left:1em;
+    padding-right:1em;
     padding-top:5.75pt;
     color:#222;
 }
@@ -67,4 +91,21 @@ h1
 code.side
 {
     font-size:10pt;
+
+}
+
+div.sidecode p
+{
+    border-bottom:1px solid #ccc;
+}
+
+.section ul
+{
+    padding-top:5.75pt;
+    padding-left:3em;
+}
+.section ul li
+{
+    list-style-type: disc;
+    padding-left:0.5em;
 }

@@ -49,6 +49,7 @@ To include Gorilla in your project, simply copy the two Gorilla files Gorilla.cp
     </div>
     <div class="grid_12 section">
       <h2>How Gorilla Works</h2>
+      <hr />
       <p>
         To draw onto the Screen, Gorilla creates a number of "Quads" or two triangles that mark a <a href="http://en.wikipedia.org/wiki/Glyph">Glyph</a>, <a href="http://en.wikipedia.org/wiki/Sprite_%28computer_graphics%29">Sprite</a> or solid/gradient colour on the screen. These triangles all share the same source image, but reference only portions of that image. This way instead of sending multiple images to your Graphics card at once, only one is needed -- increasing render time and reducing memory usage. This process is colourfully described in the following image:
       </p>
@@ -56,27 +57,50 @@ To include Gorilla in your project, simply copy the two Gorilla files Gorilla.cp
     
     </div>
     <div class="grid_12 section">
-      <h2>Texture Atlas</h2>
+      <h2>Texture Atlases</h2>
+      <hr />
       <div class="grid_8 alpha">
         <p>
-         To know what portions of the image is what, Gorilla uses <code>.gorilla</code> file that gives the precise positions of the Glyphs and Sprites held within the image. These are simple text files easily editable by any Text Editor.
+         To know what portions of the image is what, Gorilla uses <code>.gorilla</code> file that gives the precise positions and sizes of the Glyphs and Sprites held within the image. These are simple text files easily editable by any Text Editor.
         </p>
-
+        <p>
+          Typically a Gorilla file will contain the following;
+        </p>
+         <ul>
+           <li>Location of a white pixel</li>
+           <li>Font line heights, average sizing, base line height and letter spacing</li>
+           <li>Glyph to Glyph kerning information</li>
+           <li>Glyph sizes</li>
+           <li>Sprite names, positions and sizes</li>
+         </ul>
+        <p>
+          
+        </p>
      </div>
-      <div class="grid_4 omega">
-         <code class="side">
-            [Texture]<br/>
-            file my_textureatlas.png<br/>
-            <br/>
-            [Font]<br/>
-            range 65 66 <br/>
-            glyph_65 19 0 17 23 16 <br/>
-            glyph_66 36 0 13 23 12 <br/>
-
-            [Sprites]<br/>
-            coco 54 464 15 22<br/>
-            zombie 0 464 48 48<br/>
-          </code>
+      <div class="grid_4 omega sidecode">
+         <h3 class="mini">Sample Gorilla File</h3>
+         <p>
+           <code class="side">
+              [Texture]<br/>
+              file my_textureatlas.png<br/>
+              rectangle 510 510<br />
+              <br />
+              [Font]<br />
+              lineheight 22<br />
+              spacelength 6<br />
+              baseline 18<br />
+              scale 0.999<br />
+              kerning -0.5<br />
+              monowidth 15<br />
+              range 65 66 <br/>
+              glyph_65 19 0 17 23 16 <br/>
+              glyph_66 36 0 13 23 12 <br/>
+              <br/>
+              [Sprites]<br/>
+              coco 0 0 48 48<br/>
+              zombie 54 0 48 48<br/>
+            </code>
+          </p>
       </div>
     </div>
 
