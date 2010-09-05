@@ -1,0 +1,70 @@
+h1, h2, h3, h4, h5, h6
+{
+    font-family: "dejavu sans", helvetica , arial;
+    font-weight: normal;    
+}
+
+h1
+{
+    font-size:48pt;
+}
+
+.section h2
+{
+    margin-top: 23pt;
+    font-size:24pt;
+    color:#777;
+}
+
+.section h3
+{
+    margin-top:23pt;
+    margin-bottom:11.5pt;
+    font-size:16pt;
+}
+.section
+{
+    font-size:11.5pt;
+    font-family: helvetica, arial;
+    line-height:1.5;
+}
+
+.section p
+{
+    padding-top:5.75pt;
+    color:#222;
+}
+
+.section p a
+{
+    font-weight: bolder;
+    color: DarkBlue;
+    text-decoration: none;
+}
+
+.section p a:hover
+{
+    color: Blue;
+    text-decoration: underline;
+}
+
+.section p code, .section pre
+{
+    font-family: "consolas", "courier new", mono;
+    color:#444;
+}
+
+.center
+{
+    text-align: center;
+}
+
+.gray_border
+{
+    border:1px solid #ccc;
+}
+
+code.side
+{
+    font-size:10pt;
+}

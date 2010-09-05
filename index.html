@@ -1,8 +1,98 @@
 <html>
 <head>
   <title>Gorilla</title>
+  <link rel="stylesheet" href="css/reset.css" />
+  <link rel="stylesheet" href="css/960.css" />
+  <link rel="stylesheet" href="css/style.css" />
+
 </head>
 <body>
-Gorilla
+  <h1>Gorilla</h1>
+  <div class="container_12">
+    <div class="grid_12 section section_begin">
+      <h3>Licence</h3>
+      <pre>
+Copyright (c) 2010 Robin Southern                                             
+
+Permission is hereby granted, free of charge, to any person obtaining a copy  
+of this software and associated documentation files (the "Software"), to deal 
+in the Software without restriction, including without limitation the rights  
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell     
+copies of the Software, and to permit persons to whom the Software is         
+furnished to do so, subject to the following conditions:                      
+
+The above copyright notice and this permission notice shall be included in    
+all copies or substantial portions of the Software.                           
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR    
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,      
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE   
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER        
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN     
+THE SOFTWARE.</pre>
+      <h3>What is it?</h3>
+      <p>
+        Gorilla is a C++ based HUD and simple 2D overlay system for the <a href="http://www.ogre3d.org">Ogre3D graphics engine</a>, it comes in two files Gorilla.cpp and Gorilla.h
+      </p>
+      <p>
+Gorilla is intended to substitute the Ogre overlay system, and to provide a good framework and basis for any Ogre programmer to build their HUD or GUI system upon.</p>
+      <p>
+Gorilla is designed for speed; it uses <a href="http://en.wikipedia.org/wiki/Texture_atlas">Texture Atlases</a> and tries to render everything in one batch.
+      </p>
+      <h3>Getting Started</h3>
+      <p>
+To include Gorilla in your project, simply copy the two Gorilla files Gorilla.cpp and Gorilla.h into your project. Making sure you correctly include and link to Ogre. To increase compliation speed you may want to <code>#include "Gorilla.h"</code> in your static headers file.</p>
+      <p>
+      All of Gorilla's classes are contained in the Gorilla namespace. All classes and member functions use the <code>camelCase</code> notation, with the exception that class names the first letter is always captialised.
+</p>
+    </div>
+    <div class="grid_12 section">
+      <h2>How Gorilla Works</h2>
+      <p>
+        To draw onto the Screen, Gorilla creates a number of "Quads" or two triangles that mark a <a href="http://en.wikipedia.org/wiki/Glyph">Glyph</a>, <a href="http://en.wikipedia.org/wiki/Sprite_%28computer_graphics%29">Sprite</a> or solid/gradient colour on the screen. These triangles all share the same source image, but reference only portions of that image. This way instead of sending multiple images to your Graphics card at once, only one is needed -- increasing render time and reducing memory usage. This process is colourfully described in the following image:
+      </p>
+      <p class="center"><img src="images/howitworks.png" class="gray_border" /></p>
+    
+    </div>
+    <div class="grid_12 section">
+      <h2>Texture Atlas</h2>
+      <div class="grid_8 alpha">
+        <p>
+         To know what portions of the image is what, Gorilla uses <code>.gorilla</code> file that gives the precise positions of the Glyphs and Sprites held within the image. These are simple text files easily editable by any Text Editor.
+        </p>
+
+     </div>
+      <div class="grid_4 omega">
+         <code class="side">
+            [Texture]<br/>
+            file my_textureatlas.png<br/>
+            <br/>
+            [Font]<br/>
+            range 65 66 <br/>
+            glyph_65 19 0 17 23 16 <br/>
+            glyph_66 36 0 13 23 12 <br/>
+
+            [Sprites]<br/>
+            coco 54 464 15 22<br/>
+            zombie 0 464 48 48<br/>
+          </code>
+      </div>
+    </div>
+
+
+    <div class="grid_12">
+        <div class="grid_4 alpha">
+            ...
+        </div>
+        <div class="grid_6">
+            ...
+        </div>
+        <div class="grid_2 omega">
+            ...
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
