@@ -1268,7 +1268,9 @@ namespace Gorilla
     */
     void  left(const Ogre::Real& left)
     {
+     Ogre::Real w = width();
      mLeft = left;
+     mRight = left + w;
      mDirty = true;
      mLayer->_markDirty();
     }
@@ -1288,7 +1290,9 @@ namespace Gorilla
     */
     void  top(const Ogre::Real& top)
     {
+     Ogre::Real h = height();
      mTop = top;
+     mBottom = top + h;
      mDirty = true;
      mLayer->_markDirty();
     }

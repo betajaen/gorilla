@@ -994,9 +994,7 @@ namespace Gorilla
  void Layer::_render(buffer<Vertex>& vertices)
  {
   
-   Ogre::Real xTexel = mScreen->getRenderSystem()->getHorizontalTexelOffset(),
-              yTexel = mScreen->getRenderSystem()->getVerticalTexelOffset(),
-              invWidth = mScreen->getViewportWidth(),
+   Ogre::Real invWidth = mScreen->getViewportWidth(),
               invHeight = mScreen->getViewportHeight();
 
   size_t begin = vertices.size();
@@ -1079,8 +1077,8 @@ namespace Gorilla
   
   for (size_t i = begin; i < vertices.size(); i++)
   {
-   vertices[i].position.x = ((vertices[i].position.x + xTexel) / invWidth) * 2 - 1;
-   vertices[i].position.y = ((vertices[i].position.y + yTexel) / invHeight) * -2 + 1;
+   vertices[i].position.x = ((vertices[i].position.x) / invWidth) * 2 - 1;
+   vertices[i].position.y = ((vertices[i].position.y) / invHeight) * -2 + 1;
   }
   
  }
