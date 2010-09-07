@@ -66,7 +66,7 @@ class OgreConsole : public Ogre::Singleton<OgreConsole>, Ogre::FrameListener, Og
     Gorilla::Caption*    mPromptText;
     Gorilla::MarkupText* mConsoleText;
     Gorilla::Rectangle*  mDecoration;
-
+    Gorilla::GlyphData*  mGlyphData;
     
     bool                 mUpdateConsole;
     bool                 mUpdatePrompt;

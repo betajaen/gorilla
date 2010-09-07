@@ -34,56 +34,26 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
   mSilverback = new Gorilla::Silverback();
   mSilverback->loadAtlas("dejavu");
   mScreen = mSilverback->createScreen(mViewport, "dejavu");
+  Ogre::Real vpW = mViewport->getActualWidth(), vpH = mViewport->getActualHeight();
 
   // Create our drawing layer
   mLayer = mScreen->createLayer(0);
+  rect = mLayer->createRectangle(0,0, vpW, vpH);
+  rect->background_gradient(Gorilla::Gradient_Diagonal, Gorilla::rgb(98,0,63), Gorilla::rgb(255,180,174));
+  
+  markup = mLayer->createMarkupText(9,5,5, "%@24%A Haiku\n%@14%Written by Betajaen%@9%\nSo many to choose from\nPretty typefaces on Ogre screen\nTime to update Git");
+  
+  caption = mLayer->createCaption(9, vpW - 55, 5, "9");
+  caption->width(50);
+  caption->align(Gorilla::TextAlign_Right);
 
-  // Create a rectangle with a pink border and no background.
-  rect = mLayer->createRectangle(10,10,500,100);
-  rect->border(5, Gorilla::Colours::Pink);
-  rect->no_background();
+  caption = mLayer->createCaption(14, vpW - 55, 18, "14");
+  caption->width(50);
+  caption->align(Gorilla::TextAlign_Right);
 
-  // Create a closed line loop.
-  list = mLayer->createLineList();
-  list->begin();
-  list->position(100,100);
-  list->position(100,200);
-  list->position(50,200);
-  list->end(true);
-
-  // Create a polygon with coco as the background and a OrangeRed border
-  poly = mLayer->createPolygon(250,250, 250, 8);
-  poly->background_image("coco");
-  poly->border_width(12);
-  poly->border_colour(Gorilla::Colours::OrangeRed);
-
-  // Create a QuadList with various bits in it.
-  quads = mLayer->createQuadList();
-  quads->begin();
-  quads->gradient(100,100,  300,300, Gorilla::Gradient_NorthSouth, Gorilla::Colours::Aqua, Gorilla::Colours::Red);
-  quads->border(100,100, 300,300, 10,Gorilla::Colours::Pink, Gorilla::Colours::Red, Gorilla::Colours::Blue, Gorilla::Colours::Green);
-  quads->glyph(100,100, 'A', Gorilla::Colours::BlueViolet);
-  quads->end();
-   
-   
-   caption = mLayer->createCaption(10,10, "This is some left-aligned text");
-   caption->size(500, 100);
-   caption->colour(Gorilla::Colours::White);
-   caption->background(Gorilla::Colours::Burlywood);
-   
-   caption = mLayer->createCaption(10,10, "This is some right-aligned text");
-   caption->size(500, 100);
-   caption->align(Gorilla::TextAlign_Right);
-   caption->vertical_align(Gorilla::VerticalAlign_Middle);
-   caption->colour(Gorilla::Colours::White);
-   
-   caption = mLayer->createCaption(10,10, "This is some centered-aligned text");
-   caption->size(500, 100);
-   caption->align(Gorilla::TextAlign_Centre);
-   caption->vertical_align(Gorilla::VerticalAlign_Bottom);
-   caption->colour(Gorilla::Colours::White);
-   
-   markup = mLayer->createMarkupText(50,250, "Wow this i%%s a t%2o%3n o%4f t%%ext h%Rere isn't it?\nI mean really!And this is some %MMonospaced Text!!11%M. Yeah! %:coco% yeah!\nThat was coco.");
+  caption = mLayer->createCaption(24, vpW - 55, 33, "24");
+  caption->width(50);
+  caption->align(Gorilla::TextAlign_Right);
 
   }
   
@@ -106,24 +76,6 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
    mMouse->capture();
    mTimer += evt.timeSinceLastFrame;
    mTimer2 += evt.timeSinceLastFrame;
-   
-     
-
-   if (mTimer >= 1.0f)
-   {
-    //rect->background_colour(  Ogre::ColourValue(Ogre::Math::RangeRandom(0,1), 0,0, 1)  );
-    //rect->colour(
-    poly->sides(poly->sides() + 1);
-    if (poly->sides() == 16)
-     poly->sides(3);
-    mTimer = 0;
-   }
-   
-   if (mTimer2 >= 1.0f/60.0f)
-   {
-    poly->angle(poly->angle() + Ogre::Radian(0.015f));
-    mTimer2 = 0;
-   }
    
    return true;
   }

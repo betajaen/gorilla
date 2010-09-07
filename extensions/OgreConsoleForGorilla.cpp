@@ -14,6 +14,8 @@
 
 template<> OgreConsole* Ogre::Singleton<OgreConsole>::ms_Singleton=0;
 
+#define CONSOLE_FONT_INDEX 14
+
 #define CONSOLE_LINE_LENGTH 85
 #define CONSOLE_LINE_COUNT 15
 static const char legalchars[]="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890+!\"'#%&/()=?[]\\*-_.:,; ";
@@ -41,10 +43,12 @@ void OgreConsole::init(Gorilla::Screen* screen)
    // Create gorilla things here.
    mScreen = screen;
    mLayer = mScreen->createLayer(15);
-   mConsoleText = mLayer->createMarkupText(10,10, Ogre::StringUtil::BLANK);
+   mGlyphData = mLayer->_getGlyphData(CONSOLE_FONT_INDEX); // Font.CONSOLE_FONT_INDEX
+
+   mConsoleText = mLayer->createMarkupText(CONSOLE_FONT_INDEX,  10,10, Ogre::StringUtil::BLANK);
    mConsoleText->width(mScreen->getViewportWidth() - 10);
-   mPromptText = mLayer->createCaption(10,10, "> _");
-   mDecoration = mLayer->createRectangle(8,8, mScreen->getViewportWidth() - 16, mLayer->_getGlyphHeight());
+   mPromptText = mLayer->createCaption(CONSOLE_FONT_INDEX,  10,10, "> _");
+   mDecoration = mLayer->createRectangle(8,8, mScreen->getViewportWidth() - 16, mGlyphData->mLineHeight );
    mDecoration->background_gradient(Gorilla::Gradient_NorthSouth, Gorilla::rgb(128,128,128,128), Gorilla::rgb(64,64,64,128));
    mDecoration->border(2, Gorilla::rgb(128,128,128,128));
    
@@ -175,10 +179,10 @@ void OgreConsole::updateConsole()
  mConsoleText->text(text.str());
  
  // Move prompt downwards.
- mPromptText->top(10 + (lcount * mLayer->_getGlyphHeight()));
+ mPromptText->top(10 + (lcount * mGlyphData->mLineHeight));
  
  // Change background height so it covers the text and prompt
- mDecoration->height(((lcount+1) * mScreen->getAtlas()->getGlyphLineHeight()) + 4);
+ mDecoration->height(((lcount+1) * mGlyphData->mLineHeight) + 4);
  
  mConsoleText->width(mScreen->getViewportWidth() - 20);
  mDecoration->width(mScreen->getViewportWidth() - 16);

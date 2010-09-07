@@ -423,6 +423,46 @@ namespace Gorilla
    
  };
  
+ /*! class. GlyphData
+     desc.
+         Collection of glyphs of the same size.
+ */
+ class GlyphData : public Ogre::GeneralAllocatedObject
+ {
+   
+  friend class TextureAtlas;
+   
+   public:
+    
+    GlyphData();
+    
+   ~GlyphData();
+    
+    /*! function. getGlyph
+        desc.
+            Get a glyph (character information) from a specific character.
+        note.
+            If the character doesn't exist then a null pointer is returned.
+            Do not delete the Glyph pointer.
+    */
+    inline Glyph* getGlyph(Ogre::uint character) const
+    {
+     character = character - mRangeBegin;
+     if (character > mRangeEnd)
+      return 0;
+     return mGlyphs[character];
+    }
+    
+    std::vector<Glyph*>  mGlyphs;
+    Ogre::uint           mRangeBegin, mRangeEnd;
+    Ogre::Real           mSpaceLength,
+                         mLineHeight,
+                         mBaseline,
+                         mLetterSpacing,
+                         mMonoWidth;
+   
+ };
+ 
  /*! class. TextureAtlas
      desc.
           The TextureAtlas file represents a .gorilla file which contains all the needed information that
@@ -463,19 +503,12 @@ namespace Gorilla
      return mMaterial->getName();
     }
     
-    /*! function. getGlyph
-        desc.
-            Get a glyph (character information) from a specific character.
-        note.
-            If the character doesn't exist then a null pointer is returned.
-            Do not delete the Glyph pointer.
-    */
-    inline Glyph* getGlyph(Ogre::uint character) const
+    inline GlyphData* getGlyphData(Ogre::uint index) const
     {
-     character = character - mGlyphRangeBegin;
-     if (character > mGlyphRangeEnd)
+     std::map<Ogre::uint, GlyphData*>::const_iterator it = mGlyphData.find(index);
+     if (it == mGlyphData.end())
       return 0;
-     return mGlyphs[character];
+     return (*it).second;
     }
     
     /*! function. getSprite
@@ -495,55 +528,13 @@ namespace Gorilla
     
     /*! function. getGlyphKerning
         desc.
-            Get the distance between any two characters.
-        note.
-            This is used if there is no kerning information between those
-            two characters in the Caption and MarkupText classes.
-    */
-    inline Ogre::Real getGlyphKerning() const
-    {
-     return mGlyphAllGlyphsKerning;
-    }
-    
-    /*! function. getGlyphKerning
-        desc.
-            Get the how long in pixels a space is.
-    */
-    inline Ogre::Real getGlyphSpaceLength() const
-    {
-     return mGlyphSpaceLength;
-    }
-    
-    /*! function. getGlyphKerning
-        desc.
-            Get the vertical distance of where the baseline of the characters are.
-        note.
-            See http://en.wikipedia.org/wiki/Baseline_%28typography%29 for what
-            exactly a baseline
-    */
-    inline Ogre::Real getGlyphBaseline() const
-    {
-     return mGlyphBaseline;
-    }
-    
-    /*! function. getGlyphKerning
-        desc.
-            Get the maximum vertical distance used for a line.
-    */
-    inline Ogre::Real getGlyphLineHeight() const
-    {
-     return mGlyphLineHeight;
-    }
-    
-    /*! function. getGlyphKerning
-        desc.
             Get the UV information for a designated white pixel in the texture.
         note.
             Units are in relative coordinates (0..1)
     */
-    inline Ogre::Vector2 getRectangleCoords() const
+    inline Ogre::Vector2 getWhitePixel() const
     {
-     return mRectangleCoords;
+     return mWhitePixel;
     }
     
     /*! function. getGlyphKerning
@@ -553,9 +544,9 @@ namespace Gorilla
             Units are in relative coordinates (0..1)
  
     */
-    inline Ogre::Real getRectangleCoordsX() const
+    inline Ogre::Real getWhitePixelX() const
     {
-     return mRectangleCoords.x;
+     return mWhitePixel.x;
     }
     
     /*! function. getGlyphKerning
@@ -564,9 +555,9 @@ namespace Gorilla
         note.
             Units are in relative coordinates (0..1)
     */
-    inline Ogre::Real getRectangleCoordsY() const
+    inline Ogre::Real getWhitePixelY() const
     {
-     return mRectangleCoords.y;
+     return mWhitePixel.y;
     }
     
     /*! function. getTextureSize
@@ -603,34 +594,6 @@ namespace Gorilla
     inline Ogre::Pass* getPass() const
     {
      return mPass;
-    }
-   
-    /*! function. getGlyphRangeBegin
-        desc.
-            Get the first character that exists in the loaded glyphs
-    */
-    inline Ogre::uint getGlyphRangeBegin() const
-    {
-     return mGlyphRangeBegin;
-    }
-   
-    /*! function. getGlyphRangeEnd
-        desc.
-            Get the last character that exists in the loaded glyphs
-    */
-    inline Ogre::uint getGlyphRangeEnd() const
-    {
-     return mGlyphRangeEnd;
-    }
-    
-    /*! function. getGlyphMonoWidth
-        desc.
-            Get the distance between two characters when drawing in
-            monospace mode.
-    */
-    inline Ogre::Real getGlyphMonoWidth() const
-    {
-     return mGlyphMonoWidth;
     }
     
     /*! function. getGlyphMonoWidth
@@ -675,8 +638,8 @@ namespace Gorilla
     void _reset();
     void _load(const Ogre::String& gorillaFile, const Ogre::String& groupName);
     void _loadTexture(Ogre::ConfigFile::SettingsMultiMap*);
-    void _loadGlyphs(Ogre::ConfigFile::SettingsMultiMap*);
-    void _loadKerning(Ogre::ConfigFile::SettingsMultiMap*);
+    void _loadGlyphs(Ogre::ConfigFile::SettingsMultiMap*, GlyphData*);
+    void _loadKerning(Ogre::ConfigFile::SettingsMultiMap*, GlyphData*);
     void _loadSprites(Ogre::ConfigFile::SettingsMultiMap*);
     void _save(const Ogre::String& gorillaFile);
     void _createMaterial();
@@ -686,16 +649,10 @@ namespace Gorilla
     Ogre::MaterialPtr mMaterial;
     Ogre::TextureUnitState* mTextureUnit;
     Ogre::Pass* mPass;
-    std::vector<Glyph*> mGlyphs;
-    std::map<Ogre::String, Sprite*> mSprites;
-    Ogre::uint mGlyphRangeBegin, mGlyphRangeEnd;
-    Ogre::Real mGlyphScale;
-    Ogre::Real mGlyphSpaceLength;
-    Ogre::Real mGlyphLineHeight;
-    Ogre::Real mGlyphBaseline;
-    Ogre::Real mGlyphAllGlyphsKerning;
-    Ogre::Real mGlyphMonoWidth;
-    Ogre::Vector2 mRectangleCoords;
+    
+    std::map<Ogre::uint, GlyphData*> mGlyphData;
+    std::map<Ogre::String, Sprite*>  mSprites;
+    Ogre::Vector2 mWhitePixel;
     Ogre::Vector2 mInverseTextureSize;
     Ogre::ColourValue mMarkupColour[10];
   };
@@ -882,6 +839,8 @@ namespace Gorilla
     */
     inline void setVisible(bool isVisible)
     {
+     if (mVisible == isVisible)
+      return;
      mVisible = isVisible;
      _markDirty();
     }
@@ -892,6 +851,8 @@ namespace Gorilla
     */
     inline void show()
     {
+     if (mVisible)
+      return;
      mVisible = true;
      _markDirty();
     }
@@ -902,6 +863,8 @@ namespace Gorilla
     */
     inline void hide()
     {
+     if (!mVisible)
+      return;
      mVisible = false;
      _markDirty();
     }
@@ -1028,7 +991,7 @@ namespace Gorilla
         desc.
             Creates a caption
     */
-    Caption*         createCaption(Ogre::Real x, Ogre::Real y, const Ogre::String& text);
+    Caption*         createCaption(Ogre::uint glyphDataIndex, Ogre::Real x, Ogre::Real y, const Ogre::String& text);
     
     /*! function. destroyCaption
         desc.
@@ -1055,7 +1018,7 @@ namespace Gorilla
         desc.
             Creates a markup text
     */
-    MarkupText*         createMarkupText(Ogre::Real x, Ogre::Real y, const Ogre::String& text);
+    MarkupText*         createMarkupText(Ogre::uint defaultGlyphIndex, Ogre::Real x, Ogre::Real y, const Ogre::String& text);
     
     /*! function. destroyMarkupText
         desc.
@@ -1093,7 +1056,7 @@ namespace Gorilla
     */
     inline Ogre::Vector2      _getSolidUV() const
     {
-     return mScreen->getAtlas()->getRectangleCoords();
+     return mScreen->getAtlas()->getWhitePixel();
     }
     
     /*! function. _getSprite
@@ -1109,9 +1072,9 @@ namespace Gorilla
         desc.
             Helper function to get a Glyph from the assigned texture atlas.
     */
-    inline Glyph*             _getGlyph(unsigned char character) const
+    inline GlyphData*         _getGlyphData(Ogre::uint id) const
     {
-     return mScreen->getAtlas()->getGlyph(character);
+     return mScreen->getAtlas()->getGlyphData(id);
     }
     
     /*! function. _getGlyph
@@ -1148,60 +1111,6 @@ namespace Gorilla
     inline Ogre::Real         _getTexelY() const
     {
      return mScreen->getTexelOffsetY();
-    }
-    
-    /*! function. _getGlyphHeight
-        desc.
-            Helper function to get the glyph line height.
-    */
-    inline Ogre::Real         _getGlyphHeight() const
-    {
-     return mScreen->getAtlas()->getGlyphLineHeight();
-    }
-    
-    /*! function. _getGlyphHeight
-        desc.
-            Helper function to get the glyph space length.
-    */
-    inline Ogre::Real         _getGlyphSpaceLength() const
-    {
-     return mScreen->getAtlas()->getGlyphSpaceLength();
-    }
-    
-    /*! function. _getGlyphRangeBegin
-        desc.
-            Helper function to get the first glyph character.
-    */
-    inline Ogre::uint         _getGlyphRangeBegin() const
-    {
-     return mScreen->getAtlas()->getGlyphRangeBegin();
-    }
-    
-    /*! function. _getGlyphRangeEnd
-        desc.
-            Helper function to get the last glyph character.
-    */
-    inline Ogre::uint         _getGlyphRangeEnd() const
-    {
-     return mScreen->getAtlas()->getGlyphRangeEnd();
-    }
-    
-    /*! function. _getDefaultGlyphKerning
-        desc.
-            Helper function to get the default kerning for all glyphs.
-    */
-    inline Ogre::Real         _getDefaultGlyphKerning() const
-    {
-     return mScreen->getAtlas()->getGlyphKerning();
-    }
-    
-    /*! function. _getDefaultGlyphKerning
-        desc.
-            Helper function to get the monospace width for glyphs.
-    */
-    inline Ogre::Real         _getGlyphFixedWidth() const
-    {
-     return mScreen->getAtlas()->getGlyphMonoWidth();
     }
     
     /*! function. _getMarkupColour
@@ -1252,6 +1161,15 @@ namespace Gorilla
    friend class Layer;
    
    public:
+    
+    /*! function. intersects
+        desc.
+            Does a set of coordinates lie within this rectangle?
+    */
+    inline bool intersects(const Ogre::Vector2& coordinates) const
+    {
+     return ((coordinates.x >= mLeft && coordinates.x <= mRight) && (coordinates.y >= mTop && coordinates.y <= mBottom));
+    }
     
     /*! function. left 
         desc.
@@ -2091,30 +2009,30 @@ namespace Gorilla
         desc.
             Draw a glpyh
     */
-    void  glyph(Ogre::Real x, Ogre::Real y, unsigned char character, const Ogre::ColourValue& colour);
+    void  glyph(Ogre::uint glyphDataIndex, Ogre::Real x, Ogre::Real y, unsigned char character, const Ogre::ColourValue& colour);
     
     /*! function. glyph
         desc.
             Draw a glyph with a custom size.
     */
-    void  glyph(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, unsigned char character, const Ogre::ColourValue& colour);
+    void  glyph(Ogre::uint glyphDataIndex, Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, unsigned char character, const Ogre::ColourValue& colour);
     
     /*! function. glyph
         desc.
             Draw a glpyh
     */
-    void  glyph(Ogre::Real x, Ogre::Real y, unsigned char character, const Gorilla::Colours::Colour& colour)
+    void  glyph(Ogre::uint glyphDataIndex, Ogre::Real x, Ogre::Real y, unsigned char character, const Gorilla::Colours::Colour& colour)
     {
-     glyph(x,y,character, webcolour(colour));
+     glyph(glyphDataIndex,x,y,character, webcolour(colour));
     }
     
     /*! function. glyph
         desc.
             Draw a glyph with a custom size.
     */
-    void  glyph(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, unsigned char character, const Gorilla::Colours::Colour& colour)
+    void  glyph(Ogre::uint glyphDataIndex, Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, unsigned char character, const Gorilla::Colours::Colour& colour)
     {
-     glyph(x,y,w,h, character, webcolour(colour));
+     glyph(glyphDataIndex, x,y,w,h, character, webcolour(colour));
     }
     
     /*! function. end
@@ -2156,6 +2074,15 @@ namespace Gorilla
    friend class Layer;
    
    public:
+    
+    /*! function. intersects
+        desc.
+            Does a set of coordinates lie within this caption?
+    */
+    inline bool intersects(const Ogre::Vector2& coordinates) const
+    {
+     return ((coordinates.x >= mLeft && coordinates.x <= mLeft + mWidth) && (coordinates.y >= mTop && coordinates.y <= mTop + mHeight));
+    }
     
     /*! function. top
         desc.
@@ -2415,16 +2342,17 @@ namespace Gorilla
     
     void               _calculateDrawSize(Ogre::Vector2& size);
     
-    Caption(Ogre::Real left, Ogre::Real top, const Ogre::String& caption, Layer* parent);
+    Caption(Ogre::uint glyphDataIndex, Ogre::Real left, Ogre::Real top, const Ogre::String& caption, Layer* parent);
     
    ~Caption() {}
     
    protected:
     
     Layer*                mLayer;
+    GlyphData*            mGlyphData;
     Ogre::Real            mLeft, mTop, mWidth, mHeight;
     TextAlignment         mAlignment;
-    VerticalAlignment mVerticalAlign;
+    VerticalAlignment     mVerticalAlign;
     Ogre::String          mText;
     Ogre::ColourValue     mColour, mBackground;
     bool                  mDirty;
@@ -2608,7 +2536,7 @@ namespace Gorilla
     
    protected:
     
-    MarkupText(Ogre::Real left, Ogre::Real top, const Ogre::String& text, Layer* parent);
+    MarkupText(Ogre::uint defaultGlyphIndex, Ogre::Real left, Ogre::Real top, const Ogre::String& text, Layer* parent);
     
    ~MarkupText() {}
     
@@ -2623,6 +2551,7 @@ namespace Gorilla
     };
     
     Layer*                mLayer;
+    GlyphData*            mDefaultGlyphData;
     Ogre::Real            mLeft, mTop, mWidth, mHeight;
     Ogre::String          mText;
     Ogre::ColourValue     mBackground;

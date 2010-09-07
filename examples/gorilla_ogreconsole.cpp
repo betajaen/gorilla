@@ -74,7 +74,7 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
    mScreen = mGorilla->createScreen(mViewport, "dejavu");
    
    mFPSLayer = mScreen->createLayer(14);
-   mFPS = mFPSLayer->createCaption(10,10, Ogre::StringUtil::BLANK);
+   mFPS = mFPSLayer->createCaption(14, 10,10, Ogre::StringUtil::BLANK);
 
    mConsole = new OgreConsole();
    mConsole->init(mScreen);
@@ -107,7 +107,7 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
     mTimer = 0;
     std::stringstream s;
     s << "FPS: " << mWindow->getLastFPS() << ", Batches: " << mRoot->getRenderSystem()->_getBatchCount() << "\n";
-    mFPS->top(mViewport->getActualHeight() - 20);
+    mFPS->top(mViewport->getActualHeight() - 25);
     mFPS->text(s.str());
     
    }

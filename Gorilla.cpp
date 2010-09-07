@@ -95,6 +95,16 @@ namespace Gorilla
 
  TextureAtlas::~TextureAtlas()
  {
+  for (std::map<Ogre::uint, GlyphData*>::iterator it = mGlyphData.begin(); it != mGlyphData.end(); it++)
+  {
+   OGRE_DELETE (*it).second;
+  }
+  
+  for (std::map<Ogre::String, Sprite*>::iterator it = mSprites.begin(); it != mSprites.end(); it++)
+  {
+   OGRE_DELETE (*it).second;
+  }
+
  }
 
  void  TextureAtlas::_reset()
@@ -120,10 +130,15 @@ namespace Gorilla
    
    if (secName == "texture")
     _loadTexture(settings);
-   else if (secName == "font" || secName == "glyphs")
-    _loadGlyphs(settings);
-   else if (secName == "fontkerning" || secName == "glyphskerning" || secName == "kerning")
-    _loadKerning(settings);
+   else if (Ogre::StringUtil::startsWith(secName, "font.", false))
+   {
+    Ogre::uint index = Ogre::StringConverter::parseUnsignedInt(secName.substr(5));
+    GlyphData* glyphData = OGRE_NEW GlyphData();
+    mGlyphData[index] = glyphData;
+    
+    _loadGlyphs(settings, glyphData);
+    _loadKerning(settings, glyphData);
+   }
    else if (secName == "sprites")
     _loadSprites(settings);
    
@@ -176,11 +191,11 @@ namespace Gorilla
    }
    // layer x y
    // >  layer 100 105
-   else if (name == "rectangle")
+   else if (name == "whitepixel")
    {
-    mRectangleCoords = Ogre::StringConverter::parseVector2(data);
-    mRectangleCoords.x *= mInverseTextureSize.x;
-    mRectangleCoords.y *= mInverseTextureSize.y;
+    mWhitePixel = Ogre::StringConverter::parseVector2(data);
+    mWhitePixel.x *= mInverseTextureSize.x;
+    mWhitePixel.y *= mInverseTextureSize.y;
    }
    
   }
@@ -188,13 +203,14 @@ namespace Gorilla
   
  }
 
- void  TextureAtlas::_loadGlyphs(Ogre::ConfigFile::SettingsMultiMap* settings)
+ void  TextureAtlas::_loadGlyphs(Ogre::ConfigFile::SettingsMultiMap* settings, GlyphData* glyphData)
  {
-  
+
   Ogre::String name, data;
   Ogre::ConfigFile::SettingsMultiMap::iterator i;
   
   Ogre::StringVector str_values;
+  Ogre::Vector2  offset(0,0);
   for (i = settings->begin(); i != settings->end(); ++i) 
   {
   
@@ -207,39 +223,39 @@ namespace Gorilla
 
    Ogre::StringUtil::toLowerCase(name);
    
+   // lineheight x y
+   // >  offset 0 80
+   if (name == "offset")
+   {
+    offset = Ogre::StringConverter::parseVector2(data);
+    continue;
+   }
    // lineheight lineheight
    // >  lineheight 15
-   if (name == "lineheight")
+   else if (name == "lineheight")
    {
-    mGlyphLineHeight = Ogre::StringConverter::parseReal(data);
+    glyphData->mLineHeight = Ogre::StringConverter::parseReal(data);
     continue;
    }
    // spacelength spacelength
    // >  spacelength 3
    else if (name == "spacelength")
    {
-    mGlyphSpaceLength = Ogre::StringConverter::parseReal(data);
+    glyphData->mSpaceLength = Ogre::StringConverter::parseReal(data);
     continue;
    }
    // spacelength spacelength
    // >  spacelength 3
    else if (name == "baseline")
    {
-    mGlyphBaseline = Ogre::StringConverter::parseReal(data);
+    glyphData->mBaseline = Ogre::StringConverter::parseReal(data);
     continue;
    }
    // monowidth width
    // >  monowidth 3
    else if (name == "monowidth")
    {
-    mGlyphMonoWidth = Ogre::StringConverter::parseReal(data);
-    continue;
-   }
-   // scale glyph_scale
-   // >  scale 0.75
-   else if (name == "scale")
-   {
-    mGlyphScale = Ogre::StringConverter::parseReal(data);
+    glyphData->mMonoWidth = Ogre::StringConverter::parseReal(data);
     continue;
    }
    // range lower upper
@@ -247,23 +263,23 @@ namespace Gorilla
    else if (name == "range")
    {
     Ogre::Vector2 t = Ogre::StringConverter::parseVector2(data);
-    mGlyphRangeBegin = t.x;
-    mGlyphRangeEnd = t.y;
+    glyphData->mRangeBegin = t.x;
+    glyphData->mRangeEnd = t.y;
    }
    // kerning kerning
    // >  kerning -1
-   else if (name == "kerning")
+   else if (name == "letterspacing")
    {
-    mGlyphAllGlyphsKerning = Ogre::StringConverter::parseReal(data);
+    glyphData->mLetterSpacing = Ogre::StringConverter::parseReal(data);
    }
   }
   
 
-  for (Ogre::uint index = mGlyphRangeBegin; index < mGlyphRangeEnd; index++)
+  for (Ogre::uint index = glyphData->mRangeBegin; index < glyphData->mRangeEnd; index++)
   {
    
    Glyph* glyph = OGRE_NEW Glyph();
-   mGlyphs.push_back(glyph);
+   glyphData->mGlyphs.push_back(glyph);
    
    std::stringstream s;
    s << "glyph_" << index;
@@ -280,8 +296,8 @@ namespace Gorilla
     continue;
    }
    
-   glyph->uvLeft    = Ogre::StringConverter::parseReal(  str_values[0]  );
-   glyph->uvTop     = Ogre::StringConverter::parseReal(  str_values[1]  );
+   glyph->uvLeft    = offset.x + Ogre::StringConverter::parseReal(  str_values[0]  );
+   glyph->uvTop     = offset.y + Ogre::StringConverter::parseReal(  str_values[1]  );
    glyph->uvWidth   = Ogre::StringConverter::parseReal(  str_values[2]  );
    glyph->uvHeight  = Ogre::StringConverter::parseReal(  str_values[3]  );
    glyph->uvRight   = glyph->uvLeft + glyph->uvWidth;
@@ -295,10 +311,9 @@ namespace Gorilla
    
   }
   
-  
  }
 
- void  TextureAtlas::_loadKerning(Ogre::ConfigFile::SettingsMultiMap* settings)
+ void  TextureAtlas::_loadKerning(Ogre::ConfigFile::SettingsMultiMap* settings, GlyphData* glyphData)
  {
   
   Ogre::String left_name, data;
@@ -315,14 +330,14 @@ namespace Gorilla
    data = i->second;
    Ogre::StringUtil::toLowerCase(left_name);
    
-   if (left_name.substr(0,6) != "glyph_")
+   if (left_name.substr(0,6) != "kerning_")
     continue;
    
    size_t comment = data.find_first_of('#');
    if (comment != std::string::npos)
     data = data.substr(0, comment);
    
-   left_name = left_name.substr(6); // chop of glyph_
+   left_name = left_name.substr(8); // chop of kerning_
    left_glyph_id = Ogre::StringConverter::parseUnsignedInt(left_name);
    
    str_values = Ogre::StringUtil::split(data, " ", 2);
@@ -337,7 +352,7 @@ namespace Gorilla
    kerning = Ogre::StringConverter::parseInt(str_values[1]);
    
    
-   mGlyphs[right_glyph_id - mGlyphRangeBegin]->kerning.push_back(Kerning(left_glyph_id, kerning));
+   glyphData->mGlyphs[right_glyph_id - glyphData->mRangeBegin]->kerning.push_back(Kerning(left_glyph_id, kerning));
    
   }
   
@@ -414,29 +429,39 @@ namespace Gorilla
  void  TextureAtlas::_calculateCoordinates()
  {
   
-  for(std::vector<Glyph*>::iterator it = mGlyphs.begin(); it != mGlyphs.end(); it++)
+  Ogre::RenderSystem* rs = Ogre::Root::getSingletonPtr()->getRenderSystem();
+
+  Ogre::Real texelX =  rs->getHorizontalTexelOffset(),
+             texelY =  rs->getVerticalTexelOffset();
+  
+  for (std::map<Ogre::uint, GlyphData*>::iterator gd_it = mGlyphData.begin(); gd_it != mGlyphData.end(); gd_it++)
   {
-   (*it)->uvLeft        *= mInverseTextureSize.x;
-   (*it)->uvTop         *= mInverseTextureSize.y;
-   (*it)->uvRight       *= mInverseTextureSize.x;
-   (*it)->uvBottom      *= mInverseTextureSize.y;
+    for(std::vector<Glyph*>::iterator it = (*gd_it).second->mGlyphs.begin(); it != (*gd_it).second->mGlyphs.end(); it++)
+    {
+     
+     (*it)->uvLeft        -= texelX;
+     (*it)->uvTop         -= texelY;
+     (*it)->uvRight       += texelX;
+     (*it)->uvBottom      += texelY;
 
-   (*it)->texCoords[TopLeft].x = (*it)->uvLeft;
-   (*it)->texCoords[TopLeft].y = (*it)->uvTop;
-   (*it)->texCoords[TopRight].x = (*it)->uvRight;
-   (*it)->texCoords[TopRight].y = (*it)->uvTop;
-   (*it)->texCoords[BottomRight].x = (*it)->uvRight;
-   (*it)->texCoords[BottomRight].y = (*it)->uvBottom;
-   (*it)->texCoords[BottomLeft].x = (*it)->uvLeft;
-   (*it)->texCoords[BottomLeft].y = (*it)->uvBottom;
+     (*it)->uvLeft        *= mInverseTextureSize.x;
+     (*it)->uvTop         *= mInverseTextureSize.y;
+     (*it)->uvRight       *= mInverseTextureSize.x;
+     (*it)->uvBottom      *= mInverseTextureSize.y;
 
-   (*it)->glyphAdvance  *= mGlyphScale;
+     (*it)->texCoords[TopLeft].x = (*it)->uvLeft;
+     (*it)->texCoords[TopLeft].y = (*it)->uvTop;
+     (*it)->texCoords[TopRight].x = (*it)->uvRight;
+     (*it)->texCoords[TopRight].y = (*it)->uvTop;
+     (*it)->texCoords[BottomRight].x = (*it)->uvRight;
+     (*it)->texCoords[BottomRight].y = (*it)->uvBottom;
+     (*it)->texCoords[BottomLeft].x = (*it)->uvLeft;
+     (*it)->texCoords[BottomLeft].y = (*it)->uvBottom;
 
-   (*it)->glyphWidth     = (*it)->uvWidth;
-   (*it)->glyphHeight    = (*it)->uvHeight;
-   
-   for (Ogre::uint i=0;i < (*it)->kerning.size();i++)
-    (*it)->kerning[i].kerning *= mGlyphScale;
+     (*it)->glyphWidth     = (*it)->uvWidth;
+     (*it)->glyphHeight    = (*it)->uvHeight;
+     
+    }
   }
   
   for (std::map<Ogre::String, Sprite*>::iterator it = mSprites.begin(); it != mSprites.end(); it++)
@@ -492,10 +517,31 @@ namespace Gorilla
   return mMarkupColour[index];
  }
 
+ GlyphData::GlyphData()
+ : mRangeBegin(0), 
+   mRangeEnd(0),
+   mSpaceLength(0),
+   mLineHeight(0),
+   mBaseline(0),
+   mLetterSpacing(0),
+   mMonoWidth(0)
+ {
+ }
+ 
+ GlyphData::~GlyphData()
+ {
+  
+  for (std::vector<Glyph*>::iterator it = mGlyphs.begin(); it != mGlyphs.end(); it++)
+  {
+   OGRE_DELETE (*it);
+  }
+  
+ }
 
 
  Silverback::Silverback()
  {
+  // Nothing to do!
  }
 
  Silverback::~Silverback()
@@ -935,9 +981,9 @@ namespace Gorilla
   mQuadLists.clear();
  }
 
- Caption* Layer::createCaption(Ogre::Real x, Ogre::Real y, const Ogre::String& text)
+ Caption* Layer::createCaption(Ogre::uint glyphDataIndex, Ogre::Real x, Ogre::Real y, const Ogre::String& text)
  {
-  Caption* caption = OGRE_NEW Caption(x, y, text, this);
+  Caption* caption = OGRE_NEW Caption(glyphDataIndex,x, y, text, this);
   mCaptions.push_back(caption);
   return caption;
  }
@@ -963,9 +1009,9 @@ namespace Gorilla
   mCaptions.clear();
  }
 
- MarkupText* Layer::createMarkupText(Ogre::Real x, Ogre::Real y, const Ogre::String& text)
+ MarkupText* Layer::createMarkupText(Ogre::uint defaultGlyphIndex, Ogre::Real x, Ogre::Real y, const Ogre::String& text)
  {
-  MarkupText* markuptext = OGRE_NEW MarkupText(x, y, text, this);
+  MarkupText* markuptext = OGRE_NEW MarkupText(defaultGlyphIndex, x, y, text, this);
   mMarkupTexts.push_back(markuptext);
   return markuptext;
  }
@@ -1504,10 +1550,13 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
   
  }
  
- void  QuadList::glyph(Ogre::Real x, Ogre::Real y, unsigned char character, const Ogre::ColourValue& colour)
+ void  QuadList::glyph(Ogre::uint glyphDataIndex, Ogre::Real x, Ogre::Real y, unsigned char character, const Ogre::ColourValue& colour)
  {
+  GlyphData* glyphData = mLayer->_getGlyphData(glyphDataIndex);
+  if (glyphData == 0)
+   return;
   
-  Glyph* glyph = mLayer->_getGlyph(character);
+  Glyph* glyph = glyphData->getGlyph(character);
   if (glyph == 0)
    return;
   
@@ -1538,9 +1587,13 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
   mQuads.push_back(q);
  }
  
- void  QuadList::glyph(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, unsigned char character, const Ogre::ColourValue& colour)
+ void  QuadList::glyph(Ogre::uint glyphDataIndex, Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, unsigned char character, const Ogre::ColourValue& colour)
  {
-  Glyph* glyph = mLayer->_getGlyph(character);
+  GlyphData* glyphData = mLayer->_getGlyphData(glyphDataIndex);
+  if (glyphData == 0)
+   return;
+  
+  Glyph* glyph = glyphData->getGlyph(character);
   if (glyph == 0)
    return;
   
@@ -1594,11 +1647,12 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
  }
  
  
- Caption::Caption(Ogre::Real left, Ogre::Real top, const Ogre::String& caption, Layer* layer)
+ Caption::Caption(Ogre::uint glyphDataIndex, Ogre::Real left, Ogre::Real top, const Ogre::String& caption, Layer* layer)
  : mLayer(layer)
  {
   mDirty        = true;
   mLayer->_markDirty();
+  mGlyphData      = mLayer->_getGlyphData(glyphDataIndex);
   mLeft           = left;
   mTop            = top;
   mWidth          = 0.0f;
@@ -1607,18 +1661,19 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
   mColour         = Ogre::ColourValue::White;
   mBackground.a   = 0.0f;
   mAlignment      = TextAlign_Left;
+  mVerticalAlign  = VerticalAlign_Top;
  }
 
  void Caption::_calculateDrawSize(Ogre::Vector2& retSize)
- {
-  TextureAtlas* atlas = mLayer->_getAtlas();
+ { 
+ 
   Ogre::Real cursor = 0,
              kerning;
 
   unsigned char thisChar = 0, lastChar = 0;
   Glyph* glyph = 0;
   retSize.x = 0;
-  retSize.y = atlas->getGlyphLineHeight();
+  retSize.y = mGlyphData->mLineHeight;
   
   for (size_t i=0;i < mText.length();i++)
   {
@@ -1627,20 +1682,20 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
    if (thisChar == ' ')
    {
     lastChar = thisChar;
-    cursor += atlas->getGlyphSpaceLength();
+    cursor += mGlyphData->mSpaceLength;
     continue;
    }
    
-   if (thisChar < atlas->getGlyphRangeBegin() || thisChar > atlas->getGlyphRangeEnd())
+   if (  thisChar < mGlyphData->mRangeBegin || thisChar > mGlyphData->mRangeEnd  )
    {
     lastChar = 0;
     continue;
    }
    
-   glyph = atlas->getGlyph(thisChar);
+   glyph = mGlyphData->getGlyph(thisChar);
    kerning = glyph->getKerning(lastChar);
    if (kerning == 0)
-    kerning = atlas->getGlyphKerning();
+    kerning = mGlyphData->mLetterSpacing;
       
    cursor  += glyph->glyphAdvance + kerning;
    lastChar = thisChar;
@@ -1718,9 +1773,9 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
   if (mVerticalAlign == VerticalAlign_Top)
    cursorY = mTop;
   else if (mVerticalAlign == VerticalAlign_Middle)
-   cursorY = mTop + (mHeight * 0.5) - (mLayer->_getGlyphHeight() * 0.5);
+   cursorY = mTop + (mHeight * 0.5) - (mGlyphData->mLineHeight * 0.5);
   else if (mVerticalAlign == VerticalAlign_Bottom)
-   cursorY = mTop +  mHeight - mLayer->_getGlyphHeight();
+   cursorY = mTop +  mHeight - mGlyphData->mLineHeight;
   
   unsigned char thisChar = 0, lastChar = 0;
   Vertex temp;
@@ -1734,23 +1789,23 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
    if (thisChar == ' ')
    {
     lastChar = thisChar;
-    cursorX += mLayer->_getGlyphSpaceLength();
+    cursorX += mGlyphData->mSpaceLength;
     continue;
    }
    
-   if (thisChar < mLayer->_getGlyphRangeBegin() || thisChar > mLayer->_getGlyphRangeEnd())
+   if (  thisChar < mGlyphData->mRangeBegin || thisChar > mGlyphData->mRangeEnd  )
    {
     lastChar = 0;
     continue;
    }
    
-   glyph = mLayer->_getGlyph(thisChar);
+   glyph = mGlyphData->getGlyph(thisChar);
    kerning = glyph->getKerning(lastChar);
    if (kerning == 0)
-    kerning = mLayer->_getDefaultGlyphKerning();
+    kerning = mGlyphData->mLetterSpacing;
    
-   left = cursorX;
-   top = cursorY;
+   left = cursorX - texelOffsetX;
+   top = cursorY - texelOffsetY;
    right = left + glyph->glyphWidth + texelOffsetX;
    bottom = top + glyph->glyphHeight + texelOffsetY;
    
@@ -1799,18 +1854,20 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
  }
  
  
- MarkupText::MarkupText(Ogre::Real left, Ogre::Real top, const Ogre::String& text, Layer* parent)
+ MarkupText::MarkupText(Ogre::uint defaultGlyphIndex, Ogre::Real left, Ogre::Real top, const Ogre::String& text, Layer* parent)
  : mLayer(parent)
  {
   mDirty          = true;
   mTextDirty      = true;
   mLayer->_markDirty();
+  mDefaultGlyphData = mLayer->_getGlyphData(defaultGlyphIndex);
   mLeft           = left;
   mTop            = top;
   mWidth          = 0.0f;
   mHeight         = 0.0f;
   mText           = text;
   mBackground.a   = 0.0f;
+
  }
  
  void MarkupText::_calculateCharacters()
@@ -1818,7 +1875,7 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
   if (mTextDirty == false)
    return;
   
-  Ogre::Real cursorX = mLeft, cursorY = mTop, kerning = 0, texelOffsetX = mLayer->_getTexelX(), texelOffsetY = mLayer->_getTexelY(), right = 0, bottom = 0;
+  Ogre::Real cursorX = mLeft, cursorY = mTop, kerning = 0, texelOffsetX = mLayer->_getTexelX(), texelOffsetY = mLayer->_getTexelY(), right = 0, bottom = 0, left = 0, top = 0;
   unsigned int thisChar = 0, lastChar = 0;
   Glyph* glyph = 0;
   
@@ -1828,6 +1885,9 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
   Ogre::ColourValue colour = mLayer->_getMarkupColour(0);
   bool fixedWidth = false;
   
+  GlyphData* glyphData = mDefaultGlyphData;
+  Ogre::Real lineHeight = glyphData->mLineHeight;
+  
   for(size_t i=0;i < mText.length();i++)
   {
    
@@ -1836,7 +1896,7 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
    if (thisChar == ' ')
    {
     lastChar = thisChar;
-    cursorX += mLayer->_getGlyphSpaceLength();
+    cursorX += glyphData->mSpaceLength;
     continue;
    }
    
@@ -1844,11 +1904,12 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
    {
     lastChar = thisChar;
     cursorX = mLeft;
-    cursorY += mLayer->_getGlyphHeight();
+    cursorY += lineHeight;
+    lineHeight = glyphData->mLineHeight;
     continue;
    }
    
-   if (thisChar < mLayer->_getGlyphRangeBegin() || thisChar > mLayer->_getGlyphRangeEnd())
+   if (  thisChar < glyphData->mRangeBegin || thisChar > glyphData->mRangeEnd  )
    {
     lastChar = 0;
     continue;
@@ -1882,8 +1943,35 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
      {
       fixedWidth = !fixedWidth;
      }
+     else if (thisChar == '@')
+     {
+      markupMode = false;
+      bool foundIt = false;
+      size_t begin = i;
+      while(i < mText.size())
+      {
+       if (mText[i] == '%')
+       {
+        foundIt = true;
+        break;
+       }
+       i++;
+      }
+      
+      if (foundIt == false)
+       return;
+      
+      Ogre::uint index = Ogre::StringConverter::parseUnsignedInt(mText.substr(begin+1, i - begin - 1));
+      glyphData = mLayer->_getGlyphData(index);
+      if (glyphData == 0)
+       return;
+      // TODO: Check against line height?
+      lineHeight = std::max(lineHeight, glyphData->mLineHeight);
+      continue;
+     }
      else if (thisChar == ':')
      {
+      markupMode = false;
       bool foundIt = false;
       size_t begin = i;
       while(i < mText.size())
@@ -1905,16 +1993,18 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
       if (sprite == 0)
        continue;
       
-      right = cursorX + sprite->spriteWidth;
-      bottom = cursorY + sprite->spriteHeight;
+      left = cursorX - texelOffsetX;
+      top = cursorY - texelOffsetY;
+      right = left + sprite->spriteWidth + texelOffsetX;
+      bottom = top + sprite->spriteHeight + texelOffsetY;
       
       Character c;
       c.mIndex = i;
-      c.mPosition[TopLeft].x = cursorX;
-      c.mPosition[TopLeft].y = cursorY;
+      c.mPosition[TopLeft].x = left;
+      c.mPosition[TopLeft].y = top;
       c.mPosition[TopRight].x = right;
-      c.mPosition[TopRight].y = cursorY;
-      c.mPosition[BottomLeft].x = cursorX;
+      c.mPosition[TopRight].y = top;
+      c.mPosition[BottomLeft].x = left;
       c.mPosition[BottomLeft].y = bottom;
       c.mPosition[BottomRight].x = right;
       c.mPosition[BottomRight].y = bottom;
@@ -1928,6 +2018,9 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
       
       cursorX  += sprite->spriteWidth;
       
+      lineHeight = std::max(lineHeight, sprite->spriteHeight);
+      
+      continue;
      }
      
 
@@ -1936,13 +2029,13 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
     markupMode = false;
    }
    
-   glyph = mLayer->_getGlyph(thisChar);
+   glyph = glyphData->getGlyph(thisChar);
    
    if (!fixedWidth)
    {
     kerning = glyph->getKerning(lastChar);
     if (kerning == 0)
-     kerning = mLayer->_getDefaultGlyphKerning();
+     kerning = glyphData->mLetterSpacing;
    }
    
    right = cursorX + glyph->glyphWidth + texelOffsetX;
@@ -1967,7 +2060,7 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
    mCharacters.push_back(c);
    
    if (fixedWidth)
-     cursorX  += mLayer->_getGlyphFixedWidth();
+     cursorX  += glyphData->mMonoWidth;
    else
      cursorX  += glyph->glyphAdvance + kerning;
    
