@@ -1387,6 +1387,35 @@ namespace Gorilla
     
     /*! function. background_image
         desc.
+            Set the background to a sprite from the texture atlas, with clipping.
+            Clipping is used for example with RPM meters on HUDs, where a portion
+            of the sprite needs to be shown to indicate the RPM on the car.
+            
+            widthClip  is a decimal percentage of the width of the sprite (0.0 none, 1.0 full)
+            heightClip is a decimal percentage of the height of the sprite (0.0 none, 1.0 full)
+            
+            You should use this with the width() and height() functions for a full effect.
+        note.
+            To remove the image pass on a null pointer.
+    */
+    void  background_image(Sprite* sprite, Ogre::Real widthClip, Ogre::Real heightClip)
+    {
+     if (sprite == 0)
+     {
+      mUV[0] = mUV[1] = mUV[2] = mUV[3] = mLayer->_getSolidUV();
+     }
+     else
+     {
+      mUV[0].x = mUV[3].x = sprite->uvLeft;
+      mUV[0].y = mUV[1].y = sprite->uvTop;
+      mUV[1].x = mUV[2].x = sprite->uvLeft + ( (sprite->uvRight - sprite->uvLeft) * widthClip );
+      mUV[2].y = mUV[3].y = sprite->uvTop + ( (sprite->uvBottom - sprite->uvTop) * heightClip );
+     }
+     mDirty = true;
+     mLayer->_markDirty();
+    }
+    /*! function. background_image
+        desc.
             Set the background to a sprite from the texture atlas.
         note.
             To remove the image pass on "none" or a empty string
