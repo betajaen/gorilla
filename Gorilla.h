@@ -34,7 +34,9 @@ namespace Gorilla
  
  class Silverback;
  class TextureAtlas;
+ class LayerContainer;
  class Screen;
+ class ScreenRenderable;
  class Layer;
  class Rectangle;
  class Polygon;
@@ -272,7 +274,7 @@ namespace Gorilla
    
    inline void erase(size_t index)
    {
-    *(mBuffer + index) = *(mBuffer + mUsed - 1)
+    *(mBuffer + index) = *(mBuffer + mUsed - 1);
     mUsed--;
    }
    
@@ -370,7 +372,7 @@ namespace Gorilla
     desc.
         Main singleton class for Gorilla
  */
- class Silverback : public Ogre::Singleton<Silverback>, public Ogre::GeneralAllocatedObject
+ class Silverback : public Ogre::Singleton<Silverback>, public Ogre::GeneralAllocatedObject, public Ogre::FrameListener
  {
    
   public:
@@ -408,18 +410,34 @@ namespace Gorilla
            reduce the number of screens you use.
    */
    Screen* createScreen(Ogre::Viewport*, const Ogre::String& atlas);
- 
- 
+   
    /*! function. destroyScreen
        desc.
            Destroy an existing screen, its layers and the contents of those layers.
    */
    void destroyScreen(Screen*);
    
+   /*! function. createScreenRenderable
+   */
+   ScreenRenderable* createScreenRenderable(const Ogre::Vector2& maxSize, const Ogre::String& atlas);
+   
+   /*! function. destroyScreen
+       desc.
+           Destroy an existing screen, its layers and the contents of those layers.
+   */
+   void destroyScreenRenderable(ScreenRenderable*);
+   
+   /*! function. frameStarted
+       desc.
+           Call ScreenRenderable draw
+   */
+   bool frameStarted(const Ogre::FrameEvent& evt);
+   
   protected:
    
-   std::map<Ogre::String, TextureAtlas*> mAtlases;
-   std::vector<Screen*> mScreens;
+   std::map<Ogre::String, TextureAtlas*>  mAtlases;
+   std::vector<Screen*>                   mScreens;
+   std::vector<ScreenRenderable*>         mScreenRenderables;
    
  };
  
@@ -476,6 +494,10 @@ namespace Gorilla
    
    public:
     
+    Ogre::MaterialPtr createOrGet2DMasterMaterial();
+    
+    Ogre::MaterialPtr createOrGet3DMasterMaterial();
+    
     /*! function. getTexture
         desc.
             Get the texture assigned to this TextureAtlas
@@ -489,18 +511,34 @@ namespace Gorilla
         desc.
             Get the material assigned to this TextureAtlas
     */
-    inline Ogre::MaterialPtr getMaterial() const
+    inline Ogre::MaterialPtr get2DMaterial() const
     {
-     return mMaterial;
+     return m2DMaterial;
     }
     
+    /*! function. getMaterial
+        desc.
+            Get the material assigned to this TextureAtlas
+    */
+    inline Ogre::MaterialPtr get3DMaterial() const
+    {
+     return m3DMaterial;
+    }
     /*! function. getMaterialName
         desc.
             Get the name of the material assigned to this TextureAtlas
     */
-    inline Ogre::String getMaterialName() const
+    inline Ogre::String get2DMaterialName() const
     {
-     return mMaterial->getName();
+     return m2DMaterial->getName();
+    }
+    /*! function. getMaterialName
+        desc.
+            Get the name of the material assigned to this TextureAtlas
+    */
+    inline Ogre::String get3DMaterialName() const
+    {
+     return m3DMaterial->getName();
     }
     
     inline GlyphData* getGlyphData(Ogre::uint index) const
@@ -591,9 +629,9 @@ namespace Gorilla
         desc.
             Get the first pass of the material used by this TextureAtlas
     */
-    inline Ogre::Pass* getPass() const
+    inline Ogre::Pass* get2DPass() const
     {
-     return mPass;
+     return m2DPass;
     }
     
     /*! function. getGlyphMonoWidth
@@ -635,44 +673,35 @@ namespace Gorilla
     
    ~TextureAtlas();
     
-    void _reset();
-    void _load(const Ogre::String& gorillaFile, const Ogre::String& groupName);
-    void _loadTexture(Ogre::ConfigFile::SettingsMultiMap*);
-    void _loadGlyphs(Ogre::ConfigFile::SettingsMultiMap*, GlyphData*);
-    void _loadKerning(Ogre::ConfigFile::SettingsMultiMap*, GlyphData*);
-    void _loadSprites(Ogre::ConfigFile::SettingsMultiMap*);
-    void _save(const Ogre::String& gorillaFile);
-    void _createMaterial();
-    void _calculateCoordinates();
+    void  _reset();
+    void  _load(const Ogre::String& gorillaFile, const Ogre::String& groupName);
+    void  _loadTexture(Ogre::ConfigFile::SettingsMultiMap*);
+    void  _loadGlyphs(Ogre::ConfigFile::SettingsMultiMap*, GlyphData*);
+    void  _loadKerning(Ogre::ConfigFile::SettingsMultiMap*, GlyphData*);
+    void  _loadSprites(Ogre::ConfigFile::SettingsMultiMap*);
+    void  _create2DMaterial();
+    void  _create3DMaterial();
+    void  _calculateCoordinates();
    
-    Ogre::TexturePtr mTexture;
-    Ogre::MaterialPtr mMaterial;
-    Ogre::TextureUnitState* mTextureUnit;
-    Ogre::Pass* mPass;
+    Ogre::TexturePtr                  mTexture;
+    Ogre::MaterialPtr                 m2DMaterial, m3DMaterial;
+    Ogre::Pass*                       m2DPass, *m3DPass;
+    std::map<Ogre::uint, GlyphData*>  mGlyphData;
+    std::map<Ogre::String, Sprite*>   mSprites;
+    Ogre::Vector2                     mWhitePixel;
+    Ogre::Vector2                     mInverseTextureSize;
+    Ogre::ColourValue                 mMarkupColour[10];
     
-    std::map<Ogre::uint, GlyphData*> mGlyphData;
-    std::map<Ogre::String, Sprite*>  mSprites;
-    Ogre::Vector2 mWhitePixel;
-    Ogre::Vector2 mInverseTextureSize;
-    Ogre::ColourValue mMarkupColour[10];
   };
   
-  /*! class. Screen
-      desc.
-          A screen is a container class for all 2D operations upon the RenderWindow, it is comparible
-          in function to the SceneManager. Each Screen may use a seperate TextureAtlas or share one 
-          together, but each Screen rendered seperately as one batch. So five screens is five batches.
-          
-          Typically it is normal just to have one screen, or a second one for debug output. Screens need a 
-          Viewport to render too, and will get the SceneManager from the Viewport's Camera to listen for 
-          drawing updates. All Screen drawings are done after the RENDER_QUEUE_OVERLAY renderqueue.
-  */
-  class Screen : public Ogre::GeneralAllocatedObject, public Ogre::RenderQueueListener
+  class LayerContainer
   {
-   
-   friend class Silverback;
-   
+    
    public:
+    
+    LayerContainer(TextureAtlas*);
+    
+    virtual ~LayerContainer();
     
     /*! function. createLayer
         desc.
@@ -686,117 +715,185 @@ namespace Gorilla
             Index must be between or equal to 0 and 15. Any other value will cause
             a very nasty crash.
     */
-    Layer*  Screen::createLayer(Ogre::uint index = 0);
+    Layer*  createLayer(Ogre::uint index = 0);
     
     /*! function. destroyLayer
         desc.
             Destroy a layer and it's contents.
     */
-    void   Screen::destroy(Layer* layer);
-    
-    /*! function. getViewportWidth
-        desc.
-            Get the width of the viewport that the screen uses.
-    */
-    inline Ogre::Real getViewportWidth() const
-    {
-     return mViewportWidth;
-    }
-    
-    /*! function. getViewportHeight
-        desc.
-            Get the height of the viewport that the screen uses.
-    */
-    inline Ogre::Real getViewportHeight() const
-    {
-     return mViewportHeight;
-    }
+    void   destroy(Layer* layer);
     
     /*! function. getAtlas
         desc.
-            Get the TextureAtlas that this Screen uses.
+            Get atlas assigned to this LayerContainer
     */
-    inline TextureAtlas* getAtlas() const
-    {
-     return mAtlas;
-    }
+    TextureAtlas* getAtlas() const { return mAtlas; }
     
-    /*! function. getTexelOffsetX
+    virtual Ogre::Real getTexelOffsetX() const { return 0.0f; }
+    
+    virtual Ogre::Real getTexelOffsetY() const { return 0.0f; }
+    
+    /*! function. _createVertexBuffer
         desc.
-            Get the horizontal offset provided by the RenderSystem for texels.
+            Create the vertex buffer
     */
-    inline Ogre::Real    getTexelOffsetX() const
-    {
-     return mRenderSystem->getHorizontalTexelOffset();
-    }
-    
-    /*! function. getTexelOffsetY
+    void _createVertexBuffer(size_t initialSize);
+
+    /*! function. _destroyVertexBuffer
         desc.
-            Get the vertical offset provided by the RenderSystem for texels.
+            Destroy the vertex buffer
     */
-    inline Ogre::Real    getTexelOffsetY() const
-    {
-     return mRenderSystem->getVerticalTexelOffset();
-    }
-    
-    /*! function. getRenderSystem
+    void _destroyVertexBuffer();
+
+    /*! function. _resizeVertexBuffer
         desc.
-            Get the rendersystem that the Screen and Ogre is using.
+            Resize the vertex buffer to the greatest nearest power 
+            of 2 of requestedSize.
     */
-    inline Ogre::RenderSystem*  getRenderSystem() const
-    {
-     return mRenderSystem;
-    }
+    void _resizeVertexBuffer(size_t requestedSize);
     
-    /*! function. _forceViewportChange
+    /* function. _recalculateIndexes
+       desc.
+           Clear mIndexes, mIndexVertices and mIndexRedraw, 
+           and from mLayers fill them out again. A full redraw
+           is required.
+    */
+    void _recalculateIndexes();
+    
+    /*! function. _redrawIndex
         desc.
-            A viewport size has changed, and for some Gorilla hasn't noticed. Use this function
-            to force Gorilla to update to it's new size.
+            Redraw all layers of an index.
+            If force is true, then all elements of that layer
+            will be redrawn regardless of anything has changed
+            or not.
     */
-    void _forceViewportChange();
+    void _redrawIndex(Ogre::uint id, bool force);
     
-    void _layerRedrawRequested(Ogre::uint layer);
+    /*! function. _redrawAllIndexes
+        desc.
+            Redraw all layers of all indexes
+            If force is true, then all elements of all layers
+            will be redrawn regardless of anything has changed
+            or not.
+    */
+    void _redrawAllIndexes(bool force = false);
+    
+    /*! function. _redrawAllIndexes
+        desc.
+            Redraw a redraw of an index on the next call of _renderVertices
+    */
+    void _requestIndexRedraw(Ogre::uint index);
+    
+    /*! function. _renderVertices
+        desc.
+            Bundle up mIndexData (redraw any if needed) then copy them
+            into mVertexBuffer, and update mRenderOpPtr with the new 
+            vertex count.
+    */
+    void _renderVertices(bool force = false);
+    
+    /*! function. renderOnce
+        desc.
+            Draw the vertices from mVertexBuffer into Ogre.
+    */
+    virtual void renderOnce() = 0;
+    
+    virtual void transform(buffer<Vertex>& vertices, size_t begin, size_t end) {}
     
    protected:
     
-    void _registerListener();
-    void _unregisterListener();
-    void _createBuffer();
-    void _destroyBuffer();
-    void _checkBuffer(size_t requestedSize);
-    void _calculateLayers();
-    void _redrawAll();
-    void _redrawLayer(Ogre::uint id);
-    void _copyToVertexBuffer();
-    void _prepareRenderSystem();
-    void _render();
-    void renderQueueEnded(Ogre::uint8 queueGroupId, const Ogre::String& invocation, bool& repeatThisInvocation);
+    /// mLayers -- Master copy of all layers of this Target.
+    std::vector<Layer*>     mLayers;
+    
+    struct IndexData : public Ogre::GeneralAllocatedObject
+    {
+     std::vector<Layer*>    mLayers;
+     buffer<Vertex>         mVertices;
+     bool                   mRedrawNeeded;
+    };
+    
+    /// mIndexes -- Copies pointers to Layers arranged their index.
+    std::map< Ogre::uint, IndexData* >  mIndexData;
+    
+    /// mIndexRedrawNeeded -- An index (not sure what) needs to be redrawn.
+    bool  mIndexRedrawNeeded;
+    
+    /// mRedrawAll -- All indexes need to be redrawn regardless of state.
+    bool  mIndexRedrawAll;
+    
+    /// mVertexBuffer -- Compiled layers of all indexes go into here for rendering directly to the screen or scene.
+    Ogre::HardwareVertexBufferSharedPtr   mVertexBuffer;
+    
+    /// mVertexBufferSize -- How much the VertexBuffer can hold.
+    size_t  mVertexBufferSize;
+    
+    /// mRenderOpPtr -- Pointer to the RenderOperation (Not owned by LayerContainer)
+    Ogre::RenderOperation*  mRenderOpPtr;
+    
+    /// Atlas assigned to this LayerContainer
+    TextureAtlas*  mAtlas;
+    
+  };
+  
+  class Screen : public LayerContainer, public Ogre::RenderQueueListener, public Ogre::GeneralAllocatedObject
+  {
+    
+   public:
     
     Screen(Ogre::Viewport*, TextureAtlas*);
+    
    ~Screen();
+    
+    void renderQueueEnded(Ogre::uint8 queueGroupId, const Ogre::String& invocation, bool& repeatThisInvocation);
+    void _prepareRenderSystem();
+    void renderOnce();
+    void transform(buffer<Vertex>& vertices, size_t begin, size_t end);
+
+    Ogre::Real getTexelOffsetX() const;
+    
+    Ogre::Real getTexelOffsetY() const;
+
+   protected:
+    Ogre::RenderOperation mRenderOp;
+    Ogre::SceneManager*   mSceneMgr;
+    Ogre::RenderSystem*   mRenderSystem;
+    Ogre::Viewport*       mViewport;
+    Ogre::Real            mWidth, mHeight, mInvWidth, mInvHeight;
+    
+  };
+  
+  class ScreenRenderable : public LayerContainer, public Ogre::SimpleRenderable
+  {
+   
+   public:
+    
+    ScreenRenderable(const Ogre::Vector2& maxSize, TextureAtlas*);
+    
+   ~ScreenRenderable();
+    
+    void frameStarted();
+    void renderOnce();
+    void transform(buffer<Vertex>& vertices, size_t begin, size_t end);
+    void calculateBoundingBox();
+
+    Ogre::Real getBoundingRadius(void) const { return mBox.getMaximum().squaredLength(); }
+  
+    Ogre::Real getSquaredViewDepth(const Ogre::Camera* cam) const
+    {
+     Ogre::Vector3 min, max, mid, dist;
+     min = mBox.getMinimum();
+     max = mBox.getMaximum();
+     mid = ((max - min) * 0.5) + min;
+     dist = cam->getDerivedPosition() - mid;
+     return dist.squaredLength();
+    }
     
    protected:
     
-    Ogre::RenderSystem* mRenderSystem;
-    Ogre::SceneManager* mSceneMgr;
-    Ogre::Viewport* mViewport;
-    Ogre::Real mViewportWidth,
-               mViewportHeight,
-               mInvViewportWidth,
-               mInvViewportHeight;
-
-    TextureAtlas* mAtlas;
-    std::vector<Layer*> mAllLayers; // Master copy of all Renderables.
-    
-    buffer<Layer*> mLayers[16]; // Pointers to Renderables in QuadBuffer sorted by Depth.
-    buffer<Vertex> mVertexLayerBuffer[16]; // Compiled vertex layer for each depth.
-    bool mRedrawLayerNeeded[16]; // If a layer needs a full redraw.
-    bool mLayerRedrawNeeded;
-    bool mRedrawAll; // Every layer needs a redraw.
-    
-    Ogre::HardwareVertexBufferSharedPtr mVertexBuffer;
-    size_t mMaxVertexCount, mKnownVertexCount;
-    Ogre::RenderOperation mRenderOp;
+    Ogre::SceneManager*   mSceneMgr;
+    Ogre::RenderSystem*   mRenderSystem;
+    Ogre::Viewport*       mViewport;
+    Ogre::Vector2         mMaxSize;
     
   };
   
@@ -807,7 +904,7 @@ namespace Gorilla
   class Layer : public Ogre::GeneralAllocatedObject
   {
    
-   friend class Screen;
+   friend class LayerContainer;
    
    public:
     
@@ -1056,7 +1153,7 @@ namespace Gorilla
     */
     inline Ogre::Vector2      _getSolidUV() const
     {
-     return mScreen->getAtlas()->getWhitePixel();
+     return mParent->getAtlas()->getWhitePixel();
     }
     
     /*! function. _getSprite
@@ -1065,7 +1162,7 @@ namespace Gorilla
     */
     inline Sprite*            _getSprite(const Ogre::String& sprite_name) const
     {
-     return mScreen->getAtlas()->getSprite(sprite_name);
+     return mParent->getAtlas()->getSprite(sprite_name);
     }
     
     /*! function. _getGlyph
@@ -1074,7 +1171,7 @@ namespace Gorilla
     */
     inline GlyphData*         _getGlyphData(Ogre::uint id) const
     {
-     return mScreen->getAtlas()->getGlyphData(id);
+     return mParent->getAtlas()->getGlyphData(id);
     }
     
     /*! function. _getGlyph
@@ -1083,7 +1180,7 @@ namespace Gorilla
     */
     inline Ogre::Vector2      _getTextureSize() const
     {
-     return mScreen->getAtlas()->getTextureSize();
+     return mParent->getAtlas()->getTextureSize();
     }
     
     /*! function. _getAtlas
@@ -1092,7 +1189,7 @@ namespace Gorilla
     */
     inline TextureAtlas*      _getAtlas() const
     {
-     return mScreen->getAtlas();
+     return mParent->getAtlas();
     }
     
     /*! function. _getTexelX
@@ -1101,7 +1198,7 @@ namespace Gorilla
     */
     inline Ogre::Real         _getTexelX() const
     {
-     return mScreen->getTexelOffsetX();
+     return mParent->getTexelOffsetX();
     }
     
     /*! function. _getTexelX
@@ -1110,7 +1207,7 @@ namespace Gorilla
     */
     inline Ogre::Real         _getTexelY() const
     {
-     return mScreen->getTexelOffsetY();
+     return mParent->getTexelOffsetY();
     }
     
     /*! function. _getMarkupColour
@@ -1119,7 +1216,7 @@ namespace Gorilla
     */
     inline Ogre::ColourValue  _getMarkupColour(Ogre::uint index) const
     {
-     return mScreen->getAtlas()->getMarkupColour(index);
+     return mParent->getAtlas()->getMarkupColour(index);
     }
     
     /*! function. _markDirty
@@ -1133,9 +1230,9 @@ namespace Gorilla
     
    protected:
     
-    void _render(buffer<Vertex>&);
+    void _render(buffer<Vertex>&, bool force = false);
 
-    Layer(Ogre::uint index, Screen*);
+    Layer(Ogre::uint index, LayerContainer*);
     
    ~Layer();
     
@@ -1146,7 +1243,7 @@ namespace Gorilla
     QuadLists                mQuadLists;
     Captions                 mCaptions;
     MarkupTexts              mMarkupTexts;
-    Screen*                  mScreen;
+    LayerContainer*          mParent;
     bool                     mVisible;
     
   };
@@ -1171,11 +1268,39 @@ namespace Gorilla
      return ((coordinates.x >= mLeft && coordinates.x <= mRight) && (coordinates.y >= mTop && coordinates.y <= mBottom));
     }
     
+    /*! function. position
+        desc.
+            Get the position
+    */
+    inline Ogre::Vector2 position() const
+    {
+     return Ogre::Vector2(mLeft, mTop);
+    }
+    
+    /*! function. position
+        desc.
+            Set the position
+    */
+    inline void position(const Ogre::Real& l, const Ogre::Real& t)
+    {
+     left(l);
+     top(t);
+    }
+    /*! function. position
+        desc.
+            Set the position
+    */
+    inline void position(const Ogre::Vector2& position)
+    {
+     left(position.x);
+     top(position.y);
+    }
+    
     /*! function. left 
         desc.
             Get left position
     */
-    Ogre::Real  left() const
+    inline Ogre::Real  left() const
     {
      return mLeft;
     }
@@ -1184,7 +1309,7 @@ namespace Gorilla
         desc.
             Set left position
     */
-    void  left(const Ogre::Real& left)
+    inline void  left(const Ogre::Real& left)
     {
      Ogre::Real w = width();
      mLeft = left;
@@ -1197,7 +1322,7 @@ namespace Gorilla
         desc.
             Get top position
     */
-    Ogre::Real  top() const
+    inline Ogre::Real  top() const
     {
      return mTop;
     }
@@ -1206,7 +1331,7 @@ namespace Gorilla
         desc.
             Set top position
     */
-    void  top(const Ogre::Real& top)
+    inline void  top(const Ogre::Real& top)
     {
      Ogre::Real h = height();
      mTop = top;
@@ -1219,7 +1344,7 @@ namespace Gorilla
         desc.
             Get the width
     */
-    Ogre::Real  width() const
+    inline Ogre::Real  width() const
     {
      return mRight - mLeft;
     }
@@ -1228,7 +1353,7 @@ namespace Gorilla
         desc.
             Set the width
     */
-    void  width(const Ogre::Real& width)
+    inline void  width(const Ogre::Real& width)
     {
      mRight = mLeft + width;
      mDirty = true;
@@ -1239,7 +1364,7 @@ namespace Gorilla
         desc.
             Get the height
     */
-    Ogre::Real  Rectangle::height() const
+    Ogre::Real  height() const
     {
      return mBottom - mTop;
     }
@@ -1248,7 +1373,7 @@ namespace Gorilla
         desc.
             Set the height
     */
-    void  height(const Ogre::Real& height)
+    inline void  height(const Ogre::Real& height)
     {
      mBottom = mTop + height;
      mDirty = true;
@@ -1376,10 +1501,13 @@ namespace Gorilla
      }
      else
      {
-      mUV[0].x = mUV[3].x = sprite->uvLeft;
-      mUV[0].y = mUV[1].y = sprite->uvTop;
-      mUV[1].x = mUV[2].x = sprite->uvRight;
-      mUV[2].y = mUV[3].y = sprite->uvBottom;
+      Ogre::Real texelOffsetX = mLayer->_getTexelX(), texelOffsetY = mLayer->_getTexelY();
+      texelOffsetX /= mLayer->_getTextureSize().x;
+      texelOffsetY /= mLayer->_getTextureSize().y;
+      mUV[0].x = mUV[3].x = sprite->uvLeft - texelOffsetX;
+      mUV[0].y = mUV[1].y = sprite->uvTop - texelOffsetY;
+      mUV[1].x = mUV[2].x = sprite->uvRight + texelOffsetX;
+      mUV[2].y = mUV[3].y = sprite->uvBottom + texelOffsetX;
      }
      mDirty = true;
      mLayer->_markDirty();
@@ -1406,10 +1534,14 @@ namespace Gorilla
      }
      else
      {
-      mUV[0].x = mUV[3].x = sprite->uvLeft;
-      mUV[0].y = mUV[1].y = sprite->uvTop;
-      mUV[1].x = mUV[2].x = sprite->uvLeft + ( (sprite->uvRight - sprite->uvLeft) * widthClip );
-      mUV[2].y = mUV[3].y = sprite->uvTop + ( (sprite->uvBottom - sprite->uvTop) * heightClip );
+      Ogre::Real texelOffsetX = mLayer->_getTexelX(), texelOffsetY = mLayer->_getTexelY();
+      texelOffsetX /= mLayer->_getTextureSize().x;
+      texelOffsetY /= mLayer->_getTextureSize().y;
+
+      mUV[0].x = mUV[3].x = sprite->uvLeft - texelOffsetX;
+      mUV[0].y = mUV[1].y = sprite->uvTop - texelOffsetY;
+      mUV[1].x = mUV[2].x = sprite->uvLeft + ( (sprite->uvRight - sprite->uvLeft) * widthClip ) + texelOffsetX;
+      mUV[2].y = mUV[3].y = sprite->uvTop + ( (sprite->uvBottom - sprite->uvTop) * heightClip ) + texelOffsetY;
      }
      mDirty = true;
      mLayer->_markDirty();
@@ -1428,11 +1560,14 @@ namespace Gorilla
      }
      else
      {
+      Ogre::Real texelOffsetX = mLayer->_getTexelX(), texelOffsetY = mLayer->_getTexelY();
+      texelOffsetX /= mLayer->_getTextureSize().x;
+      texelOffsetY /= mLayer->_getTextureSize().y;
       Sprite* sprite = mLayer->_getSprite(sprite_name_or_none);
-      mUV[0].x = mUV[3].x = sprite->uvLeft;
-      mUV[0].y = mUV[1].y = sprite->uvTop;
-      mUV[1].x = mUV[2].x = sprite->uvRight;
-      mUV[2].y = mUV[3].y = sprite->uvBottom;
+      mUV[0].x = mUV[3].x = sprite->uvLeft - texelOffsetX;
+      mUV[0].y = mUV[1].y = sprite->uvTop - texelOffsetY;
+      mUV[1].x = mUV[2].x = sprite->uvRight + texelOffsetX;
+      mUV[2].y = mUV[3].y = sprite->uvBottom + texelOffsetY;
      }
      mDirty = true;
      mLayer->_markDirty();
@@ -1866,6 +2001,34 @@ namespace Gorilla
      mLayer->_markDirty();
     }
     
+
+    /*! function. no_background 
+        desc.
+            Don't draw the background.
+        note.
+            This just sets the background colour alpha to zero. Which on the next
+            draw tells Rectangle to skip over drawing the background.
+    */
+    void  no_background()
+    {
+     mBackgroundColour.a = 0;
+     mDirty = true;
+     mLayer->_markDirty();
+    }
+
+    /*! function. no_border 
+        desc.
+            Don't draw the border.
+        note.
+            This just sets the border to zero. Which on the next
+            draw tells Rectangle to skip over drawing the border.
+    */
+    void  no_border()
+    {
+     mBorderWidth = 0;
+     mDirty = true;
+     mLayer->_markDirty();
+    }
 
     /*! function. _redraw
         desc.
@@ -2359,6 +2522,20 @@ namespace Gorilla
      mLayer->_markDirty();
     }
     
+    /*! function. no_background 
+        desc.
+            Don't draw the background.
+        note.
+            This just sets the background colour alpha to zero. Which on the next
+            draw tells Caption to skip over drawing the background.
+    */
+    void  no_background()
+    {
+     mBackground.a = 0;
+     mDirty = true;
+     mLayer->_markDirty();
+    }
+
     /*! function. _redraw
         desc.
             Redraw the text.

@@ -66,6 +66,11 @@ template<> Gorilla::Silverback* Ogre::Singleton<Gorilla::Silverback>::ms_Singlet
 namespace Gorilla
 {
  
+ enum
+ {
+  SCREEN_RENDERQUEUE = Ogre::RENDER_QUEUE_OVERLAY
+ };
+ 
  Ogre::ColourValue rgb(Ogre::uchar r, Ogre::uchar g, Ogre::uchar b, Ogre::uchar a )
  {
   static const Ogre::Real inv255 = Ogre::Real(0.00392156863);
@@ -89,8 +94,8 @@ namespace Gorilla
   _reset();
   _load(gorillaFile, groupName);
   _calculateCoordinates();
-  _createMaterial();
-  
+  _create2DMaterial();
+  _create3DMaterial();
  }
 
  TextureAtlas::~TextureAtlas()
@@ -292,7 +297,7 @@ namespace Gorilla
    
    if (str_values.size() < 4)
    {
-    std::cout << "[Gorilla] Glyph #" << (*i).second << " does not have enough properties.\n";
+    //std::cout << "[Gorilla] Glyph #" << (*i).second << " does not have enough properties.\n";
     continue;
    }
    
@@ -344,7 +349,7 @@ namespace Gorilla
    
    if (str_values.size() != 2)
    {
-    std::cout << "[Gorilla] Kerning Glyph #" << left_name << " does not have enough properties\n";
+    //std::cout << "[Gorilla] Kerning Glyph #" << left_name << " does not have enough properties\n";
     continue;
    }
    
@@ -379,7 +384,7 @@ namespace Gorilla
    
    if (str_values.size() != 4)
    {
-    std::cout << "[Gorilla] Sprite #" << sprite_name << " does not have enough properties\n" << data << "\n";
+    //std::cout << "[Gorilla] Sprite #" << sprite_name << " does not have enough properties\n" << data << "\n";
     continue;
    }
    
@@ -396,34 +401,81 @@ namespace Gorilla
   
  }
 
- void  TextureAtlas::_save(const Ogre::String& gorillaFile)
+
+ Ogre::MaterialPtr TextureAtlas::createOrGet2DMasterMaterial()
  {
+  Ogre::MaterialPtr d2Material = Ogre::MaterialManager::getSingletonPtr()->getByName("Gorilla2D");
+  if (d2Material.isNull() == false)
+   return d2Material;
+  
+  d2Material = Ogre::MaterialManager::getSingletonPtr()->create("Gorilla2D", Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+  Ogre::Pass* pass = d2Material->getTechnique(0)->getPass(0);
+  pass->setCullingMode(Ogre::CULL_NONE);
+  pass->setDepthCheckEnabled(false);
+  pass->setDepthWriteEnabled(false);
+  pass->setLightingEnabled(false);
+  pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
+  
+  Ogre::TextureUnitState* texUnit = pass->createTextureUnitState();
+  texUnit->setTextureAddressingMode(Ogre::TextureUnitState::TAM_CLAMP);
+  texUnit->setTextureFiltering(Ogre::FO_NONE, Ogre::FO_NONE, Ogre::FO_NONE);
+  
+  return d2Material;
+ }
+ 
+ Ogre::MaterialPtr TextureAtlas::createOrGet3DMasterMaterial()
+ {
+  
+  Ogre::MaterialPtr d3Material = Ogre::MaterialManager::getSingletonPtr()->getByName("Gorilla3D");
+  if (d3Material.isNull() == false)
+   return d3Material;
+  
+  d3Material = Ogre::MaterialManager::getSingletonPtr()->create("Gorilla3D", Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+  Ogre::Pass* pass = d3Material->getTechnique(0)->getPass(0);
+  pass->setCullingMode(Ogre::CULL_NONE);
+  pass->setDepthCheckEnabled(false);
+  pass->setDepthWriteEnabled(false);
+  pass->setLightingEnabled(false);
+  pass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
+
+  Ogre::TextureUnitState* texUnit = pass->createTextureUnitState();
+  texUnit->setTextureAddressingMode(Ogre::TextureUnitState::TAM_CLAMP);
+  texUnit->setTextureFiltering(Ogre::FO_ANISOTROPIC, Ogre::FO_ANISOTROPIC, Ogre::FO_ANISOTROPIC);
+  
+  return d3Material;
+ }
+ 
+
+ void  TextureAtlas::_create2DMaterial()
+ {
+  
+  std::string matName = "Gorilla2D." + mTexture->getName();
+  m2DMaterial = Ogre::MaterialManager::getSingletonPtr()->getByName(matName);
+  
+  if (m2DMaterial.isNull() == false)
+   return;
+  
+  
+  m2DMaterial = createOrGet2DMasterMaterial()->clone(matName);
+  m2DPass = m2DMaterial->getTechnique(0)->getPass(0);
+  m2DPass->getTextureUnitState(0)->setTextureName(mTexture->getName());
+  
  }
 
- void  TextureAtlas::_createMaterial()
+ void  TextureAtlas::_create3DMaterial()
  {
   
-  std::string matName = "GorillaMaterialFor" + mTexture->getName();
-  mMaterial == Ogre::MaterialManager::getSingletonPtr()->getByName(matName);
+  std::string matName = "Gorilla3D." + mTexture->getName();
+  m3DMaterial = Ogre::MaterialManager::getSingletonPtr()->getByName(matName);
   
-  if (mMaterial.isNull() == false)
+  if (m3DMaterial.isNull() == false)
    return;
-
-  mMaterial = Ogre::MaterialManager::getSingletonPtr()->create(matName, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-  mPass = mMaterial->getTechnique(0)->getPass(0);
   
-  mPass->setCullingMode(Ogre::CULL_NONE);
-  mPass->setDepthCheckEnabled(false);
-  mPass->setDepthWriteEnabled(false);
-  mPass->setLightingEnabled(false);
-  mPass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
-
-  mTextureUnit = mPass->createTextureUnitState(mTexture->getName());
-  mTextureUnit->setTextureAddressingMode(Ogre::TextureUnitState::TAM_CLAMP);
-  mTextureUnit->setTextureFiltering(Ogre::FO_NONE, Ogre::FO_NONE, Ogre::FO_NONE);
-  //mTextureUnit->setTextureAnisotropy(2);
-  //mTextureUnit->setNumMipmaps(0);
-  //mTextureUnit->setTextureAnisotropy(0);
+  
+  m3DMaterial = createOrGet3DMasterMaterial()->clone(matName);
+  m3DPass = m3DMaterial->getTechnique(0)->getPass(0);
+  m3DPass->getTextureUnitState(0)->setTextureName(mTexture->getName());
+  
  }
 
  void  TextureAtlas::_calculateCoordinates()
@@ -541,11 +593,15 @@ namespace Gorilla
 
  Silverback::Silverback()
  {
-  // Nothing to do!
+  
+  Ogre::Root::getSingletonPtr()->addFrameListener(this);
+  
  }
 
  Silverback::~Silverback()
  {
+  
+  Ogre::Root::getSingletonPtr()->removeFrameListener(this);
   
   // Delete Screens.
   for (std::vector<Screen*>::iterator it = mScreens.begin(); it != mScreens.end(); it++)
@@ -574,280 +630,431 @@ namespace Gorilla
   return screen;
  }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
- Screen::Screen(Ogre::Viewport* viewport, TextureAtlas* atlas)
- : mViewport(viewport), mAtlas(atlas), mLayerRedrawNeeded(false)
+ ScreenRenderable* Silverback::createScreenRenderable(const Ogre::Vector2& maxSize, const Ogre::String& atlas_name)
  {
-  for (size_t i=0;i < 16;i++)
-   mRedrawLayerNeeded[i] = false;
-
-  mSceneMgr = mViewport->getCamera()->getSceneManager();
-  
-  mRenderSystem = Ogre::Root::getSingletonPtr()->getRenderSystem();
-  
-  mViewportWidth = mViewport->getActualWidth();
-  mViewportHeight = mViewport->getActualHeight();
-  mInvViewportWidth = 1.0f / mViewportWidth;
-  mInvViewportHeight = 1.0f / mViewportHeight;
-
-  _createBuffer();
-  _registerListener();
+  TextureAtlas* atlas = (*mAtlases.find(atlas_name)).second;
+  ScreenRenderable* screen = OGRE_NEW ScreenRenderable(maxSize, atlas);
+  mScreenRenderables.push_back(screen);
+  return screen;
  }
-
- Screen::~Screen()
+ 
+ bool Silverback::frameStarted(const Ogre::FrameEvent& evt)
  {
-  _unregisterListener();
   
-  for (std::vector<Layer*>::iterator it = mAllLayers.begin(); it != mAllLayers.end();it++)
+  for (std::vector<ScreenRenderable*>::iterator it = mScreenRenderables.begin(); it != mScreenRenderables.end(); it++)
+   (*it)->frameStarted();
+  
+  return true;
+ }
+ 
+ LayerContainer::LayerContainer(TextureAtlas* atlas)
+ : mAtlas(atlas), mIndexRedrawAll(false)
+ {
+ }
+ 
+ LayerContainer::~LayerContainer()
+ {
+  for (std::vector<Layer*>::iterator it = mLayers.begin(); it != mLayers.end(); it++)
    OGRE_DELETE (*it);
-  mAllLayers.clear();
   
-  _destroyBuffer();
+  _destroyVertexBuffer();
+ }
+ 
+ Layer* LayerContainer::createLayer(Ogre::uint index)
+ {
+  Layer* layer = OGRE_NEW Layer(index, this);
+  mLayers.push_back(layer);
+  
+  std::map<Ogre::uint, IndexData*>::iterator index_data = mIndexData.find( layer->getIndex() );
+  if (index_data == mIndexData.end())
+  {
+   mIndexData[layer->getIndex()] = OGRE_NEW IndexData();
+   index_data = mIndexData.find( layer->getIndex() );
+  }
+  
+  (*index_data).second->mLayers.push_back( layer );
+  (*index_data).second->mRedrawNeeded = true;
+  
+  mIndexRedrawNeeded = true;
+  
+  return layer;
+ }
+  
+ /*! function. destroyLayer
+     desc.
+         Destroy a layer and it's contents.
+ */
+ void LayerContainer::destroy(Layer* layer)
+ {
+  if (layer == 0)
+   return;
+  
+  std::map<Ogre::uint, IndexData*>::iterator index_data = mIndexData.find( layer->getIndex() );
+
+  // Remove layer from index, and delete index if index is empty.
+  if (index_data != mIndexData.end())
+  {
+   IndexData* indexData = (*index_data).second;
+   indexData->mLayers.erase(std::find(indexData->mLayers.begin(), indexData->mLayers.end(), layer));
+   indexData->mRedrawNeeded = true;
+   mIndexRedrawNeeded = true;
+   if (indexData->mLayers.size() == 0)
+   {
+    mIndexData.erase(index_data);
+    OGRE_DELETE indexData;
+   }
+  }
+  
+  OGRE_DELETE layer;
  }
 
- void  Screen::_registerListener()
+ void LayerContainer::_createVertexBuffer(size_t initialSize = 32)
  {
-  mSceneMgr->addRenderQueueListener(this);
- }
-
- void  Screen::_unregisterListener()
- {
-  mSceneMgr->removeRenderQueueListener(this);
- }
-
- void  Screen::_createBuffer()
- {
-
-  mMaxVertexCount = 32 * 6;
-  mRenderOp.vertexData = OGRE_NEW Ogre::VertexData;
-  mRenderOp.vertexData->vertexStart = 0;
-
-  Ogre::VertexDeclaration* vDecl = mRenderOp.vertexData->vertexDeclaration;
-
+  mVertexBufferSize = initialSize * 6;
+  mRenderOpPtr->vertexData = OGRE_NEW Ogre::VertexData;
+  mRenderOpPtr->vertexData->vertexStart = 0;
+  
+  Ogre::VertexDeclaration* vertexDecl = mRenderOpPtr->vertexData->vertexDeclaration;
   size_t offset = 0;
   
-  vDecl->addElement(0, 0, Ogre::VET_FLOAT3, Ogre::VES_POSITION);
+  // Position.
+  vertexDecl->addElement(0,0, Ogre::VET_FLOAT3, Ogre::VES_POSITION);
   offset += Ogre::VertexElement::getTypeSize(Ogre::VET_FLOAT3);
-
-  vDecl->addElement(0, offset, Ogre::VET_FLOAT4, Ogre::VES_DIFFUSE);
+  
+  // Colour
+  vertexDecl->addElement(0, offset, Ogre::VET_FLOAT4, Ogre::VES_DIFFUSE);
   offset += Ogre::VertexElement::getTypeSize(Ogre::VET_FLOAT4);
   
-  vDecl->addElement(0, offset, Ogre::VET_FLOAT2, Ogre::VES_TEXTURE_COORDINATES);
-
+  // Texture Coordinates
+  vertexDecl->addElement(0, offset, Ogre::VET_FLOAT2, Ogre::VES_TEXTURE_COORDINATES);
   
-  mVertexBuffer = Ogre::HardwareBufferManager::getSingletonPtr()->createVertexBuffer(
-   vDecl->getVertexSize(0),
-   mMaxVertexCount,
-   Ogre::HardwareBuffer::HBU_DYNAMIC_WRITE_ONLY_DISCARDABLE,
-   false
-  );
+  mVertexBuffer = Ogre::HardwareBufferManager::getSingletonPtr()
+     ->createVertexBuffer(
+         vertexDecl->getVertexSize(0),
+         mVertexBufferSize,
+         Ogre::HardwareBuffer::HBU_DYNAMIC_WRITE_ONLY_DISCARDABLE,
+         false
+     );
   
-  mRenderOp.vertexData->vertexBufferBinding->setBinding(0, mVertexBuffer);
-  mRenderOp.operationType = Ogre::RenderOperation::OT_TRIANGLE_LIST;
-  mRenderOp.useIndexes = false;
+  mRenderOpPtr->vertexData->vertexBufferBinding->setBinding(0, mVertexBuffer);
+  mRenderOpPtr->operationType = Ogre::RenderOperation::OT_TRIANGLE_LIST;
+  mRenderOpPtr->useIndexes = false;
  }
-
- void  Screen::_destroyBuffer()
+ 
+ void LayerContainer::_destroyVertexBuffer()
  {
-  OGRE_DELETE mRenderOp.vertexData;
-  mRenderOp.vertexData = 0;
+  OGRE_DELETE mRenderOpPtr->vertexData;
+  mRenderOpPtr->vertexData = 0;
   mVertexBuffer.setNull();
-  mMaxVertexCount = 0;
+  mVertexBufferSize = 0;
  }
-
- void  Screen::_checkBuffer(size_t neededVertices)
+ 
+ void LayerContainer::_resizeVertexBuffer(size_t requestedSize)
  {
-
-  if (mMaxVertexCount == 0)
-   _createBuffer();
   
-  if (neededVertices > mMaxVertexCount)
+  if (mVertexBufferSize == 0)
+   _createVertexBuffer();
+  
+  if (requestedSize > mVertexBufferSize)
   {
-   
    size_t newVertexBufferSize = 1;
    
-   while (newVertexBufferSize < neededVertices)
+   while(newVertexBufferSize < requestedSize)
     newVertexBufferSize <<= 1;
    
    mVertexBuffer = Ogre::HardwareBufferManager::getSingletonPtr()->createVertexBuffer(
-    mRenderOp.vertexData->vertexDeclaration->getVertexSize(0),
-    newVertexBufferSize,
-    Ogre::HardwareBuffer::HBU_DYNAMIC_WRITE_ONLY_DISCARDABLE,
-    false
+     mRenderOpPtr->vertexData->vertexDeclaration->getVertexSize(0),
+     newVertexBufferSize,
+     Ogre::HardwareBuffer::HBU_DYNAMIC_WRITE_ONLY_DISCARDABLE,
+     false
    );
-   mMaxVertexCount = newVertexBufferSize;
-   mRenderOp.vertexData->vertexStart = 0;
-   mRenderOp.vertexData->vertexBufferBinding->setBinding(0, mVertexBuffer);
+   mVertexBufferSize = newVertexBufferSize;
+   mRenderOpPtr->vertexData->vertexStart = 0;
+   mRenderOpPtr->vertexData->vertexBufferBinding->setBinding(0, mVertexBuffer);
   }
   
  }
-
- void  Screen::_calculateLayers()
+ 
+ void LayerContainer::_recalculateIndexes()
  {
   
-  // Clear all layers.
-  for (Ogre::uint i=0;i < 16;i++)
+  std::map<Ogre::uint, IndexData*>::iterator index_data;
+  
+  // Clear all index data.
+  for(std::map< Ogre::uint, IndexData* >::iterator index_data = mIndexData.begin(); index_data != mIndexData.end(); index_data++)
   {
-   mLayers[i].remove_all();
-   mVertexLayerBuffer[i].remove_all();
-   mRedrawLayerNeeded[i] = false;
+   (*index_data).second->mVertices.remove_all();
+   (*index_data).second->mLayers.clear();
+   (*index_data).second->mRedrawNeeded = false;
   }
   
-  //
-  for (std::vector<Layer*>::iterator it = mAllLayers.begin(); it != mAllLayers.end();it++)
+  // Loop through layers, and add them to IndexData
+  for(std::vector<Layer*>::iterator layer = mLayers.begin(); layer != mLayers.end(); layer++)
   {
-   mLayers[ (*it)->getIndex() ].push_back( (*it) );
+   index_data = mIndexData.find( (*layer)->getIndex() );
+   if (index_data == mIndexData.end())
+   {
+    mIndexData[(*layer)->getIndex()] = OGRE_NEW IndexData();
+    index_data = mIndexData.find( (*layer)->getIndex() );
+   }
+   
+   (*index_data).second->mLayers.push_back( (*layer) );
   }
   
-  mRedrawAll = true;
- }
-
- void  Screen::_redrawAll()
- {
-  _calculateLayers();
-  for (Ogre::uint i=0;i < 16;i++)
-   _redrawLayer(i); 
- }
-
- void  Screen::_redrawLayer(Ogre::uint id)
- {
-  mRedrawLayerNeeded[id] = false;
-  mVertexLayerBuffer[id].remove_all();
+  // Prune any index data that is not.
+  bool deleted = false;
   
-  for (size_t i=0;i < mLayers[id].size();i++)
+  while(0xDEADBEEF)
   {
-   if (mLayers[id][i]->mVisible)
-    mLayers[id][i]->_render(mVertexLayerBuffer[id]);
+   deleted = false;
+   for(std::map< Ogre::uint, IndexData* >::iterator index_data = mIndexData.begin(); index_data != mIndexData.end(); index_data++)
+   {
+    if (  (*index_data).second->mLayers.size() == 0)
+    {
+     OGRE_DELETE (*index_data).second;
+     mIndexData.erase(index_data);
+     deleted = true;
+     break;
+    }
+   }
+   
+   if (!deleted)
+    break;
+   
+  }
+  
+  mIndexRedrawAll = true;
+  
+ }
+ 
+ void LayerContainer::_redrawIndex(Ogre::uint index, bool force)
+ {
+  
+  std::map<Ogre::uint, IndexData*>::iterator it = mIndexData.find( index );
+  if (it == mIndexData.end())
+   return;
+  
+  IndexData* indexData = (*it).second;
+  
+  indexData->mVertices.remove_all();
+  indexData->mRedrawNeeded = false;
+  
+  for (size_t i=0;i < indexData->mLayers.size();i++)
+  {
+   if (indexData->mLayers[i]->mVisible)
+    indexData->mLayers[i]->_render( indexData->mVertices, force );
   }
   
  }
-
- void  Screen::_layerRedrawRequested(Ogre::uint layer)
+ 
+ void LayerContainer::_requestIndexRedraw(Ogre::uint index)
  {
-  mLayerRedrawNeeded = true;
-  mRedrawLayerNeeded[layer] = true;
+  std::map<Ogre::uint, IndexData*>::iterator it = mIndexData.find( index );
+  if (it == mIndexData.end())
+   return;
+   
+  (*it).second->mRedrawNeeded = true;
+  mIndexRedrawNeeded = true;
+  //std::cout << "+++ IndexRedrawNeeded\n";
  }
-
- void  Screen::_copyToVertexBuffer()
+ 
+ void LayerContainer::_redrawAllIndexes(bool force)
+ {
+  mIndexRedrawNeeded = false;
+  for(std::map<Ogre::uint, IndexData*>::iterator it = mIndexData.begin(); it != mIndexData.end();it++)
+  {
+   IndexData* indexData = (*it).second;
+   if (indexData->mRedrawNeeded || force)
+   {
+    //std::cout << "+++ Drawing Index: " << (*it).first;
+    indexData->mVertices.remove_all();
+    indexData->mRedrawNeeded = false;
+    
+    for (size_t i=0;i < indexData->mLayers.size();i++)
+    {
+     if (indexData->mLayers[i]->mVisible)
+      indexData->mLayers[i]->_render( indexData->mVertices, force );
+    }
+    //std::cout << "+++ Drawn " << indexData->mVertices.size() << "\n";
+   }
+   
+  }
+ }
+ 
+ void LayerContainer::_renderVertices(bool force)
  {
   
-  mKnownVertexCount = 0;
-  for (size_t i=0;i < 16;i++)
-   mKnownVertexCount += mVertexLayerBuffer[i].size();
+  if (mIndexRedrawNeeded == false)
+   if (!force)
+    return;
   
-  _checkBuffer(mKnownVertexCount);
+  _redrawAllIndexes(force);
   
+  size_t knownVertexCount = 0;
+  
+  for(std::map<Ogre::uint, IndexData*>::iterator it = mIndexData.begin(); it != mIndexData.end();it++)
+   knownVertexCount += (*it).second->mVertices.size();
+  
+  _resizeVertexBuffer(knownVertexCount);
+  //std::cout << "+++ Known Vertex Count is: " << knownVertexCount << "\n";
   Vertex* writeIterator = (Vertex*) mVertexBuffer->lock(Ogre::HardwareBuffer::HBL_DISCARD);
   
-  for (size_t layer=0;layer < 16;layer++)
+  size_t i = 0;
+  IndexData* indexData = 0;
+  for(std::map<Ogre::uint, IndexData*>::iterator it = mIndexData.begin(); it != mIndexData.end();it++)
   {
-   for (size_t vertex=0;vertex < mVertexLayerBuffer[layer].size();vertex++)
+   indexData = (*it).second;
+   for (i=0;i < indexData->mVertices.size();i++)
    {
-    *writeIterator++ = mVertexLayerBuffer[layer][vertex];
+    *writeIterator++ = indexData->mVertices[i];
    }
   }
   
   mVertexBuffer->unlock();
-  mRenderOp.vertexData->vertexCount = mKnownVertexCount;
+  mRenderOpPtr->vertexData->vertexCount = knownVertexCount;
+ }
+ 
+ 
+ Screen::Screen(Ogre::Viewport* viewport, TextureAtlas* atlas)
+ : LayerContainer(atlas), mViewport(viewport)
+ {
+  mRenderOpPtr = &mRenderOp;
+  mSceneMgr = mViewport->getCamera()->getSceneManager();
+  
+  mRenderSystem = Ogre::Root::getSingletonPtr()->getRenderSystem();
+  
+  mWidth = mViewport->getActualWidth();
+  mHeight = mViewport->getActualHeight();
+  mInvWidth = 1.0f / mWidth;
+  mInvHeight = 1.0f / mHeight;
+  
+  mSceneMgr->addRenderQueueListener(this);
+  _createVertexBuffer();
  }
 
- void  Screen::_forceViewportChange()
+ Screen::~Screen()
  {
-  mViewportWidth = mViewport->getActualWidth();
-  mViewportHeight = mViewport->getActualHeight();
-  mInvViewportWidth = 1.0f / mViewportWidth;
-  mInvViewportHeight = 1.0f / mViewportHeight;
-
-  _redrawAll();
+  mSceneMgr->removeRenderQueueListener(this);
  }
-
- void  Screen::renderQueueEnded(Ogre::uint8 queueGroupId, const Ogre::String& invocation, bool& repeatThisInvocation)
+ 
+ void Screen::renderQueueEnded(Ogre::uint8 queueGroupId, const Ogre::String& invocation, bool& repeatThisInvocation)
  {
-  if (queueGroupId == Ogre::RENDER_QUEUE_OVERLAY)
-  {
-   
-   if (mViewport->getActualWidth() != mViewportWidth || mViewport->getActualHeight() != mViewportHeight)
-   {
-    
-    mViewportWidth = mViewport->getActualWidth();
-    mViewportHeight = mViewport->getActualHeight();
-    mInvViewportWidth = 1.0f / mViewportWidth;
-    mInvViewportHeight = 1.0f / mViewportHeight;
-    
-    _redrawAll();
-   }
-
-   // Check to see if redraw needed here.
-   if ( mLayerRedrawNeeded == true)
-   {
-    for (size_t i=0;i < 16;i++)
-     if (mRedrawLayerNeeded[i])
-      _redrawLayer(i);
-    mLayerRedrawNeeded = false;
-    _copyToVertexBuffer();
-   }
-   
-   if (mRenderOp.vertexData->vertexCount)
-   {
-    _prepareRenderSystem();
-    _render();
-   }
-  }
+  if (queueGroupId != SCREEN_RENDERQUEUE)
+   return;
+  renderOnce();
  }
-
- void  Screen::_prepareRenderSystem()
+ 
+ void Screen::_prepareRenderSystem()
  {
-
   mRenderSystem->_setWorldMatrix( Ogre::Matrix4::IDENTITY );
   mRenderSystem->_setProjectionMatrix( Ogre::Matrix4::IDENTITY );
   mRenderSystem->_setViewMatrix( Ogre::Matrix4::IDENTITY );
-  
-  mSceneMgr->_setPass(mAtlas->getPass());
+  mSceneMgr->_setPass(mAtlas->get2DPass());
  }
 
- void  Screen::_render()
+ void Screen::renderOnce()
  {
-  mRenderSystem->_render(mRenderOp);
+  bool force = false;
+  // force == true if viewport size changed.
+  _renderVertices(force);
+  if (mRenderOp.vertexData->vertexCount)
+  {
+   _prepareRenderSystem();
+   mRenderSystem->_render(mRenderOp);
+  }
  }
  
- Layer*  Screen::createLayer(Ogre::uint index)
+ void  Screen::transform(buffer<Vertex>& vertices, size_t begin, size_t end) 
  {
-  Layer* layer = OGRE_NEW Layer(index, this);
-  mAllLayers.push_back(layer);
-  mLayers[index].push_back(layer);
-  mRedrawLayerNeeded[index] = true;
-  mLayerRedrawNeeded = true;
-  return layer;
+  for (size_t i = begin; i < end; i++)
+  {
+   vertices[i].position.x = ((vertices[i].position.x) * mInvWidth) * 2 - 1;
+   vertices[i].position.y = ((vertices[i].position.y) * mInvHeight) * -2 + 1;
+  }
  }
-  
- void   Screen::destroy(Layer* layer)
+ 
+ Ogre::Real Screen::getTexelOffsetX() const 
  {
-  
-  if (layer == 0)
-   return;
-  
-  mAllLayers.erase(std::find(mAllLayers.begin(), mAllLayers.end(), layer));
-  // TOOD: Erase layer from mLayers[x] as well.
-  OGRE_DELETE layer;
-  
+  return mRenderSystem->getHorizontalTexelOffset();
+ }
+ 
+ Ogre::Real Screen::getTexelOffsetY() const
+ {
+  return mRenderSystem->getVerticalTexelOffset();
  }
  
  
  
- Layer::Layer(Ogre::uint index, Screen* screen)
- : mIndex(index), mScreen(screen), mVisible(true)
+ ScreenRenderable::ScreenRenderable(const Ogre::Vector2& maxSize, TextureAtlas* atlas)
+ : LayerContainer(atlas), mMaxSize(maxSize)
+ {
+  mRenderOpPtr = &mRenderOp;
+  
+  mBox.setInfinite();
+  setMaterial(mAtlas->get3DMaterialName());
+  
+  _createVertexBuffer();
+ }
+ 
+ ScreenRenderable::~ScreenRenderable()
+ {
+ }
+ 
+ void ScreenRenderable::frameStarted()
+ {
+  renderOnce();
+ }
+ 
+ void ScreenRenderable::renderOnce()
+ {
+  if (mIndexRedrawNeeded)
+  {
+   _renderVertices(false);
+   calculateBoundingBox();
+  }
+ }
+ 
+ void ScreenRenderable::calculateBoundingBox()
+ {
+  IndexData* indexData = 0;
+  mBox.setExtents(0,0,0,0,0,0);
+  size_t i = 0;
+  for(std::map<Ogre::uint, IndexData*>::iterator it = mIndexData.begin(); it != mIndexData.end();it++)
+  {
+   indexData = (*it).second;
+   for (i=0;i < indexData->mVertices.size();i++)
+   {
+    mBox.merge( indexData->mVertices[i].position );
+   }
+  }
+  if (mBox.isNull() == false)
+  {
+   mBox.merge(Ogre::Vector3(0,0,-0.25f));
+   mBox.merge(Ogre::Vector3(0,0, 0.25f));
+   
+  }
+  
+  Ogre::SceneNode* node = getParentSceneNode();
+  if (node)
+   node->_updateBounds();
+ 
+ }
+ 
+ void ScreenRenderable::transform(buffer<Vertex>& vertices, size_t begin, size_t end)
+ {
+  Ogre::Vector2 halfSize = mMaxSize * 0.5;
+  for (size_t i = begin; i < end; i++)
+  {
+   vertices[i].position.x = (vertices[i].position.x * 0.01f) - halfSize.x;
+   vertices[i].position.y = (vertices[i].position.y * -0.01f) + halfSize.y;
+  }
+ }
+ 
+ 
+ 
+ 
+ Layer::Layer(Ogre::uint index, LayerContainer* parent)
+ : mIndex(index), mParent(parent), mVisible(true)
  {
  }
  
@@ -863,7 +1070,7 @@ namespace Gorilla
  
  void Layer::_markDirty()
  {
-  mScreen->_layerRedrawRequested(mIndex);
+  mParent->_requestIndexRedraw(mIndex);
  }
  
  Rectangle* Layer::createRectangle(Ogre::Real left, Ogre::Real top, Ogre::Real width, Ogre::Real height)
@@ -1037,12 +1244,9 @@ namespace Gorilla
   mMarkupTexts.clear();
  }
 
- void Layer::_render(buffer<Vertex>& vertices)
+ void Layer::_render(buffer<Vertex>& vertices, bool force)
  {
   
-   Ogre::Real invWidth = mScreen->getViewportWidth(),
-              invHeight = mScreen->getViewportHeight();
-
   size_t begin = vertices.size();
   size_t i = 0;
   
@@ -1050,7 +1254,7 @@ namespace Gorilla
   for (Rectangles::iterator it = mRectangles.begin(); it != mRectangles.end(); it++)
   {
    
-   if ((*it)->mDirty)
+   if ((*it)->mDirty || force)
     (*it)->_redraw();
   
    for (i=0; i < (*it)->mVertices.size(); i++)
@@ -1062,7 +1266,7 @@ namespace Gorilla
   for (Polygons::iterator it = mPolygons.begin(); it != mPolygons.end(); it++)
   {
    
-   if ((*it)->mDirty)
+   if ((*it)->mDirty || force)
     (*it)->_redraw();
   
    for (i=0; i < (*it)->mVertices.size(); i++)
@@ -1074,7 +1278,7 @@ namespace Gorilla
   for (LineLists::iterator it = mLineLists.begin(); it != mLineLists.end(); it++)
   {
    
-   if ((*it)->mDirty)
+   if ((*it)->mDirty || force)
     (*it)->_redraw();
   
    for (i=0; i < (*it)->mVertices.size(); i++)
@@ -1086,7 +1290,7 @@ namespace Gorilla
   for (QuadLists::iterator it = mQuadLists.begin(); it != mQuadLists.end(); it++)
   {
    
-   if ((*it)->mDirty)
+   if ((*it)->mDirty || force)
     (*it)->_redraw();
   
    for (i=0; i < (*it)->mVertices.size(); i++)
@@ -1098,7 +1302,7 @@ namespace Gorilla
   for (Captions::iterator it = mCaptions.begin(); it != mCaptions.end(); it++)
   {
    
-   if ((*it)->mDirty)
+   if ((*it)->mDirty || force)
     (*it)->_redraw();
   
    for (i=0; i < (*it)->mVertices.size(); i++)
@@ -1110,10 +1314,10 @@ namespace Gorilla
   for (MarkupTextIterator::iterator it = mMarkupTexts.begin(); it != mMarkupTexts.end(); it++)
   {
    
-   if ((*it)->mTextDirty)
+   if ((*it)->mTextDirty || force)
     (*it)->_calculateCharacters();
    
-   if ((*it)->mDirty)
+   if ((*it)->mDirty || force)
     (*it)->_redraw();
   
    for (i=0; i < (*it)->mVertices.size(); i++)
@@ -1121,11 +1325,7 @@ namespace Gorilla
   
   }
   
-  for (size_t i = begin; i < vertices.size(); i++)
-  {
-   vertices[i].position.x = ((vertices[i].position.x) / invWidth) * 2 - 1;
-   vertices[i].position.y = ((vertices[i].position.y) / invHeight) * -2 + 1;
-  }
+  mParent->transform(vertices, begin, vertices.size());
   
  }
  
@@ -1151,12 +1351,13 @@ namespace Gorilla
    return;
   
   mVertices.remove_all();
-  
+
+  Ogre::Real texelOffsetX = mLayer->_getTexelX(), texelOffsetY = mLayer->_getTexelY();
   Ogre::Vector2 a, b, c, d;
-  a.x = mLeft;  a.y = mTop;
-  b.x = mRight; b.y = mTop;
-  c.x = mLeft;  c.y = mBottom;
-  d.x = mRight; d.y = mBottom;
+  a.x = mLeft - texelOffsetX;  a.y = mTop - texelOffsetY;
+  b.x = mRight + texelOffsetX; b.y = mTop - texelOffsetY;
+  c.x = mLeft - texelOffsetX;  c.y = mBottom + texelOffsetY;
+  d.x = mRight + texelOffsetX; d.y = mBottom + texelOffsetY;
   
   // Border
   if (mBorderWidth != 0)
@@ -1668,7 +1869,7 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
  { 
  
   Ogre::Real cursor = 0,
-             kerning;
+             kerning = 0;
 
   unsigned char thisChar = 0, lastChar = 0;
   Glyph* glyph = 0;

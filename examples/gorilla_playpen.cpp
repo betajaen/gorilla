@@ -54,7 +54,7 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
   caption = mLayer->createCaption(24, vpW - 55, 33, "24");
   caption->width(50);
   caption->align(Gorilla::TextAlign_Right);
-
+  
   }
   
  ~App()
