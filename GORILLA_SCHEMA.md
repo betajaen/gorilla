@@ -29,12 +29,14 @@ Section: Texture
 
 Image file to use.
 
-### rectangle <x> <y>   REQUIRED
+### whitepixel <x> <y>   REQUIRED
 
 Where a white (RGB 255 255 255) pixel is in the image, for best results the surrounding pixels should be white too.
 
-Section: Font
--------------
+Section: Font.x
+---------------
+
+Where "x" is the font index.
 
 ### lineheight <h>      REQUIRED
 `lineheight 22`
@@ -56,17 +58,10 @@ Distance from the top where the character "sit's" upon. See http://en.wikipedia.
 
     <h>     Height in pixels
 
-### scale   <r>         REQUIRED
-`scale 0.999`
-
-Scale the glyphs by.
-    
-    <r>     Scale factor
-
 **NOTE: There is a current bug in Gorilla or Ogre, that makes the texture corrupted at 100%. For this reason, I recommend you put the scale at 0.999**
 
-### kerning <k>         REQUIRED
-`kerning -1`
+### letterspacing <k>         REQUIRED
+`letterspacing -1`
 
 Amount of horizontal space to move forwards/backwards when a letter is drawn. 
 
@@ -101,11 +96,9 @@ Glyph image in the texture atlas. All glyph images need to have the same height,
     <h>         Height of the glyph
     (advance)   Move across this distance when draw (OPTIONAL)
 
-Section: FontKerning
---------------------
 
-### glyph_<right_character> <left_character> <kerning>
-`glyph_74 45 1`
+### kerning_<right_character> <left_character> <kerning>
+`kerning_74 45 1`
 
 Kerning value for when a right character is drawn after a left character.
 
