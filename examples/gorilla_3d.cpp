@@ -258,50 +258,6 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
     }
    }
 
-#if 0
-   Ogre::Plane plane(Ogre::Vector3::UNIT_Z, 0);
-   Ogre::Ray ray = mCamera->getCameraToViewportRay(0.5f,0.5f);
-   std::pair<bool, Ogre::Real> result = Ogre::Math::intersects(ray, plane);
-   
-   // This is really hacky, but shows you what could be done.
-   if (result.first && result.second < 10.0f) 
-   {
-    Ogre::Vector3 hit = ray.getOrigin() + (ray.getDirection() * result.second);
-    if (hit.x > 0 && hit.x < 3.90f && hit.y > 1.5f && hit.y < 3.32f)
-    {
-     m3DMouse->left(hit.x * 100);
-     m3DMouse->top((-hit.y * 100) + 332);
-     bool lmbDown = mMouse->getMouseState().buttonDown(OIS::MB_Left);
-     if (mPowerUpButton->isOver(m3DMouse->position()) && lmbDown)
-     { 
-      if (mPowerValue->width() <= 300.0f)
-      {
-       mPowerValue->width( mPowerValue->width() + 0.5f);
-       Ogre::Real c = (255.0f/300.0f) * mPowerValue->width();
-       mPowerValue->background_gradient(Gorilla::Gradient_WestEast, Gorilla::rgb(255,255,255,1), Gorilla::rgb(255,255,255,c));
-      }
-     }
-     else if (mPowerDownButton->isOver(m3DMouse->position()) && lmbDown)
-     {
-      if (mPowerValue->width() >= 0.0f)
-      {
-       mPowerValue->width( mPowerValue->width() - 0.5f);
-       Ogre::Real c = (255.0f/300.0f) * mPowerValue->width();
-       mPowerValue->background_gradient(Gorilla::Gradient_WestEast, Gorilla::rgb(255,255,255,1), Gorilla::rgb(255,255,255,c));
-      }
-     }
-    
-     mCrosshairLayer->hide();
-    }
-    else
-    {
-     mCrosshairLayer->show();
-    }
-   }
-   else
-    mCrosshairLayer->show();
-#endif
-
    Ogre::Vector3 trans(0,0,0);
    
    if (mKeyboard->isKeyDown(OIS::KC_W))
@@ -380,10 +336,8 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
   	rgm->addResourceLocation(".", "FileSystem");
    
    mRoot->initialise(false);
-   Ogre::NameValuePairList options;
-   options["FSAA"] = "4";
    
-   mWindow = mRoot->createRenderWindow("Gorilla", 1024, 768, false, &options);
+   mWindow = mRoot->createRenderWindow("Gorilla", 1024, 768, false);
    mSceneMgr = mRoot->createSceneManager(Ogre::ST_GENERIC);
    mCamera = mSceneMgr->createCamera("Camera");
    mViewport = mWindow->addViewport(mCamera);
