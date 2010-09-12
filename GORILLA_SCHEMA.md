@@ -18,8 +18,7 @@ Sections
 A Gorilla is organised into several sections:
 
 * Texture -- Referenced texture and canvas shape UV coords
-* Font -- Glyphs and Glyph information
-* FontKerning -- Font kerning
+* Font.x -- Glyphs, Kerning and Glyph information
 * Sprite -- Sprite information
 
 Section: Texture
@@ -36,7 +35,7 @@ Where a white (RGB 255 255 255) pixel is in the image, for best results the surr
 Section: Font.x
 ---------------
 
-Where "x" is the font index.
+Where "x" is the font index; i.e. `[Font.14]`
 
 ### lineheight <h>      REQUIRED
 `lineheight 22`
