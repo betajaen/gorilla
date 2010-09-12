@@ -609,6 +609,12 @@ namespace Gorilla
   
   mScreens.clear();
   
+  // Delete Screens.
+  for (std::vector<ScreenRenderable*>::iterator it = mScreenRenderables.begin(); it != mScreenRenderables.end(); it++)
+   OGRE_DELETE (*it);
+  
+  mScreenRenderables.clear();
+  
   // Delete Atlases.
   for (std::map<Ogre::String, TextureAtlas*>::iterator it = mAtlases.begin(); it != mAtlases.end(); it++)
    OGRE_DELETE (*it).second;
@@ -638,6 +644,21 @@ namespace Gorilla
   return screen;
  }
  
+ void Silverback::destroyScreen(Screen* screen)
+ {
+  if (screen == 0)
+   return;
+  
+  mScreens.erase(std::find(mScreens.begin(), mScreens.end(), screen));
+  OGRE_DELETE screen;
+ }
+ 
+ void Silverback::destroyScreenRenderable(ScreenRenderable* screen_renderables)
+ {
+  mScreenRenderables.erase(std::find(mScreenRenderables.begin(), mScreenRenderables.end(), screen_renderables));
+  OGRE_DELETE screen_renderables;
+ }
+
  bool Silverback::frameStarted(const Ogre::FrameEvent& evt)
  {
   
@@ -971,16 +992,6 @@ namespace Gorilla
    vertices[i].position.x = ((vertices[i].position.x) * mInvWidth) * 2 - 1;
    vertices[i].position.y = ((vertices[i].position.y) * mInvHeight) * -2 + 1;
   }
- }
- 
- Ogre::Real Screen::getTexelOffsetX() const 
- {
-  return mRenderSystem->getHorizontalTexelOffset();
- }
- 
- Ogre::Real Screen::getTexelOffsetY() const
- {
-  return mRenderSystem->getVerticalTexelOffset();
  }
  
  

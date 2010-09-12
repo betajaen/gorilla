@@ -46,9 +46,9 @@ void OgreConsole::init(Gorilla::Screen* screen)
    mGlyphData = mLayer->_getGlyphData(CONSOLE_FONT_INDEX); // Font.CONSOLE_FONT_INDEX
 
    mConsoleText = mLayer->createMarkupText(CONSOLE_FONT_INDEX,  10,10, Ogre::StringUtil::BLANK);
-   mConsoleText->width(mScreen->getViewportWidth() - 10);
+   mConsoleText->width(mScreen->getWidth() - 10);
    mPromptText = mLayer->createCaption(CONSOLE_FONT_INDEX,  10,10, "> _");
-   mDecoration = mLayer->createRectangle(8,8, mScreen->getViewportWidth() - 16, mGlyphData->mLineHeight );
+   mDecoration = mLayer->createRectangle(8,8, mScreen->getWidth() - 16, mGlyphData->mLineHeight );
    mDecoration->background_gradient(Gorilla::Gradient_NorthSouth, Gorilla::rgb(128,128,128,128), Gorilla::rgb(64,64,64,128));
    mDecoration->border(2, Gorilla::rgb(128,128,128,128));
    
@@ -184,9 +184,9 @@ void OgreConsole::updateConsole()
  // Change background height so it covers the text and prompt
  mDecoration->height(((lcount+1) * mGlyphData->mLineHeight) + 4);
  
- mConsoleText->width(mScreen->getViewportWidth() - 20);
- mDecoration->width(mScreen->getViewportWidth() - 16);
- mPromptText->width(mScreen->getViewportWidth() - 20);
+ mConsoleText->width(mScreen->getWidth() - 20);
+ mDecoration->width(mScreen->getWidth() - 16);
+ mPromptText->width(mScreen->getWidth() - 20);
  
 }
 

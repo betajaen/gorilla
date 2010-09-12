@@ -849,10 +849,14 @@ namespace Gorilla
     void renderOnce();
     void transform(buffer<Vertex>& vertices, size_t begin, size_t end);
 
-    Ogre::Real getTexelOffsetX() const;
-    
-    Ogre::Real getTexelOffsetY() const;
+    inline Ogre::Real getTexelOffsetX() const { return mRenderSystem->getHorizontalTexelOffset(); }
 
+    inline Ogre::Real getTexelOffsetY() const { return mRenderSystem->getVerticalTexelOffset(); }
+    
+    inline Ogre::Real getWidth() const { return mWidth; }
+    
+    inline Ogre::Real getHeight() const { return mHeight; }
+    
    protected:
     Ogre::RenderOperation mRenderOp;
     Ogre::SceneManager*   mSceneMgr;
