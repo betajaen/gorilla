@@ -57,8 +57,6 @@ Distance from the top where the character "sit's" upon. See http://en.wikipedia.
 
     <h>     Height in pixels
 
-**NOTE: There is a current bug in Gorilla or Ogre, that makes the texture corrupted at 100%. For this reason, I recommend you put the scale at 0.999**
-
 ### letterspacing <k>         REQUIRED
 `letterspacing -1`
 
