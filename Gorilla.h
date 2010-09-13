@@ -970,6 +970,31 @@ namespace Gorilla
      _markDirty();
     }
     
+    /*! function. setAlphaModifier
+        desc.
+            Set's a modifier to the alpha component of all colours of the vertices that make up this layer
+        note.
+            Final alpha value of all vertices in this layer is the following:
+              
+             final_alpha = vertex_alpha * alphaModifier;
+            
+            Alpha modifier should be between 0.0 and 1.0
+    */
+    void setAlphaModifier(const Ogre::Real& alphaModifier)
+    {
+     mAlphaModifier = alphaModifier;
+     _markDirty();
+    }
+    
+    /*! function. getAlphaModifier
+        desc.
+            Set's a modifier to the alpha component of all colours of the vertices that make up this layer
+    */
+    Ogre::Real getAlphaModifier() const
+    {
+     return mAlphaModifier;
+    }
+    
     /*! function. createRectangle
         desc.
             Creates a rectangle.
@@ -1249,6 +1274,7 @@ namespace Gorilla
     MarkupTexts              mMarkupTexts;
     LayerContainer*          mParent;
     bool                     mVisible;
+    Ogre::Real               mAlphaModifier;
     
   };
   

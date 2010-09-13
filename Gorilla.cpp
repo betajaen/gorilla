@@ -1065,7 +1065,7 @@ namespace Gorilla
  
  
  Layer::Layer(Ogre::uint index, LayerContainer* parent)
- : mIndex(index), mParent(parent), mVisible(true)
+ : mIndex(index), mParent(parent), mVisible(true), mAlphaModifier(1.0f)
  {
  }
  
@@ -1258,6 +1258,9 @@ namespace Gorilla
  void Layer::_render(buffer<Vertex>& vertices, bool force)
  {
   
+  if (mAlphaModifier == 0.0f)
+   return;
+  
   size_t begin = vertices.size();
   size_t i = 0;
   
@@ -1334,6 +1337,12 @@ namespace Gorilla
    for (i=0; i < (*it)->mVertices.size(); i++)
     vertices.push_back((*it)->mVertices[i]);
   
+  }
+  
+  if (mAlphaModifier != 1.0f)
+  {
+   for (i=begin;i < vertices.size();i++)
+    vertices[i].colour.a *= mAlphaModifier;
   }
   
   mParent->transform(vertices, begin, vertices.size());
