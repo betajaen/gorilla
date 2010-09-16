@@ -465,10 +465,10 @@ namespace Gorilla
     */
     inline Glyph* getGlyph(Ogre::uint character) const
     {
-     character = character - mRangeBegin;
-     if (character > mRangeEnd)
-      return 0;
-     return mGlyphs[character];
+     Ogre::uint safe_character = character - mRangeBegin;
+     if (safe_character > 0 && safe_character < mGlyphs.size())
+      return mGlyphs[safe_character];
+     return 0;
     }
     
     std::vector<Glyph*>  mGlyphs;
@@ -798,7 +798,7 @@ namespace Gorilla
     */
     virtual void renderOnce() = 0;
     
-    virtual void transform(buffer<Vertex>& vertices, size_t begin, size_t end) {}
+    virtual void _transform(buffer<Vertex>& vertices, size_t begin, size_t end) {}
     
    protected:
     
@@ -837,32 +837,85 @@ namespace Gorilla
   
   class Screen : public LayerContainer, public Ogre::RenderQueueListener, public Ogre::GeneralAllocatedObject
   {
-    
    public:
     
-    Screen(Ogre::Viewport*, TextureAtlas*);
+    friend class Silverback;
+    friend class Layer;
     
-   ~Screen();
-    
-    void renderQueueEnded(Ogre::uint8 queueGroupId, const Ogre::String& invocation, bool& repeatThisInvocation);
-    void _prepareRenderSystem();
-    void renderOnce();
-    void transform(buffer<Vertex>& vertices, size_t begin, size_t end);
-
+    /*! desc. getTexelOffsetX
+            Helper function to get horizontal texel offset.
+    */
     inline Ogre::Real getTexelOffsetX() const { return mRenderSystem->getHorizontalTexelOffset(); }
 
+    /*! desc. getTexelOffsetY
+            Helper function to get vertical texel offset.
+    */
     inline Ogre::Real getTexelOffsetY() const { return mRenderSystem->getVerticalTexelOffset(); }
     
+    /*! desc. getWidth
+            Get screen height in pixels.
+    */
     inline Ogre::Real getWidth() const { return mWidth; }
     
+    /*! desc. getHeight
+            Get screen height in pixels.
+    */
     inline Ogre::Real getHeight() const { return mHeight; }
     
+    /*! desc. isVisible
+            Is the screen and it's contents visible or not?
+        note.
+            If the screen is hidden, then it is not rendered which decrease the batch count by one.
+    */
+    inline bool isVisible() const { return mIsVisible; }
+    
+    /*! desc. setVisible
+            Show or hide the screen.
+    */
+    inline void setVisible(bool value) { mIsVisible = value;}
+    
+    /*! desc. hide
+            Hide the screen and the all of layers within it.
+    */
+    inline void hide() { mIsVisible = false;}
+    
+    /*! desc. show
+            Show the screen and the visible layers within it.
+    */
+    inline void show() { mIsVisible = true;}
+    
    protected:
+    
+    /*! constructor. Screen
+        desc.
+            Use Silverback::createScreen
+    */
+    Screen(Ogre::Viewport*, TextureAtlas*);
+    
+    /*! destructor. Screen
+        desc.
+            Use Silverback::destroyScreen
+    */
+   ~Screen();
+    
+    // Internal -- Called by Ogre to render the screen.
+    void renderQueueEnded(Ogre::uint8 queueGroupId, const Ogre::String& invocation, bool& repeatThisInvocation);
+    
+    // Internal -- Prepares RenderSystem for rendering.
+    void _prepareRenderSystem();
+    
+    // Internal -- Renders mVertexData to screen.
+    void renderOnce();
+    
+    // Internal -- Used to transform vertices using units of pixels into screen coordinates.
+    void _transform(buffer<Vertex>& vertices, size_t begin, size_t end);
+    
     Ogre::RenderOperation mRenderOp;
     Ogre::SceneManager*   mSceneMgr;
     Ogre::RenderSystem*   mRenderSystem;
     Ogre::Viewport*       mViewport;
     Ogre::Real            mWidth, mHeight, mInvWidth, mInvHeight;
+    bool                  mIsVisible;
     
   };
   
@@ -877,7 +930,7 @@ namespace Gorilla
     
     void frameStarted();
     void renderOnce();
-    void transform(buffer<Vertex>& vertices, size_t begin, size_t end);
+    void _transform(buffer<Vertex>& vertices, size_t begin, size_t end);
     void calculateBoundingBox();
 
     Ogre::Real getBoundingRadius(void) const { return mBox.getMaximum().squaredLength(); }
