@@ -726,6 +726,7 @@ namespace Gorilla
    }
   }
   
+  mLayers.erase(std::find(mLayers.begin(), mLayers.end(), layer));
   OGRE_DELETE layer;
  }
 
