@@ -45,6 +45,15 @@ namespace Gorilla
  class Caption;
  class MarkupText;
  
+ template<typename T> struct VectorType
+ {
+#if OGRE_VERSION <= 67077 // If the version is less than or equal to 1.6.5
+  typedef std::vector<T> type;
+#else
+  typedef typename Ogre::vector<T>::type type;
+#endif
+ };
+ 
  namespace Colours
  {
   enum Colour
@@ -898,6 +907,9 @@ namespace Gorilla
     */
    ~Screen();
     
+    // Internal -- Not used, but required by renderQueueListener
+    void renderQueueStarted(Ogre::uint8, const Ogre::String&, bool&) {}
+    
     // Internal -- Called by Ogre to render the screen.
     void renderQueueEnded(Ogre::uint8 queueGroupId, const Ogre::String& invocation, bool& repeatThisInvocation);
     
@@ -965,18 +977,18 @@ namespace Gorilla
    
    public:
     
-    typedef Ogre::vector<Rectangle*>::type            Rectangles;
-    typedef Ogre::VectorIterator<Rectangles>          RectangleIterator;
-    typedef Ogre::vector<Polygon*>::type              Polygons;
-    typedef Ogre::VectorIterator<Polygons>            PolygonIterator;
-    typedef Ogre::vector<LineList*>::type             LineLists;
-    typedef Ogre::VectorIterator<LineLists>           LineListIterator;
-    typedef Ogre::vector<QuadList*>::type             QuadLists;
-    typedef Ogre::VectorIterator<QuadLists>           QuadListIterator;
-    typedef Ogre::vector<Caption*>::type              Captions;
-    typedef Ogre::VectorIterator<Captions>            CaptionIterator;
-    typedef Ogre::vector<MarkupText*>::type           MarkupTexts;
-    typedef Ogre::VectorIterator<MarkupTexts>         MarkupTextIterator;
+    typedef Gorilla::VectorType<Rectangle*>::type            Rectangles;
+    typedef Ogre::VectorIterator<Rectangles>                 RectangleIterator;
+    typedef Gorilla::VectorType<Polygon*>::type              Polygons;
+    typedef Ogre::VectorIterator<Polygons>                   PolygonIterator;
+    typedef Gorilla::VectorType<LineList*>::type             LineLists;
+    typedef Ogre::VectorIterator<LineLists>                  LineListIterator;
+    typedef Gorilla::VectorType<QuadList*>::type             QuadLists;
+    typedef Ogre::VectorIterator<QuadLists>                  QuadListIterator;
+    typedef Gorilla::VectorType<Caption*>::type              Captions;
+    typedef Ogre::VectorIterator<Captions>                   CaptionIterator;
+    typedef Gorilla::VectorType<MarkupText*>::type           MarkupTexts;
+    typedef Ogre::VectorIterator<MarkupTexts>                MarkupTextIterator;
     
     /*! function. isVisible
         desc.

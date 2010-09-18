@@ -65,12 +65,12 @@ template<> Gorilla::Silverback* Ogre::Singleton<Gorilla::Silverback>::ms_Singlet
 
 namespace Gorilla
 {
- 
+  
  enum
  {
   SCREEN_RENDERQUEUE = Ogre::RENDER_QUEUE_OVERLAY
  };
- 
+
  Ogre::ColourValue rgb(Ogre::uchar r, Ogre::uchar g, Ogre::uchar b, Ogre::uchar a )
  {
   static const Ogre::Real inv255 = Ogre::Real(0.00392156863);
@@ -183,9 +183,11 @@ namespace Gorilla
      Ogre::StringUtil::trim(textureName);
      Ogre::StringUtil::trim(groupName);
     }
-    
+#if OGRE_VERSION <= 67077 // If the version is less than or equal to 1.6.5
+    mTexture = Ogre::TextureManager::getSingletonPtr()->getByName(data);
+#else
     mTexture = Ogre::TextureManager::getSingletonPtr()->getByName(data, groupName);
-    
+#endif
     if (mTexture.isNull())
      mTexture = Ogre::TextureManager::getSingletonPtr()->load(textureName, groupName);
     
@@ -1064,8 +1066,6 @@ namespace Gorilla
  }
  
  
- 
- 
  Layer::Layer(Ogre::uint index, LayerContainer* parent)
  : mIndex(index), mParent(parent), mVisible(true), mAlphaModifier(1.0f)
  {
@@ -1327,7 +1327,7 @@ namespace Gorilla
   }
   
   // Render/redraw caption
-  for (MarkupTextIterator::iterator it = mMarkupTexts.begin(); it != mMarkupTexts.end(); it++)
+  for (MarkupTexts::iterator it = mMarkupTexts.begin(); it != mMarkupTexts.end(); it++)
   {
    
    if ((*it)->mTextDirty || force)
