@@ -29,6 +29,14 @@
 
 #include "OGRE/Ogre.h"
 
+#define GORILLA_USES_EXCEPTIONS 0
+
+#if OGRE_COMP == OGRE_COMPILER_GNUC
+#   define __FUNC__ __PRETTY_FUNCTION__
+#elif OGRE_COMP != OGRE_COMPILER_BORL
+#   define __FUNC__ "No function name info"
+#endif
+
 namespace Gorilla
 {
  
@@ -1596,6 +1604,14 @@ namespace Gorilla
      }
      else
      {
+      if (sprite == 0)
+      {
+#if GORILLA_USES_EXCEPTIONS == 1
+       OGRE_EXCEPT( Ogre::Exception::ERR_ITEM_NOT_FOUND, "Sprite name not found", __FUNC__ );
+#else
+       return;
+#endif
+      }
       Ogre::Real texelOffsetX = mLayer->_getTexelX(), texelOffsetY = mLayer->_getTexelY();
       texelOffsetX /= mLayer->_getTextureSize().x;
       texelOffsetY /= mLayer->_getTextureSize().y;
@@ -1629,10 +1645,17 @@ namespace Gorilla
      }
      else
      {
+      if (sprite == 0)
+      {
+#if GORILLA_USES_EXCEPTIONS == 1
+       OGRE_EXCEPT( Ogre::Exception::ERR_ITEM_NOT_FOUND, "Sprite name not found", __FUNC__ );
+#else
+       return;
+#endif
+      }
       Ogre::Real texelOffsetX = mLayer->_getTexelX(), texelOffsetY = mLayer->_getTexelY();
       texelOffsetX /= mLayer->_getTextureSize().x;
       texelOffsetY /= mLayer->_getTextureSize().y;
-
       mUV[0].x = mUV[3].x = sprite->uvLeft - texelOffsetX;
       mUV[0].y = mUV[1].y = sprite->uvTop - texelOffsetY;
       mUV[1].x = mUV[2].x = sprite->uvLeft + ( (sprite->uvRight - sprite->uvLeft) * widthClip ) + texelOffsetX;
@@ -1655,10 +1678,19 @@ namespace Gorilla
      }
      else
      {
+      Sprite* sprite = mLayer->_getSprite(sprite_name_or_none);
+      if (sprite == 0)
+      {
+#if GORILLA_USES_EXCEPTIONS == 1
+       OGRE_EXCEPT( Ogre::Exception::ERR_ITEM_NOT_FOUND, "Sprite name not found", __FUNC__ );
+#else
+       return;
+#endif
+      }
+      
       Ogre::Real texelOffsetX = mLayer->_getTexelX(), texelOffsetY = mLayer->_getTexelY();
       texelOffsetX /= mLayer->_getTextureSize().x;
       texelOffsetY /= mLayer->_getTextureSize().y;
-      Sprite* sprite = mLayer->_getSprite(sprite_name_or_none);
       mUV[0].x = mUV[3].x = sprite->uvLeft - texelOffsetX;
       mUV[0].y = mUV[1].y = sprite->uvTop - texelOffsetY;
       mUV[1].x = mUV[2].x = sprite->uvRight + texelOffsetX;

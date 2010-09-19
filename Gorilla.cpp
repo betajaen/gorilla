@@ -1777,7 +1777,13 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
  {
   GlyphData* glyphData = mLayer->_getGlyphData(glyphDataIndex);
   if (glyphData == 0)
-   return;
+  {
+#if GORILLA_USES_EXCEPTIONS == 1
+    OGRE_EXCEPT( Ogre::Exception::ERR_ITEM_NOT_FOUND, "Glyph data not found", __FUNC__ );
+#else
+    return;
+#endif
+  }
   
   Glyph* glyph = glyphData->getGlyph(character);
   if (glyph == 0)
@@ -1814,7 +1820,13 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
  {
   GlyphData* glyphData = mLayer->_getGlyphData(glyphDataIndex);
   if (glyphData == 0)
-   return;
+  {
+#if GORILLA_USES_EXCEPTIONS == 1
+    OGRE_EXCEPT( Ogre::Exception::ERR_ITEM_NOT_FOUND, "Glyph data not found", __FUNC__ );
+#else
+    return;
+#endif
+  }
   
   Glyph* glyph = glyphData->getGlyph(character);
   if (glyph == 0)
@@ -1873,9 +1885,18 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
  Caption::Caption(Ogre::uint glyphDataIndex, Ogre::Real left, Ogre::Real top, const Ogre::String& caption, Layer* layer)
  : mLayer(layer)
  {
+  mGlyphData      = mLayer->_getGlyphData(glyphDataIndex);
+  if (mGlyphData == 0)
+  {
+    mDirty        = false;
+#if GORILLA_USES_EXCEPTIONS == 1
+    OGRE_EXCEPT( Ogre::Exception::ERR_ITEM_NOT_FOUND, "Glyph data not found", __FUNC__ );
+#else
+    return;
+#endif
+  }
   mDirty        = true;
   mLayer->_markDirty();
-  mGlyphData      = mLayer->_getGlyphData(glyphDataIndex);
   mLeft           = left;
   mTop            = top;
   mWidth          = 0.0f;
@@ -2084,10 +2105,22 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
  MarkupText::MarkupText(Ogre::uint defaultGlyphIndex, Ogre::Real left, Ogre::Real top, const Ogre::String& text, Layer* parent)
  : mLayer(parent)
  {
+  mDefaultGlyphData = mLayer->_getGlyphData(defaultGlyphIndex);
+
+  if (mDefaultGlyphData == 0)
+  {
+   mDirty          = false;
+   mTextDirty      = false;
+#if GORILLA_USES_EXCEPTIONS == 1
+    OGRE_EXCEPT( Ogre::Exception::ERR_ITEM_NOT_FOUND, "Glyph data not found", __FUNC__ );
+#else
+    return;
+#endif
+  }
+
   mDirty          = true;
   mTextDirty      = true;
   mLayer->_markDirty();
-  mDefaultGlyphData = mLayer->_getGlyphData(defaultGlyphIndex);
   mLeft           = left;
   mTop            = top;
   mWidth          = 0.0f;
