@@ -483,7 +483,7 @@ namespace Gorilla
     inline Glyph* getGlyph(Ogre::uint character) const
     {
      Ogre::uint safe_character = character - mRangeBegin;
-     if (safe_character > 0 && safe_character < mGlyphs.size())
+     if (safe_character >= 0 && safe_character <= mGlyphs.size())
       return mGlyphs[safe_character];
      return 0;
     }
