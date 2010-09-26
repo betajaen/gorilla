@@ -282,7 +282,7 @@ namespace Gorilla
   }
   
 
-  for (Ogre::uint index = glyphData->mRangeBegin; index < glyphData->mRangeEnd; index++)
+  for (Ogre::uint index = glyphData->mRangeBegin; index <= glyphData->mRangeEnd; index++)
   {
    
    Glyph* glyph = OGRE_NEW Glyph();
