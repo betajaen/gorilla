@@ -7,61 +7,119 @@
 
 #pragma warning ( disable : 4244 )
 
+/// UNIT TEST SETUP CODE
+class UnitTest{public:UnitTest(Gorilla::Silverback* sb, Ogre::Viewport* vp, Ogre::SceneManager* sm):mSilverback(sb),mViewport(vp),
+mSceneMgr(sm){}virtual ~UnitTest(){}virtual bool periodic(Ogre::Real){return true;}Gorilla::Silverback* mSilverback;Ogre::Viewport* mViewport;
+Ogre::SceneManager* mSceneMgr;};
+#define BEGIN_TEST(NAME) class NAME :public UnitTest{public:NAME(Gorilla::Silverback* sb, Ogre::Viewport* vp, Ogre::SceneManager* sm):\
+UnitTest(sb,vp,sm){start();}~NAME(){stop();}
+#define END_TEST(NAME) };
+#define TEST_START bool start()
+#define TEST_STOP bool stop()
+#define TEST_PERIODIC bool periodic(Ogre::Real timeElapsed)
+#define TEST_CONTINUE return true;
+#define TEST_FAIL(DESCRIPTION) std::cout << "\n\n\n---\n"DESCRIPTION << "\n---\n\n\n";return false;
+/////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////////////////
+// Rectangle Tests
+/////////////////////////////////////////////////////////////////////////////////////////
+
+BEGIN_TEST(RectangleTest)
+  
+  Gorilla::Screen*    mScreen;
+  Gorilla::Layer*     mLayer;
+  Gorilla::Rectangle* mRectangle;
+  
+  TEST_START
+  {
+   mScreen = mSilverback->createScreen(mViewport, "dejavu");
+   TEST_CONTINUE
+  }
+
+  TEST_STOP
+  {
+   TEST_CONTINUE
+  }
+
+  TEST_PERIODIC
+  {
+   TEST_CONTINUE
+  }
+
+END_TEST(RectangleTest)
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void registerTests(std::map<Ogre::uint, UnitTest*>& tests, Gorilla::Silverback* sb, Ogre::Viewport* vp, Ogre::SceneManager* sm)
+{
+ tests[0] = new RectangleTest(sb, vp, sm);
+}
+
+
+
+
+
 class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::MouseListener
 {
   
  public:
   
-  Ogre::Real              mTimer, mTimer2;
-  Gorilla::Silverback*    mSilverback;
-  Gorilla::Screen*        mScreen;
-  Gorilla::Layer*         mLayer;
+  std::map<Ogre::uint, UnitTest*> mTests;
+  UnitTest*                       mCurrentTest;
+  Gorilla::Silverback*            mSilverback;
   
-  Gorilla::Polygon* poly;
-  Gorilla::LineList*       list;
-  Gorilla::Caption*        caption;
-  Gorilla::Rectangle*      rect;
-  Gorilla::QuadList*       quads;
-  Gorilla::MarkupText*     markup;
-  
-  App() : mNextUpdate(0), mTimer(0), mTimer2(0)
+  App() : mCurrentTest(0)
   {
    
    _makeOgre();
    _makeOIS();
-
-  // Create Silverback and load in dejavu
-  mSilverback = new Gorilla::Silverback();
-  mSilverback->loadAtlas("dejavu");
-  mScreen = mSilverback->createScreen(mViewport, "dejavu");
-  mScreen->setOrientation(Ogre::OrientationMode::OR_DEGREE_270);
-  Ogre::Real vpW = mScreen->getWidth(), vpH = mScreen->getHeight();
-
-  // Create our drawing layer
-  mLayer = mScreen->createLayer(0);
-  rect = mLayer->createRectangle(0,0, vpW, vpH);
-  rect->background_gradient(Gorilla::Gradient_Diagonal, Gorilla::rgb(98,0,63), Gorilla::rgb(255,180,174));
-  
-  markup = mLayer->createMarkupText(9,5,5, "%@24%A Haiku\n%@14%Written by Betajaen%@9%\nSo many to choose from\nPretty typefaces on Ogre screen\nTime to update Git");
-  
-  caption = mLayer->createCaption(9, vpW - 55, 5, "9");
-  caption->width(50);
-  caption->align(Gorilla::TextAlign_Right);
-
-  caption = mLayer->createCaption(14, vpW - 55, 18, "14");
-  caption->width(50);
-  caption->align(Gorilla::TextAlign_Right);
-
-  caption = mLayer->createCaption(24, vpW - 55, 33, "24");
-  caption->width(50);
-  caption->align(Gorilla::TextAlign_Right);
+   
+   // Create Silverback and load in dejavu
+   mSilverback = new Gorilla::Silverback();
+   mSilverback->loadAtlas("dejavu");
+   
+   registerTests(mTests, mSilverback, mViewport, mSceneMgr);
+   
   }
   
  ~App()
   {
-   std::cout << "\n** Average FPS is " << mWindow->getAverageFPS() << "\n\n";
    delete mSilverback;
    delete mRoot;
+  }
+  
+  void startTest(Ogre::uint index)
+  {
+  }
+  
+  void stopTest()
+  {
+  }
+   
+  void updateTest(Ogre::Real)
+  {
   }
   
   bool frameStarted(const Ogre::FrameEvent& evt)
@@ -74,6 +132,7 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
    if (mKeyboard->isKeyDown(OIS::KC_ESCAPE))
      return false;
    mMouse->capture();
+   
    
    return true;
   }
@@ -131,11 +190,11 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
    
    mRoot->initialise(false);
    
-   mWindow = mRoot->createRenderWindow("Gorilla", 1024, 768, false);
+   mWindow = mRoot->createRenderWindow("Gorilla - Press 0 to 9 for unit tests. C to Clear.", 1024, 768, false);
    mSceneMgr = mRoot->createSceneManager(Ogre::ST_GENERIC);
    mCamera = mSceneMgr->createCamera("Camera");
    mViewport = mWindow->addViewport(mCamera);
-   mViewport->setBackgroundColour(Gorilla::webcolour(Gorilla::Colours::FireBrick));
+   mViewport->setBackgroundColour(Ogre::ColourValue::Black);
    
    rgm->initialiseAllResourceGroups();
   }
@@ -163,7 +222,6 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
   Ogre::Viewport*         mViewport;
   Ogre::SceneManager*     mSceneMgr;
   Ogre::Camera*           mCamera;
-  Ogre::Real              mNextUpdate;
   OIS::InputManager*      mInputManager;
   OIS::Keyboard*          mKeyboard;
   OIS::Mouse*             mMouse;

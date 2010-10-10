@@ -901,6 +901,18 @@ namespace Gorilla
     */
     inline void show() { mIsVisible = true;}
     
+#if OGRE_NO_VIEWPORT_ORIENTATIONMODE == 1
+    inline void setOrientation(Ogre::OrientationMode o)
+    {
+      mOrientation = o; mOrientationChanged = true;
+
+      if (mOrientation == Ogre::OR_DEGREE_90 || mOrientation == Ogre::OR_DEGREE_270)
+      {
+       std::swap(mWidth, mHeight);
+       std::swap(mInvWidth, mInvHeight);
+      }
+    }
+#endif
    protected:
     
     /*! constructor. Screen
@@ -935,7 +947,13 @@ namespace Gorilla
     Ogre::RenderSystem*   mRenderSystem;
     Ogre::Viewport*       mViewport;
     Ogre::Real            mWidth, mHeight, mInvWidth, mInvHeight;
+    Ogre::OrientationMode mOrientation;
+#if OGRE_NO_VIEWPORT_ORIENTATIONMODE == 1
+    bool                  mOrientationChanged;
+#endif
+    Ogre::Vector3         mScale;
     bool                  mIsVisible;
+    Ogre::Matrix4         mVertexTransform;
     
   };
   

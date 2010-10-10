@@ -879,7 +879,6 @@ namespace Gorilla
    
   (*it).second->mRedrawNeeded = true;
   mIndexRedrawNeeded = true;
-  //std::cout << "+++ IndexRedrawNeeded\n";
  }
  
  void LayerContainer::_redrawAllIndexes(bool force)
@@ -899,7 +898,6 @@ namespace Gorilla
      if (indexData->mLayers[i]->mVisible)
       indexData->mLayers[i]->_render( indexData->mVertices, force );
     }
-    //std::cout << "+++ Drawn " << indexData->mVertices.size() << "\n";
    }
    
   }
@@ -940,7 +938,7 @@ namespace Gorilla
  
  
  Screen::Screen(Ogre::Viewport* viewport, TextureAtlas* atlas)
- : LayerContainer(atlas), mViewport(viewport), mIsVisible(true)
+ : LayerContainer(atlas), mViewport(viewport), mIsVisible(true), mScale(1,1,1)
  {
   mRenderOpPtr = &mRenderOp;
   mSceneMgr = mViewport->getCamera()->getSceneManager();
@@ -949,8 +947,17 @@ namespace Gorilla
   
   mWidth = mViewport->getActualWidth();
   mHeight = mViewport->getActualHeight();
+#if OGRE_NO_VIEWPORT_ORIENTATIONMODE == 0
+  mOrientation = mViewport->getOrientationMode();
+#else
+  mOrientation = Ogre::OR_DEGREE_0;
+  mOrientationChanged = false;
+#endif
+  
   mInvWidth = 1.0f / mWidth;
   mInvHeight = 1.0f / mHeight;
+  
+  mVertexTransform.makeTransform(Ogre::Vector3::ZERO, mScale, Ogre::Quaternion(1,0,0,0));
   
   mSceneMgr->addRenderQueueListener(this);
   _createVertexBuffer();
@@ -981,12 +988,41 @@ namespace Gorilla
  {
   bool force = false;
   // force == true if viewport size changed.
-  if (mWidth != mViewport->getActualWidth() || mHeight != mViewport->getActualHeight())
+  if (mWidth != mViewport->getActualWidth() || mHeight != mViewport->getActualHeight() 
+#if OGRE_NO_VIEWPORT_ORIENTATIONMODE == 0
+    || mOrientation != mViewport->getOrientationMode()
+#else
+    || mOrientationChanged
+#endif
+    )
   {
    mWidth = mViewport->getActualWidth();
    mHeight = mViewport->getActualHeight();
+   
    mInvWidth = 1.0f / mWidth;
    mInvHeight = 1.0f / mHeight;
+   
+#if OGRE_NO_VIEWPORT_ORIENTATIONMODE == 0
+   mOrientation = mViewport->getOrientationMode();
+#else
+   if (mOrientation == Ogre::OR_DEGREE_90 || mOrientation == Ogre::OR_DEGREE_270)
+   {
+    std::swap(mWidth, mHeight);
+    std::swap(mInvWidth, mInvHeight);
+   }
+   mOrientationChanged = false;
+#endif
+   
+   if (mOrientation == Ogre::OR_DEGREE_90)
+    mVertexTransform.makeTransform(Ogre::Vector3::ZERO, mScale, Ogre::Quaternion(Ogre::Degree(90), Ogre::Vector3::UNIT_Z));
+   else if (mOrientation == Ogre::OR_DEGREE_180)
+     mVertexTransform.makeTransform(Ogre::Vector3::ZERO, mScale, Ogre::Quaternion(Ogre::Degree(180), Ogre::Vector3::UNIT_Z));
+   else if (mOrientation == Ogre::OR_DEGREE_270)
+     mVertexTransform.makeTransform(Ogre::Vector3::ZERO, mScale, Ogre::Quaternion(Ogre::Degree(270), Ogre::Vector3::UNIT_Z));
+   else
+     mVertexTransform.makeTransform(Ogre::Vector3::ZERO, mScale, Ogre::Quaternion(1,0,0,0));
+
+   
    force = true;
   }
   
@@ -1000,11 +1036,20 @@ namespace Gorilla
  
  void  Screen::_transform(buffer<Vertex>& vertices, size_t begin, size_t end) 
  {
+  
+  
   for (size_t i = begin; i < end; i++)
   {
    vertices[i].position.x = ((vertices[i].position.x) * mInvWidth) * 2 - 1;
    vertices[i].position.y = ((vertices[i].position.y) * mInvHeight) * -2 + 1;
   }
+  
+  if (mVertexTransform != Ogre::Matrix4::IDENTITY)
+  {
+   for (size_t i = begin; i < end; i++)
+     vertices[i].position = mVertexTransform * vertices[i].position;
+  }
+  
  }
  
  
@@ -2003,7 +2048,7 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
   else if (mAlignment == TextAlign_Centre)
   {
    _calculateDrawSize(knownSize);
-   cursorX = mLeft + (mWidth * 0.5) - (knownSize.x * 0.5f);
+   cursorX = mLeft + (mWidth * 0.5f) - (knownSize.x * 0.5f);
    
    if (mWidth)
    {
@@ -2036,6 +2081,9 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
   Vertex temp;
   mClippedLeftIndex = std::string::npos;
   mClippedRightIndex = std::string::npos;
+  
+  cursorX = Ogre::Math::Floor( cursorX );
+  cursorY = Ogre::Math::Floor( cursorY );
   
   for (size_t i=0;i < mText.size();i++)
   {

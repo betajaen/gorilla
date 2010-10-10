@@ -1,13 +1,13 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gorilla_playpen", "gorilla_playpen.vcproj", "{4722520A-274E-4071-9E3F-880C9E4F7928}"
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gorilla_playpen", "gorilla_playpen.vcxproj", "{4722520A-274E-4071-9E3F-880C9E4F7928}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gorilla_console", "gorilla_ogreconsole.vcproj", "{6DC84147-F5EB-400D-9361-473A4C2CDDCA}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gorilla_console", "gorilla_ogreconsole.vcxproj", "{6DC84147-F5EB-400D-9361-473A4C2CDDCA}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gorilla_3D", "gorilla_rtt.vcproj", "{2B37A960-A0F1-461D-9E9E-387BF151CBBC}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gorilla_3D", "gorilla_rtt.vcxproj", "{2B37A960-A0F1-461D-9E9E-387BF151CBBC}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gorilla_tests", "gorilla_tests.vcproj", "{389714B7-D63D-4F7C-900B-4C8625980B46}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gorilla_tests", "gorilla_tests.vcxproj", "{389714B7-D63D-4F7C-900B-4C8625980B46}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
