@@ -663,7 +663,6 @@ namespace Gorilla
 
  bool Silverback::frameStarted(const Ogre::FrameEvent& evt)
  {
-  
   for (std::vector<ScreenRenderable*>::iterator it = mScreenRenderables.begin(); it != mScreenRenderables.end(); it++)
    (*it)->frameStarted();
   
@@ -938,7 +937,7 @@ namespace Gorilla
  
  
  Screen::Screen(Ogre::Viewport* viewport, TextureAtlas* atlas)
- : LayerContainer(atlas), mViewport(viewport), mIsVisible(true), mScale(1,1,1)
+ : LayerContainer(atlas), mViewport(viewport), mIsVisible(true), mScale(1,1,1), mCanRender(false)
  {
   mRenderOpPtr = &mRenderOp;
   mSceneMgr = mViewport->getCamera()->getSceneManager();
@@ -968,9 +967,10 @@ namespace Gorilla
   mSceneMgr->removeRenderQueueListener(this);
  }
  
+ 
  void Screen::renderQueueEnded(Ogre::uint8 queueGroupId, const Ogre::String& invocation, bool& repeatThisInvocation)
  {
-  if (queueGroupId != SCREEN_RENDERQUEUE)
+  if (mRenderSystem->_getViewport() != mViewport || queueGroupId != SCREEN_RENDERQUEUE)
    return;
   if (mIsVisible && mLayers.size())
    renderOnce();

@@ -852,6 +852,7 @@ namespace Gorilla
     
   };
   
+  
   class Screen : public LayerContainer, public Ogre::RenderQueueListener, public Ogre::GeneralAllocatedObject
   {
    public:
@@ -953,6 +954,7 @@ namespace Gorilla
 #endif
     Ogre::Vector3         mScale;
     bool                  mIsVisible;
+    bool                  mCanRender;
     Ogre::Matrix4         mVertexTransform;
     
   };
@@ -1682,6 +1684,49 @@ namespace Gorilla
      mDirty = true;
      mLayer->_markDirty();
     }
+    
+    /*! function. background_image
+        desc.
+            Set the background to a sprite from the texture atlas, with clipping.
+            Clipping is used for example with RPM meters on HUDs, where a portion
+            of the sprite needs to be shown to indicate the RPM on the car.
+            
+            widthClip  is a decimal percentage of the width of the sprite (0.0 none, 1.0 full)
+            heightClip is a decimal percentage of the height of the sprite (0.0 none, 1.0 full)
+            
+            You should use this with the width() and height() functions for a full effect.
+        note.
+            To remove the image pass on a null pointer.
+    */
+    void  background_image(const Ogre::String& sprite_name_or_none, Ogre::Real widthClip, Ogre::Real heightClip)
+    {
+     if (sprite_name_or_none.length() == 0 || sprite_name_or_none == "none")
+     {
+      mUV[0] = mUV[1] = mUV[2] = mUV[3] = mLayer->_getSolidUV();
+     }
+     else
+     {
+      Sprite* sprite = mLayer->_getSprite(sprite_name_or_none);
+      if (sprite == 0)
+      {
+#if GORILLA_USES_EXCEPTIONS == 1
+       OGRE_EXCEPT( Ogre::Exception::ERR_ITEM_NOT_FOUND, "Sprite name not found", __FUNC__ );
+#else
+       return;
+#endif
+      }
+      Ogre::Real texelOffsetX = mLayer->_getTexelX(), texelOffsetY = mLayer->_getTexelY();
+      texelOffsetX /= mLayer->_getTextureSize().x;
+      texelOffsetY /= mLayer->_getTextureSize().y;
+      mUV[0].x = mUV[3].x = sprite->uvLeft - texelOffsetX;
+      mUV[0].y = mUV[1].y = sprite->uvTop - texelOffsetY;
+      mUV[1].x = mUV[2].x = sprite->uvLeft + ( (sprite->uvRight - sprite->uvLeft) * widthClip ) + texelOffsetX;
+      mUV[2].y = mUV[3].y = sprite->uvTop + ( (sprite->uvBottom - sprite->uvTop) * heightClip ) + texelOffsetY;
+     }
+     mDirty = true;
+     mLayer->_markDirty();
+    }
+
     /*! function. background_image
         desc.
             Set the background to a sprite from the texture atlas.
@@ -2412,6 +2457,27 @@ namespace Gorilla
    
    public:
     
+    /*! function. font
+        desc.
+            Changes the font to a different Glyph index.
+        note.
+             If the font index does not exist, an exception may be thrown.
+    */
+    void font(size_t font_index)
+    {
+     mGlyphData      = mLayer->_getGlyphData(font_index);
+     if (mGlyphData == 0)
+     {
+       mDirty        = false;
+   #if GORILLA_USES_EXCEPTIONS == 1
+       OGRE_EXCEPT( Ogre::Exception::ERR_ITEM_NOT_FOUND, "Glyph data not found", __FUNC__ );
+   #else
+       return;
+   #endif
+     }
+     mDirty = true;
+     mLayer->_markDirty();
+    }
     /*! function. intersects
         desc.
             Does a set of coordinates lie within this caption?
