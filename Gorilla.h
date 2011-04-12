@@ -29,7 +29,7 @@
 
 #include "OGRE/Ogre.h"
 
-#define GORILLA_USES_EXCEPTIONS 0
+#define GORILLA_USES_EXCEPTIONS 1
 
 #if OGRE_COMP == OGRE_COMPILER_GNUC
 #   define __FUNC__ __PRETTY_FUNCTION__
