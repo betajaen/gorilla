@@ -1,0 +1,78 @@
+vertex_program gorilla2DVPHLSL hlsl
+{
+ 	source gorilla2D.hlsl
+	entry_point main_vp
+	target vs_2_0 
+} 
+
+fragment_program gorilla2DFPHLSL hlsl
+{
+	source gorilla2D.hlsl
+	entry_point main_fp
+	target ps_2_0
+}
+
+vertex_program gorilla2DVPGLSL glsl
+{
+ 	source gorilla2DVP.glsl
+} 
+
+fragment_program gorilla2DFPGLSL glsl
+{
+	source gorilla2DFP.glsl
+}
+
+vertex_program gorilla2DVPGLSLES glsles
+{
+ 	source gorilla2DVP.glsles
+} 
+
+fragment_program gorilla2DFPGLSLES glsles
+{
+	source gorilla2DFP.glsles
+}
+
+// Unified definition
+vertex_program gorilla2DVP unified
+{
+	delegate gorilla2DVPGLSLES
+	delegate gorilla2DVPHLSL
+	delegate gorilla2DVPGLSL 
+}
+fragment_program gorilla2DFP unified
+{
+	delegate gorilla2DFPGLSLES
+	delegate gorilla2DFPHLSL
+	delegate gorilla2DFPGLSL 
+}
+
+material Gorilla2D
+{
+	technique
+	{
+		pass
+		{
+			lighting off			 
+			depth_check off
+			depth_write off
+			diffuse vertexcolour
+			ambient vertexcolour
+			scene_blend alpha_blend
+			
+			vertex_program_ref gorilla2DVP
+			{
+			}
+
+			fragment_program_ref gorilla2DFP
+			{
+			}
+			
+			texture_unit 
+			{ 
+				texture atlas
+				filtering none none none
+				tex_address_mode clamp
+			} 
+		}
+	}
+}

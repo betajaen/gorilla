@@ -1,0 +1,14 @@
+#version 100
+precision highp float;
+precision highp int;
+precision lowp sampler2D;
+
+varying	vec4 oUv;
+varying	vec4 oColor;
+
+uniform	sampler2D atlas;
+
+void main() 
+{
+	gl_FragColor = texture2D(atlas, oUv.xy) * oColor;
+}

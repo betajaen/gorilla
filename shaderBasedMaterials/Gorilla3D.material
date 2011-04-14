@@ -1,0 +1,94 @@
+vertex_program gorilla3DVPHLSL hlsl
+{
+ 	source gorilla3D.hlsl
+	entry_point main_vp
+	target vs_2_0 
+
+	default_params	
+	{
+	   param_named_auto worldViewProj  WORLDVIEWPROJ_MATRIX
+   	}
+} 
+
+fragment_program gorilla3DFPHLSL hlsl
+{
+	source gorilla3D.hlsl
+	entry_point main_fp
+	target ps_2_0
+}
+
+vertex_program gorilla3DVPGLSL glsl
+{
+ 	source gorilla3DVP.glsl
+	
+	default_params	
+	{
+	   param_named_auto worldViewProj  WORLDVIEWPROJ_MATRIX
+   	}
+} 
+
+fragment_program gorilla3DFPGLSL glsl
+{
+	source gorilla3DFP.glsl
+}
+
+vertex_program gorilla3DVPGLSLES glsles
+{
+ 	source gorilla3DVP.glsles
+	
+	default_params	
+	{
+	   param_named_auto worldViewProj  WORLDVIEWPROJ_MATRIX
+   	}
+} 
+
+fragment_program gorilla3DFPGLSLES glsles
+{
+	source gorilla3DFP.glsles
+}
+
+// Unified definition
+vertex_program gorilla3DVP unified
+{
+	delegate gorilla3DVPGLSLES 
+	delegate gorilla3DVPHLSL
+	delegate gorilla3DVPGLSL 
+}
+fragment_program gorilla3DFP unified
+{
+	delegate gorilla3DFPGLSLES 
+	delegate gorilla3DFPHLSL
+	delegate gorilla3DFPGLSL 
+}
+
+material Gorilla3D
+{
+	technique
+	{
+		pass
+		{
+			lighting off			 
+			depth_check off
+			depth_write off
+			diffuse vertexcolour
+			ambient vertexcolour
+			scene_blend alpha_blend
+			
+			vertex_program_ref gorilla3DVP
+			{
+			}
+
+			fragment_program_ref gorilla3DFP
+			{
+			}
+			
+			texture_unit 
+			{ 
+				texture atlas
+				filtering anisotropic
+                max_anisotropy 8
+				tex_address_mode clamp
+			} 
+		}
+	}
+}
