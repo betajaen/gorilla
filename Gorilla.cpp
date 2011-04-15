@@ -148,6 +148,7 @@ namespace Gorilla
     
     _loadGlyphs(settings, glyphData);
     _loadKerning(settings, glyphData);
+    _loadVerticalOffsets(settings, glyphData);
    }
    else if (secName == "sprites")
     _loadSprites(settings);
@@ -365,6 +366,39 @@ namespace Gorilla
    
    
    glyphData->mGlyphs[right_glyph_id - glyphData->mRangeBegin]->kerning.push_back(Kerning(left_glyph_id, kerning));
+   
+  }
+  
+ }
+
+ void  TextureAtlas::_loadVerticalOffsets(Ogre::ConfigFile::SettingsMultiMap* settings, GlyphData* glyphData)
+ {
+  
+  Ogre::String left_name, data;
+  Ogre::ConfigFile::SettingsMultiMap::iterator i;
+  Ogre::uint glyph_id;
+  int verticalOffset;
+  
+  for (i = settings->begin(); i != settings->end(); ++i)
+  {
+   
+   left_name = i->first;
+   data = i->second;
+   Ogre::StringUtil::toLowerCase(left_name);
+   
+   if (left_name.substr(0,15) != "verticaloffset_")
+    continue;
+   
+   size_t comment = data.find_first_of('#');
+   if (comment != std::string::npos)
+    data = data.substr(0, comment);
+   
+   left_name = left_name.substr(15); // chop of verticalOffset_
+   glyph_id = Ogre::StringConverter::parseUnsignedInt(left_name);
+   
+   verticalOffset = Ogre::StringConverter::parseInt(data);
+   
+   glyphData->getGlyph(glyph_id)->verticalOffset = verticalOffset;
    
   }
   
@@ -1878,6 +1912,8 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
   Glyph* glyph = glyphData->getGlyph(character);
   if (glyph == 0)
    return;
+
+  y += glyph->verticalOffset;
   
   Quad q;
   q.mPosition[TopLeft].x = x;
@@ -1921,6 +1957,8 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
   Glyph* glyph = glyphData->getGlyph(character);
   if (glyph == 0)
    return;
+
+  y += glyph->verticalOffset;
   
   Quad q;
   q.mPosition[TopLeft].x = x;
@@ -2117,7 +2155,7 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
   Vertex temp;
   mClippedLeftIndex = std::string::npos;
   mClippedRightIndex = std::string::npos;
-  
+
   cursorX = Ogre::Math::Floor( cursorX );
   cursorY = Ogre::Math::Floor( cursorY );
   
@@ -2146,7 +2184,7 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
     kerning = mGlyphData->mLetterSpacing;
    
    left = cursorX - texelOffsetX;
-   top = cursorY - texelOffsetY;
+   top = cursorY - texelOffsetY + glyph->verticalOffset;
    right = left + glyph->glyphWidth + texelOffsetX;
    bottom = top + glyph->glyphHeight + texelOffsetY;
    
@@ -2231,6 +2269,8 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
   Ogre::Real cursorX = mLeft, cursorY = mTop, kerning = 0, texelOffsetX = mLayer->_getTexelX(), texelOffsetY = mLayer->_getTexelY(), right = 0, bottom = 0, left = 0, top = 0;
   unsigned int thisChar = 0, lastChar = 0;
   Glyph* glyph = 0;
+
+  mMaxTextWidth = 0;
   
   mCharacters.remove_all();
   
@@ -2347,7 +2387,7 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
        continue;
       
       left = cursorX - texelOffsetX;
-      top = cursorY - texelOffsetY;
+      top = cursorY - texelOffsetY + glyph->verticalOffset;
       right = left + sprite->spriteWidth + texelOffsetX;
       bottom = top + sprite->spriteHeight + texelOffsetY;
       
@@ -2391,16 +2431,18 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
      kerning = glyphData->mLetterSpacing;
    }
    
+   left = cursorX;
+   top = cursorY + glyph->verticalOffset;
    right = cursorX + glyph->glyphWidth + texelOffsetX;
-   bottom = cursorY + glyph->glyphHeight + texelOffsetY;
+   bottom = top + glyph->glyphHeight + texelOffsetY;
    
    Character c;
    c.mIndex = i;
-   c.mPosition[TopLeft].x = cursorX;
-   c.mPosition[TopLeft].y = cursorY;
+   c.mPosition[TopLeft].x = left;
+   c.mPosition[TopLeft].y = top;
    c.mPosition[TopRight].x = right;
-   c.mPosition[TopRight].y = cursorY;
-   c.mPosition[BottomLeft].x = cursorX;
+   c.mPosition[TopRight].y = top;
+   c.mPosition[BottomLeft].x = left;
    c.mPosition[BottomLeft].y = bottom;
    c.mPosition[BottomRight].x = right;
    c.mPosition[BottomRight].y = bottom;
@@ -2417,8 +2459,13 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
    else
      cursorX  += glyph->glyphAdvance + kerning;
    
+   if( cursorX > mMaxTextWidth )
+       mMaxTextWidth = cursorX;
+
    lastChar = thisChar;
   }
+
+  mMaxTextWidth -= mLeft;
   
   mTextDirty = false;
  }
