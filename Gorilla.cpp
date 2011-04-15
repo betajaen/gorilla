@@ -448,21 +448,21 @@ namespace Gorilla
   Ogre::MaterialPtr d2Material = Ogre::MaterialManager::getSingletonPtr()->getByName("Gorilla2D");
   if (d2Material.isNull() == false)
   {
-	  Ogre::Pass* pass = d2Material->getTechnique(0)->getPass(0);
+    Ogre::Pass* pass = d2Material->getTechnique(0)->getPass(0);
 
-	  if(pass->hasVertexProgram())
-	  {
-		  Ogre::GpuProgramPtr gpuPtr = pass->getVertexProgram();
-		  gpuPtr->load();
-	  }
+    if(pass->hasVertexProgram())
+    {
+      Ogre::GpuProgramPtr gpuPtr = pass->getVertexProgram();
+      gpuPtr->load();
+    }
 
-	  if(pass->hasFragmentProgram())
-	  {
-		  Ogre::GpuProgramPtr gpuPtr = pass->getFragmentProgram();
-		  gpuPtr->load();
-	  }
+    if(pass->hasFragmentProgram())
+    {
+      Ogre::GpuProgramPtr gpuPtr = pass->getFragmentProgram();
+      gpuPtr->load();
+    }
 
-	  return d2Material;
+    return d2Material;
   }
 
   d2Material = Ogre::MaterialManager::getSingletonPtr()->create("Gorilla2D", Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
@@ -485,21 +485,21 @@ namespace Gorilla
   Ogre::MaterialPtr d3Material = Ogre::MaterialManager::getSingletonPtr()->getByName("Gorilla3D");
   if (d3Material.isNull() == false)
   {
-	  Ogre::Pass* pass = d3Material->getTechnique(0)->getPass(0);
+    Ogre::Pass* pass = d3Material->getTechnique(0)->getPass(0);
 
-	  if(pass->hasVertexProgram())
-	  {
-		  Ogre::GpuProgramPtr gpuPtr = pass->getVertexProgram();
-		  gpuPtr->load();
-	  }
+    if(pass->hasVertexProgram())
+    {
+      Ogre::GpuProgramPtr gpuPtr = pass->getVertexProgram();
+      gpuPtr->load();
+    }
 
-	  if(pass->hasFragmentProgram())
-	  {
-		  Ogre::GpuProgramPtr gpuPtr = pass->getFragmentProgram();
-		  gpuPtr->load();
-	  }
+    if(pass->hasFragmentProgram())
+    {
+      Ogre::GpuProgramPtr gpuPtr = pass->getFragmentProgram();
+      gpuPtr->load();
+    }
 
-	  return d3Material;
+    return d3Material;
   }
 
   d3Material = Ogre::MaterialManager::getSingletonPtr()->create("Gorilla3D", Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
