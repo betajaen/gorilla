@@ -29,7 +29,9 @@
 
 #include "OGRE/Ogre.h"
 
-#define GORILLA_USES_EXCEPTIONS 1
+#ifndef GORILLA_USES_EXCEPTIONS
+#  define GORILLA_USES_EXCEPTIONS 0
+#endif
 
 #if OGRE_COMP == OGRE_COMPILER_GNUC
 #   define __FUNC__ __PRETTY_FUNCTION__
@@ -2891,7 +2893,7 @@ namespace Gorilla
     
     /*! function. maxTextWidth
         desc.
-            Get the maximum width of the text can draw into.
+            Get the width of the text once drawn.
     */
     Ogre::Real maxTextWidth()
     {
