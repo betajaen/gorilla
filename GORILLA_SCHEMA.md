@@ -101,10 +101,13 @@ Kerning value for when a right character is drawn after a left character.
 
     <right_character>       ASCII code for the right character
     <left_character>        ASCII code for the left character
-    <kerning>               Kerning value.
+    <kerning>               Kerning value
 
 ### verticaloffset_<character> <offset>
 `verticaloffset_74 10`
+
+    <character>             ASCII code for the character
+    <offset>                Offset value
 
 An offset value in pixels to move the character downwards when drawing.  This allows you to pack a font
 more tightly into the atlas.  Characters with space above and a 'decender' can be moved up fit alongside 
