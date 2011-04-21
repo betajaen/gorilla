@@ -13,7 +13,7 @@
   <ItemGroup>
     <ClCompile Include="..\Canvas.cpp" />
     <ClCompile Include="..\Gorilla.cpp" />
-    <ClCompile Include="..\GorillaFile.cpp" />
+    <ClCompile Include="..\Resources.cpp" />
     <ClCompile Include="..\MovableCanvas.cpp" />
     <ClCompile Include="..\OverlayCanvas.cpp" />
     <ClCompile Include="..\Shared.cpp" />
@@ -22,7 +22,7 @@
   <ItemGroup>
     <ClInclude Include="..\Canvas.h" />
     <ClInclude Include="..\Gorilla.h" />
-    <ClInclude Include="..\GorillaFile.h" />
+    <ClInclude Include="..\Resources.h" />
     <ClInclude Include="..\MovableCanvas.h" />
     <ClInclude Include="..\OverlayCanvas.h" />
     <ClInclude Include="..\Shared.h" />

@@ -77,6 +77,16 @@ namespace Gorilla
      GorillaFile*                         mGorillaFile;
    };
    
+   struct Animation
+   {
+    GorillaFile::Sprite*  mSprite;
+    unsigned int          mFrame;
+    bool                  mIsAnimating;
+    unsigned int          mVertexIDs[6];  // Vertices in the *compiled* buffer so they can be 
+                                          // changed each frame without recompiling the vertex buffer each time.
+                                          // This could be tricky to get working properly.
+   };
+   
    // Current layer being worked on, or NULL for none.
    Layer*  mCurrentLayer;
    

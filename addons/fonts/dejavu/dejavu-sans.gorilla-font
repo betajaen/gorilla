@@ -1,0 +1,14 @@
+- font
+	image: "dejavu-sans.png"
+	size: 12
+	line-height: 12
+- 0x31
+	region: [0, 0, 16, 16]
+	advance: 12
+	kerning-0x32: -0.5
+	kerning-0x33: -1.0
+	kerning-0x34: -1.5
+- 0x32
+	region: [0, 16, 16, 16]
+	advance: 12
+	kerning-0x31: 0.5

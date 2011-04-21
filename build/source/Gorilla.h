@@ -41,14 +41,20 @@ namespace Gorilla
     
    ~Gorilla();
     
-    GorillaFile*  loadGorillaFile(const Ogre::String& filename, const Ogre::String& resourceGroup = Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+    Font*         loadFont(const Ogre::String& filename, const Ogre::String& resourceGroup = Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
     
-    GorillaFile*  createGorillaFile(const Ogre::String& name);
+    Font*         createFont(const Ogre::String& name);
     
-    bool          destroyGorillaFile();
-
+    bool          destroyFont(const Ogre::String& name);
+    
+    Font*         getFont(const Ogre::String& name) const;
+    
+    bool          hasFont(const Ogre::String& name) const;
+    
    protected:
     
+    Ogre::map<Ogre::String, Font*>::type  mFonts;
+
  };
  
 }

@@ -24,21 +24,10 @@
     
 */
 
-#ifndef GORILLA_SHARED_H
-#define GORILLA_SHARED_H
-
-#include "OGRE/Ogre.h"
+#include "Gorilla.h"
 
 namespace Gorilla
 {
- class Gorilla;
- class GorillaFile;
- class GorillaVertexBuffer;
- class Canvas;
- class OverlayCanvas;
- class MovableCanvas;
- typedef unsigned int GlyphCodePoint;
+	int x = 0;
+	int x = 1;
 }
-
-
-#endif

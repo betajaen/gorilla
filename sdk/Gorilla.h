@@ -24,66 +24,17 @@
     
 */
 
-#ifndef GORILLA_FILE_H
-#define GORILLA_FILE_H
+#ifndef GORILLA_H
+#define GORILLA_H
 
-#include "Shared.h"
+#include "OGRE/Ogre.h"
 
 namespace Gorilla
 {
- 
- class GorillaFile
- {
-   
-   public:
-    
-    Gorilla();
-    
-   ~Gorilla();
-    
-    size_t    getNbReferences() const;
-    
-   protected:
-    
-    struct TextureCoordinates
-    {
-     unsigned int x, y, w, h;
-    };
-
-    struct Glyph
-    {
-     TextureCoordinates                    mTextureCoords;
-     unsigned int                          mHorizontalOffset,
-                                           mVerticalOffset;
-     std::map<GlyphCodePoint, Ogre::Real>  mKerning;
-     unsigned int                          mAdvance;
-    };
-
-    struct GlyphData
-    {
-     std::map<GlyphCodePoint, Glyph*>     mGlyphs;
-     Ogre::Real                           mLineHeight;
-     unsigned int                         mTextureID;
-    };
-
-    struct Sprite
-    {
-     TextureCoordinates                   mTextureCoords;
-    };
-
-    struct TextureAtlas
-    {
-     Ogre::String                         mImageName;
-    };
-    
-    std::map<unsigned int, TextureAtlas>  mTextures;
-    std::map<Ogre::String, GlyphData*>    mFonts;
-    
-    size_t                                mReferences;
-    
- };
- 
+ class Gorilla;
+ class Canvas;
+ class OverlayCanvas;
+ class MovableCanvas;
 }
-
 
 #endif
