@@ -122,11 +122,11 @@ __END__
 sources:
   - Shared.cpp/h
   - ook.cpp
-  - Gorilla.cpp/h
+  - Silverback.cpp/h
   - Resources.cpp/h
   - Canvas.cpp/h
   - OverlayCanvas.cpp/h
   - MovableCanvas.cpp/h
 wrapper: Wrapper
 as: ../Gorilla
-namespace: Cake
+namespace: Gorilla

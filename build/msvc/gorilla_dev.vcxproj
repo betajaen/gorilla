@@ -11,21 +11,21 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\Canvas.cpp" />
-    <ClCompile Include="..\Gorilla.cpp" />
-    <ClCompile Include="..\Resources.cpp" />
-    <ClCompile Include="..\MovableCanvas.cpp" />
-    <ClCompile Include="..\OverlayCanvas.cpp" />
-    <ClCompile Include="..\Shared.cpp" />
-    <ClCompile Include="gorilla_dev.cpp" />
+    <ClCompile Include="..\source\Canvas.cpp" />
+    <ClCompile Include="..\source\Silverback.cpp" />
+    <ClCompile Include="..\source\MovableCanvas.cpp" />
+    <ClCompile Include="..\source\ook.cpp" />
+    <ClCompile Include="..\source\OverlayCanvas.cpp" />
+    <ClCompile Include="..\source\Resources.cpp" />
+    <ClCompile Include="..\source\Shared.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Canvas.h" />
-    <ClInclude Include="..\Gorilla.h" />
-    <ClInclude Include="..\Resources.h" />
-    <ClInclude Include="..\MovableCanvas.h" />
-    <ClInclude Include="..\OverlayCanvas.h" />
-    <ClInclude Include="..\Shared.h" />
+    <ClInclude Include="..\source\Canvas.h" />
+    <ClInclude Include="..\source\Silverback.h" />
+    <ClInclude Include="..\source\MovableCanvas.h" />
+    <ClInclude Include="..\source\OverlayCanvas.h" />
+    <ClInclude Include="..\source\Resources.h" />
+    <ClInclude Include="..\source\Shared.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{4722520A-274E-4071-9E3F-880C9E4F7928}</ProjectGuid>

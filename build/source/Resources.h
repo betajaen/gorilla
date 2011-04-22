@@ -129,7 +129,7 @@ namespace Gorilla
     yy = mYY;
    }
 
-   inline void isAnimating() const
+   inline bool isAnimating() const
    {
     return mIsAnimating;
    }

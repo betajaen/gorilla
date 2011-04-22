@@ -46,59 +46,12 @@ namespace Gorilla
    // Should be called after a begin().
    void end();
    
+   size_t getCurrentLayerIndex() const;
+   
   protected:
    
-   /** function. _transformVertices
-       desc.
-           Transform pixel vertices, into user coordinates; i.e. screen or world
-           space. Vertices are formatted as x,y,z,tex_x,tex_y,col_r,col_g,col_b,col_a
-       args.
-           const float* -- The source vertices.
-           float*       -- The destination vertices. Memory size is at least the same size as source vertices.
-   */
-   virtual void _transformVertices(const float* source, float* dest) = 0;
    
-   struct Layer
-   {
-     Layer();
-    ~Layer();
-     Ogre::map<size_t, GorillaVertexBuffer*>  mVertexBuffers;
-     Ogre::map<size_t, bool>                  mVertexBufferDirty;
-     bool                                     mAllVertexBuffersDirty;
-   };
-   
-   struct CompiledVertexBuffer
-   {
-     CompiledVertexBuffer();
-    ~CompiledVertexBuffer();
-     Ogre::HardwareVertexBufferSharedPtr  mVertexBuffer;
-     size_t                               mVertexBufferSize;
-     Ogre::RenderOperation*               mRenderOpPtr;
-     GorillaFile*                         mGorillaFile;
-   };
-   
-   struct Animation
-   {
-    GorillaFile::Sprite*  mSprite;
-    unsigned int          mFrame;
-    bool                  mIsAnimating;
-    unsigned int          mVertexIDs[6];  // Vertices in the *compiled* buffer so they can be 
-                                          // changed each frame without recompiling the vertex buffer each time.
-                                          // This could be tricky to get working properly.
-   };
-   
-   // Current layer being worked on, or NULL for none.
-   Layer*  mCurrentLayer;
-   
-   // Master copy of all vertices, organised by layers, then organized by TextureAtlases.
-   Ogre::map<size_t, Layer*>  mLayers;
-   
-   // Final copy of all the vertices organised by GorillaFiles (materials).
-   Ogre::map<size_t, CompiledVertexBuffer*>  mVertexBuffers;
-   
-   // If *a* vertex buffer is dirty.
-   bool  mVertexBufferDirty;
-   
+
  };
  
 }
