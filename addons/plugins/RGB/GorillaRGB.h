@@ -1,8 +1,8 @@
 /*
-    Gorilla
-    -------
+    Gorilla RGB
+    -----------
     
-    Copyright (c) 2010 Robin Southern
+    Copyright (c) 2011 Robin Southern
                                                                                   
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -24,21 +24,20 @@
     
 */
 
-#ifndef GORILLA_SHARED_H
-#define GORILLA_SHARED_H
+#ifndef GORILLA_RGB_H
+#define GORILLA_RGB_H
 
 #include "OGRE/Ogre.h"
 
 namespace Gorilla
 {
- class Silverback;
- class SharedImage;
- class Font;
- class Sprite;
- class GorillaVertexBuffer;
- class Canvas;
- class OverlayCanvas;
- class MovableCanvas;
+ 
+ Ogre::ColourValue RGB(Ogre::uchar r, Ogre::uchar g, Ogre::uchar b, Ogre::uchar a )
+ {
+  static const Ogre::Real inv255 = Ogre::Real(0.00392156863);
+  return Ogre::ColourValue(Ogre::Real(r) * inv255, Ogre::Real(g) * inv255, Ogre::Real(b) * inv255, Ogre::Real(a) * inv255);
+ }
+
 }
 
 #endif

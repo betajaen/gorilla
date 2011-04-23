@@ -38,8 +38,9 @@
 
 namespace Gorilla
 {
-namespace ook
+namespace Ook
 {
+ 
  
  inline size_t find_first_of_escaped(const std::string& str, char search, bool ignore_escapes)
  {
@@ -753,9 +754,7 @@ namespace ook
      {
       int* new_int = (int*) malloc(sizeof(int) * _max_length * 2);
       _max_length *= 2;
-
       std::copy(_value._int, _value._int + _length, new_int);
-
       free(_value._int);
       _value._int = new_int;
      }
@@ -833,10 +832,9 @@ namespace ook
      {
       float* new_float = (float*) malloc(sizeof(float) * _max_length * 2);
       _max_length *= 2;
-
       std::copy(_value._float, _value._float + _length, new_float);
-
-      
+      free(_value._float);
+      _value._float = new_float;
      }
      
     }
@@ -879,10 +877,7 @@ namespace ook
      {
       bool* new_bool = (bool*) malloc(sizeof(bool) * _max_length * 2);
       _max_length *= 2;
-
       std::copy(_value._bool, _value._bool + _length, new_bool);
-
-
       free(_value._bool);
       _value._bool = new_bool;
      }
@@ -897,11 +892,7 @@ namespace ook
     {
      _free();
      _value._str = (char*) malloc(val.length() + 1);
-
-
      std::copy(val.begin(), val.end(), _value._str);
-
-
      _value._str[val.length()] = 0;
      _type = type_string;
      _length = val.length();
@@ -1254,7 +1245,7 @@ namespace ook
    
    std::map<std::string, Set*> _sets;
  };
-
+ 
 }
 }
 

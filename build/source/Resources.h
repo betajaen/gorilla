@@ -32,6 +32,40 @@
 namespace Gorilla
 {
  
+ class SharedImage
+ {
+   
+  public:
+   
+   friend class Font;
+   friend class Sprite;
+   
+   SharedImage(const Ogre::String& file_name);
+   
+  ~SharedImage();
+   
+   Ogre::uint getWidth() const; 
+   
+   Ogre::uint getHeight() const;
+   
+   Ogre::MaterialPtr  getOverlayMaterial() const;
+   
+   Ogre::MaterialPtr  getMovableObjectMaterial() const;
+   
+   Ogre::uint         getNbReferences() const;
+
+  protected:
+   
+   void _makeMaterials();
+   
+   Ogre::String       mFileName;
+   Ogre::uint         mWidth, mHeight;
+   Ogre::MaterialPtr  mOverlayMaterial;
+   Ogre::MaterialPtr  mMovableObjectMaterial;
+   Ogre::uint         mReferences;
+   
+ };
+ 
  class Font
  {
    
@@ -39,7 +73,7 @@ namespace Gorilla
    
    typedef unsigned int GlyphID;
    
-   Font(const Ogre::String& image, unsigned int native_size);
+   Font(SharedImage*, unsigned int native_font_size);
    
   ~Font();
    
@@ -68,7 +102,7 @@ namespace Gorilla
      std::map<GlyphID, Ogre::Real>  mKerning;                     // Kerning value when to the left of another character.
    };
    
-   Ogre::MaterialPtr                mMaterial;                    // Material to use.
+   SharedImage*                     mImage;                       // Image.
    std::map<GlyphID, Glyph*>        mGlyphs;                      // All of the glyphs.
    unsigned int                     mNativeSize;                  // Native size of the font (in pt).
    unsigned int                     mImageWidth,                  // Width of the image in pixels.

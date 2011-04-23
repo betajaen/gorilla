@@ -43,9 +43,9 @@ namespace Gorilla
     
     Font*           loadFont(const Ogre::String& filename, const Ogre::String& resourceGroup = Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
     
-    Font*           createFont(const Ogre::String& name);
+    Font*           _createFont(const Ogre::String& name);
     
-    bool            destroyFont(const Ogre::String& name);
+    bool            _destroyFont(const Ogre::String& name);
     
     Font*           getFont(const Ogre::String& name) const;
     
@@ -53,9 +53,9 @@ namespace Gorilla
     
     void            loadSprites(const Ogre::String& filename, const Ogre::String& resourceGroup = Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
     
-    Sprite*         createSprite(const Ogre::String& name);
+    Sprite*         _createSprite(const Ogre::String& name);
     
-    void            destroySprite(const Ogre::String& name);
+    void            _destroySprite(const Ogre::String& name);
     
     Sprite*         getSprite(const Ogre::String& name) const;
     
@@ -64,6 +64,8 @@ namespace Gorilla
     OverlayCanvas*  createOverlayCanvas(Ogre::RenderQueueGroupID id = Ogre::RENDER_QUEUE_OVERLAY);
     
     MovableCanvas*  createMovableCanvas(const Ogre::String& movable_object_name = Ogre::StringUtil::BLANK);
+    
+    
     
     void            destroyCanvas(Canvas*);
         
@@ -82,11 +84,12 @@ namespace Gorilla
     void            _createMovableCanvasBaseMaterial();
     void            _createSolidWhiteSprite();
     
-    Ogre::map<Ogre::String, Font*>::type    mFonts;
-    Ogre::map<Ogre::String, Sprite*>::type  mSprites;
-    Sprite*                                 mSolidWhiteSprite;
-    std::vector<OverlayCanvas*>             mOverlayCanvases;
-    std::vector<MovableCanvas*>             mMovableCanvases;
+    Ogre::map<Ogre::String, SharedImage*>::type mImages;
+    Ogre::map<Ogre::String, Font*>::type        mFonts;
+    Ogre::map<Ogre::String, Sprite*>::type      mSprites;
+    Sprite*                                     mSolidWhiteSprite;
+    std::vector<OverlayCanvas*>                 mOverlayCanvases;
+    std::vector<MovableCanvas*>                 mMovableCanvases;
     
  };
  
