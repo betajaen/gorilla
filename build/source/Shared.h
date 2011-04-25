@@ -2,7 +2,7 @@
     Gorilla
     -------
     
-    Copyright (c) 2010 Robin Southern
+    Copyright (c) 2011 Robin Southern
                                                                                   
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -29,12 +29,15 @@
 
 #include "OGRE/Ogre.h"
 
+#define GORILLA_VERSION 200
+
 namespace Gorilla
 {
+ typedef size_t QuadID;
  class Silverback;
  class SharedImage;
  class Font;
- class Sprite;
+ class SubImage;
  class GorillaVertexBuffer;
  class Canvas;
  class OverlayCanvas;

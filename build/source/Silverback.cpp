@@ -2,7 +2,7 @@
     Gorilla
     -------
     
-    Copyright (c) 2010 Robin Southern
+    Copyright (c) 2011 Robin Southern
                                                                                   
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -27,18 +27,24 @@
 #include "Silverback.h"
 #include "ook.cpp"
 #include "Resources.h"
+#include "OGRE/OgreHardwarePixelBuffer.h"
 
 namespace Gorilla
 {
   
   Silverback::Silverback()
   {
-   // TODO
+   _createShaders();
+   _createOverlayCanvasBaseMaterial();
+   _createMovableCanvasBaseMaterial();
+   _createSolidWhiteImage();
   }
   
   Silverback::~Silverback()
   {
-   // TODO
+   destroyAllOverlayCanvases();
+   destroyAllMovableCanvases();
+   
   }
   
   void Silverback::_createShaders()
@@ -56,9 +62,38 @@ namespace Gorilla
    // TODO
   }
   
-  void Silverback::_createSolidWhiteSprite()
+  void Silverback::_createSolidWhiteImage()
   {
-   // TODO
+   
+   Ogre::TexturePtr texture = Ogre::TextureManager::getSingletonPtr()->createManual(
+    "GorillaWhitePixel",
+    Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
+    Ogre::TEX_TYPE_2D,
+    4,4,
+    0,
+    Ogre::PF_BYTE_BGRA,
+    Ogre::TU_DEFAULT
+   );
+   
+   Ogre::HardwarePixelBufferSharedPtr pixelBuffer = texture->getBuffer();
+   
+   pixelBuffer->lock(Ogre::HardwareBuffer::HBL_NORMAL);
+     const Ogre::PixelBox& pixelBox = pixelBuffer->getCurrentLock();
+     Ogre::uint8* pDest = static_cast<Ogre::uint8*>(pixelBox.data);
+     for (size_t i=0;i < 4*4*4;i++)
+     {
+      *pDest++ = 255;
+     }
+   pixelBuffer->unlock();
+   
+   _createSharedImage("GorillaWhitePixel");
+  }
+
+  SharedImage* Silverback::_createSharedImage(const Ogre::String& filename)
+  {
+   SharedImage* image = new SharedImage(filename);
+   mSharedImages.insert(  std::pair<Ogre::String, SharedImage*>(filename, image)  );
+   return image;
   }
 
   Font* Silverback::loadFont(const Ogre::String& filename, const Ogre::String& resourceGroup)
@@ -67,13 +102,13 @@ namespace Gorilla
    return 0;
   }
   
-  Font* Silverback::createFont(const Ogre::String& name)
+  Font* Silverback::_createFont(const Ogre::String& name)
   {
    // TODO
    return 0;
   }
   
-  bool  Silverback::destroyFont(const Ogre::String& name)
+  bool  Silverback::_destroyFont(const Ogre::String& name)
   {
    // TODO
    return false;
@@ -91,28 +126,30 @@ namespace Gorilla
    return 0;
   }
   
-  void Silverback::loadSprites(const Ogre::String& filename, const Ogre::String& resourceGroup)
+  void Silverback::loadSubImages(const Ogre::String& filename, const Ogre::String& resourceGroup)
   {
    // TODO
   }
   
-  Sprite* Silverback::createSprite(const Ogre::String& name)
-  {
-   // TODO
-  }
-  
-  void  Silverback::destroySprite(const Ogre::String& name)
-  {
-   // TODO
-  }
-  
-  Sprite* Silverback::getSprite(const Ogre::String& name) const
+  SubImage* Silverback::_createSubImage(const Ogre::String& name, SharedImage*)
   {
    // TODO
    return 0;
   }
   
-  bool  Silverback::hasSprite(const Ogre::String& name) const
+  bool  Silverback::_destroySubImage(const Ogre::String& name)
+  {
+   // TODO
+   return false;
+  }
+  
+  SubImage* Silverback::getSubImage(const Ogre::String& name) const
+  {
+   // TODO
+   return 0;
+  }
+  
+  bool  Silverback::hasSubImage(const Ogre::String& name) const
   {
    // TODO
    return false;
@@ -145,14 +182,14 @@ namespace Gorilla
    // TODO
   }
   
-  Ogre::ConstVectorIterator<OverlayCanvas*> Silverback::getOverlayCanvases() const
+  Ogre::ConstVectorIterator<Silverback::OverlayCanvases> Silverback::getOverlayCanvases() const
   {
-   return Ogre::ConstVectorIterator<OverlayCanvas*>(mOverlayCanvases.begin(), mOverlayCanvases.end());
+   return Ogre::ConstVectorIterator<OverlayCanvases>(mOverlayCanvases.begin(), mOverlayCanvases.end());
   }
   
-  Ogre::ConstVectorIterator<MovableCanvas*> Silverback::getMovableCanvases() const
+  Ogre::ConstVectorIterator<Silverback::MovableCanvases> Silverback::getMovableCanvases() const
   {
-   return Ogre::ConstVectorIterator<MovableCanvas*>(mMovableCanvases.begin(), mMovableCanvases.end());
+   return Ogre::ConstVectorIterator<MovableCanvases>(mMovableCanvases.begin(), mMovableCanvases.end());
   }
   
 } // namespace Gorilla

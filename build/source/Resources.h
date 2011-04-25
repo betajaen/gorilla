@@ -2,7 +2,7 @@
     Gorilla
     -------
     
-    Copyright (c) 2010 Robin Southern
+    Copyright (c) 2011 Robin Southern
                                                                                   
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -32,17 +32,48 @@
 namespace Gorilla
 {
  
+ struct Region
+ {
+  enum CoordinateUnits
+  {
+   Pixels,
+   Relative
+  };
+  
+  Region()
+    : left(0.0f), top(0.0f), width(1.0f), height(1.0f), units(Pixels)
+   {
+   }
+  
+  Region(Ogre::Real l, Ogre::Real t, Ogre::Real w, Ogre::Real h, CoordinateUnits u = Pixels) 
+    : left(l), top(t), width(w), height(h), units(u)
+  {
+  }
+  
+  Ogre::Real left,
+             top,
+             width,
+             height;
+  
+  CoordinateUnits units;
+  
+ };
+
  class SharedImage
  {
    
   public:
    
    friend class Font;
-   friend class Sprite;
+   friend class SubImage;
    
    SharedImage(const Ogre::String& file_name);
    
   ~SharedImage();
+   
+   bool  isValidImage() const;
+   
+   Ogre::TexturePtr  getTexturePtr() const;
    
    Ogre::uint getWidth() const; 
    
@@ -53,13 +84,19 @@ namespace Gorilla
    Ogre::MaterialPtr  getMovableObjectMaterial() const;
    
    Ogre::uint         getNbReferences() const;
-
+   
+   Region             convertUnits(const Region&, Region::CoordinateUnits new_units);
+   
   protected:
    
+   void _addReference();
+   void _removeReference();
    void _makeMaterials();
    
+  private:
+   
    Ogre::String       mFileName;
-   Ogre::uint         mWidth, mHeight;
+   Ogre::TexturePtr   mTexture;
    Ogre::MaterialPtr  mOverlayMaterial;
    Ogre::MaterialPtr  mMovableObjectMaterial;
    Ogre::uint         mReferences;
@@ -81,7 +118,7 @@ namespace Gorilla
    
    void setLineHeight(Ogre::Real line_height_in_pixels);
    
-   void addGlyph(GlyphID, Ogre::uint x, Ogre::uint y, Ogre::uint w, Ogre::uint h, Ogre::Real advance = 0);
+   void addGlyph(GlyphID, const Region& region, Ogre::Real advance = 0);
    
    void addKerning(GlyphID left, GlyphID right, Ogre::Real kerning);
    
@@ -97,10 +134,12 @@ namespace Gorilla
    {
      Glyph();
     ~Glyph();
-     Ogre::Real                     mX, mY, mXX, mYY;             // Relative positions (in 0..1 coordinates).
+     Region                    mRegion;                      // Region of image (in relative units).
      Ogre::Real                     mAdvance;                     // Glyph advance - in pixels.
      std::map<GlyphID, Ogre::Real>  mKerning;                     // Kerning value when to the left of another character.
    };
+   
+  private:
    
    SharedImage*                     mImage;                       // Image.
    std::map<GlyphID, Glyph*>        mGlyphs;                      // All of the glyphs.
@@ -111,81 +150,78 @@ namespace Gorilla
    
  };
 
- class Sprite
+ class SubImage
  {
   
-  friend class AnimatingSprite;
+  friend class AnimatingSubImage;
+  friend class OverlayCanvas;
+  friend class MovableCanvas;
   
   public:
    
-   Sprite(const Ogre::String& image, unsigned int native_size);
+   SubImage(SharedImage*, const Region&);
    
-  ~Sprite();
+  ~SubImage();
+   
+   void setRegion(const Region&);
    
    void clearAnimation();
    
-   void setAnimation(unsigned int nbFrames, Ogre::Real deltaFrameX, Ogre::Real deltaFrameY);
+   void setAnimationFrameCount(Ogre::uint nbFrames);
+
+   void setAnimationDeltaX(Ogre::Real deltaX);
+
+   void setAnimationDeltaY(Ogre::Real deltaY);
    
-   void addTiming(unsigned int frame, Ogre::Real time = 0);
+   void setAnimationDeltaWidth(Ogre::Real deltaWidth);
    
-   void doesLoop(bool val);
+   void setAnimationDeltaHeight(Ogre::Real deltaHeight);
    
-  protected:
+   void setAnimationLoops(bool doesLoop);
    
-   Ogre::Real               mX, mY, mXX, mYY, mFrameX, mFrameY;
-   bool                     mIsAnimated;
-   bool                     mLoops;
-   std::vector<Ogre::Real>  mTiming;
+   void setAnimationFramesPerSecond(Ogre::Real frames_per_second);
+   
+   bool isAnimated() const;
+   
+   Ogre::uint getAnimationNbFrames() const;
+   
+   Ogre::Real getAnimationDeltaX() const;
+   
+   Ogre::Real getAnimationDeltaY() const;
+   
+   Ogre::Real getAnimationDeltaWidth() const;
+   
+   Ogre::Real getAnimationDeltaHeight() const;
+   
+   bool getAnimationLoops() const;
+   
+   Ogre::Real getAnimationFramesPerSecond() const;
+   
+   Ogre::uint getReferences() const;
+   
+  private:
+   
+   void _increaseReference();
+   
+   void _decreaseReference();
+   
+   SharedImage*  mImage;
+   Region        mRegion;                                      // Region of image (in relative units).
+   Ogre::Real    mDeltaX, mDeltaY, mDeltaWidth, mDeltaHeight;  // Delta animation offset (in relative units).
+   Ogre::uint    mNbFrames;                                    // Number of frames the subimage has (at least 1 or more).
+   bool          mDoesLoop;                                    // Is the animation played once or continously?
+   Ogre::Real    mFramesPerSecond;                             // How many frames per second does it play at?
+   Ogre::uint    mReferences;                                  // How many Canvases reference this?
    
  };
  
- class AnimatingSprite
+ struct AnimatingRectangle
  {
-   
-  public:
-   
-   AnimatingSprite(Sprite*, unsigned int frame = 0);
-   
-  ~AnimatingSprite();
-   
-   void update(const Ogre::Real& time);
-   
-   inline unsigned int getFrame() const
-   {
-    return mCurrentFrame;
-   }
-   
-   inline void getRegion(Ogre::Real& x, Ogre::Real& y, Ogre::Real& xx, Ogre::Real& yy) const
-   {
-    x = mX;
-    y = mY;
-    xx = mXX;
-    yy = mYY;
-   }
-
-   inline bool isAnimating() const
-   {
-    return mIsAnimating;
-   }
-   
-   inline void pause()
-   {
-    mIsAnimating = false;
-   }
-   
-   inline void play()
-   {
-    mIsAnimating = true;
-   }
-   
-  protected:
-   
-   Sprite*                  mSprite;
-   Ogre::Real               mX, mY, mXX, mYY;
-   unsigned int             mCurrentFrame;
-   bool                     mIsAnimating;
-   Ogre::Real               mTimeLeft;
-   
+   SubImage*    mSubImage;
+   Region       mFrameRegion;
+   Region       mCanvasRegion;
+   Ogre::Real   mTime;
+   Ogre::uint   mFrame;
  };
  
 }
