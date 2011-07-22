@@ -34,7 +34,6 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
   mSilverback = new Gorilla::Silverback();
   mSilverback->loadAtlas("dejavu");
   mScreen = mSilverback->createScreen(mViewport, "dejavu");
-  //mScreen->setOrientation(Ogre::OrientationMode::OR_DEGREE_270);
   mScreen->setOrientation(Ogre::OR_DEGREE_270);
   Ogre::Real vpW = mScreen->getWidth(), vpH = mScreen->getHeight();
 
@@ -112,7 +111,7 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
    mRoot->addFrameListener(this);
    
 #if OGRE_PLATFORM == OGRE_PLATFORM_LINUX
-   mRoot->loadPlugin("/usr/local/lib/OGRE/RenderSystem_GL");
+   mRoot->loadPlugin(OGRE_RENDERER);
 #else
 #if 1
   #ifdef _DEBUG

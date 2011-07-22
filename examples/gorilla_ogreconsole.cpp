@@ -43,6 +43,24 @@ void make(Ogre::StringVector& vec)
  }
 }
 
+void sudo(Ogre::StringVector& vec)
+{
+ // See http://xkcd.com/149/ for the design specs of this function.
+ if( vec.size() == 3 )
+ {
+  Ogre::String make = vec[1];
+  Ogre::String item_to_make = vec[2];
+  Ogre::StringUtil::toLowerCase(make);
+  Ogre::StringUtil::toLowerCase(item_to_make);
+  if( make == "make" && item_to_make == "sandwich")
+  {
+   OgreConsole::getSingleton().print("Oh, ok then . . . . . . argh! The Ogre ate it! Honest!");
+   return;
+  }
+ }
+ OgreConsole::getSingleton().print("Go check everyones fridge.");
+}
+
 void quit(Ogre::StringVector&)
 {
  quitApp = true;
@@ -80,6 +98,7 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
    mConsole->init(mScreen);
    mConsole->addCommand("whoami", whoami);
    mConsole->addCommand("version", version);
+   mConsole->addCommand("sudo", sudo);
    mConsole->addCommand("make", make);
    mConsole->addCommand("quit", quit);
   }
@@ -152,7 +171,7 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
    mRoot = new Ogre::Root("","");
    mRoot->addFrameListener(this);
 #if OGRE_PLATFORM == OGRE_PLATFORM_LINUX
-   mRoot->loadPlugin("/usr/local/lib/OGRE/RenderSystem_GL");
+   mRoot->loadPlugin(OGRE_RENDERER);
 #else
   #ifdef _DEBUG
    mRoot->loadPlugin("RenderSystem_Direct3D9_d");

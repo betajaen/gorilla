@@ -170,7 +170,7 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
    mRoot->addFrameListener(this);
    
 #if OGRE_PLATFORM == OGRE_PLATFORM_LINUX
-   mRoot->loadPlugin("/usr/local/lib/OGRE/RenderSystem_GL");
+   mRoot->loadPlugin(OGRE_RENDERER);
 #else
 #if 1
   #ifdef _DEBUG
