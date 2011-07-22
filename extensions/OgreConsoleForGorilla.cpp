@@ -243,7 +243,12 @@ void OgreConsole::removeCommand(const Ogre::String &command)
  commands.erase(commands.find(command));
 }
 
+#if OGRE_VERSION_MINOR < 8 && OGRE_VERSION_MAJOR < 2
 void OgreConsole::messageLogged( const Ogre::String& message, Ogre::LogMessageLevel lml, bool maskDebug, const Ogre::String &logName )
+#else
+    // "bool& skip" added in Ogre 1.8
+void OgreConsole::messageLogged( const Ogre::String& message, Ogre::LogMessageLevel lml, bool maskDebug, const Ogre::String &logName, bool &skip )
+#endif
 {
  print(message);
 }

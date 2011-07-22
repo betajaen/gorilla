@@ -53,7 +53,12 @@ class OgreConsole : public Ogre::Singleton<OgreConsole>, Ogre::FrameListener, Og
     void removeCommand(const Ogre::String &command);
  
     //log
+#if OGRE_VERSION_MINOR < 8 && OGRE_VERSION_MAJOR < 2
     void messageLogged( const Ogre::String& message, Ogre::LogMessageLevel lml, bool maskDebug, const Ogre::String &logName );
+#else
+    // "bool& skip" added in Ogre 1.8
+    void messageLogged( const Ogre::String& message, Ogre::LogMessageLevel lml, bool maskDebug, const Ogre::String &logName, bool &skip );
+#endif
  private:
     
     void  updateConsole();
