@@ -61,7 +61,7 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
   Gorilla::Caption*       mFPS;
   Ogre::Real              mTimer;
   
-  App() : mNextUpdate(0), mTimer(0)
+  App() : mTimer(0), mNextUpdate(0)
   {
    
    _makeOgre();
@@ -151,11 +151,15 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
    
    mRoot = new Ogre::Root("","");
    mRoot->addFrameListener(this);
+#if OGRE_PLATFORM == OGRE_PLATFORM_LINUX
+   mRoot->loadPlugin("/usr/local/lib/OGRE/RenderSystem_GL");
+#else
   #ifdef _DEBUG
    mRoot->loadPlugin("RenderSystem_Direct3D9_d");
   #else
    mRoot->loadPlugin("RenderSystem_Direct3D9");
   #endif
+#endif
    
    mRoot->setRenderSystem(mRoot->getAvailableRenderers()[0]);
    
@@ -267,11 +271,13 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
   
 };
 
-void main()
+int main()
 {
  App* app  = new App();
  app->mRoot->startRendering();
  delete app;
+
+ return 0;
 }
 
 

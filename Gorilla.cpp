@@ -740,7 +740,7 @@ namespace Gorilla
  }
  
  LayerContainer::LayerContainer(TextureAtlas* atlas)
- : mAtlas(atlas), mIndexRedrawAll(false)
+ : mIndexRedrawAll(false), mAtlas(atlas)
  {
  }
  
@@ -1007,7 +1007,7 @@ namespace Gorilla
  
  
  Screen::Screen(Ogre::Viewport* viewport, TextureAtlas* atlas)
- : LayerContainer(atlas), mViewport(viewport), mIsVisible(true), mScale(1,1,1), mCanRender(false)
+ : LayerContainer(atlas), mViewport(viewport), mIsVisible(true), mCanRender(false), mScale(1,1,1)
  {
   mRenderOpPtr = &mRenderOp;
   mSceneMgr = mViewport->getCamera()->getSceneManager();
