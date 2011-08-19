@@ -360,7 +360,7 @@ namespace Gorilla
    
    // Get kerning value of a character to the right of another.
    // Ab -- get the kerning value of b, pass on A.
-   inline const Ogre::Real getKerning(char left_of) const
+   inline const Ogre::Real getKerning(unsigned char left_of) const
    {
     if (kerning.size() == 0)
      return 0;
