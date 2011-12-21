@@ -33,7 +33,11 @@
 
 #pragma warning ( disable : 4244 )
 
+#if OGRE_VERSION < 67584 // 1.8.0
 template<> Gorilla::Silverback* Ogre::Singleton<Gorilla::Silverback>::ms_Singleton = 0;
+#else
+template<> Gorilla::Silverback* Ogre::Singleton<Gorilla::Silverback>::msSingleton = 0;
+#endif
 
 #define PUSH_VERTEX(VERTICES, VERTEX, X, Y, UV, COLOUR)   \
   VERTEX.position.x = X;                                           \

@@ -12,7 +12,11 @@
 
 #include "OgreConsoleForGorilla.h"
 
+#if OGRE_VERSION < 67584 // 1.8.0
 template<> OgreConsole* Ogre::Singleton<OgreConsole>::ms_Singleton=0;
+#else
+template<> OgreConsole* Ogre::Singleton<OgreConsole>::msSingleton=0;
+#endif
 
 #define CONSOLE_FONT_INDEX 14
 
