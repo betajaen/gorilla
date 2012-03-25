@@ -15,7 +15,7 @@ OGRE_RENDERER=/usr/local/lib/OGRE/RenderSystem_GL.so
 #OGRE_RENDERER=/usr/lib64/OGRE/RenderSystem_GL.so
 
 LIBS=-lOgreMain -lOIS
-CXXFLAGS= -g -I.. -I../extensions ${OGRE_INCDIR} -DOGRE_RENDERER="\"${OGRE_RENDERER}\""
+CXXFLAGS=-Wall -Wno-unknown-pragmas -g -I.. -I../extensions ${OGRE_INCDIR} -DOGRE_RENDERER="\"${OGRE_RENDERER}\""
 
 vpath %.cpp ..
 vpath %.cpp ../extensions

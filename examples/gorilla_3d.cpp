@@ -153,7 +153,7 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
   Ogre::Real              mBasePower;
   Ogre::SceneNode*        mNode;
   
-  App() : mNextUpdate(0), mTimer(0), mTimer2(0), mBasePower(150)
+  App() : mTimer(0), mTimer2(0), mBasePower(150), mNextUpdate(0)
   {
    
    _makeOgre();
@@ -348,7 +348,6 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
 
    Ogre::ColourValue BackgroundColour = Ogre::ColourValue(0.1337f, 0.1337f, 0.1337f, 1.0f);
    Ogre::ColourValue GridColour = Ogre::ColourValue(0.2000f, 0.2000f, 0.2000f, 1.0f);
-   Ogre::ColourValue GroundColour = Ogre::ColourValue(0.2337f, 0.2337f, 0.2337f, 1.0f);
 
    mViewport->setBackgroundColour(BackgroundColour);
    

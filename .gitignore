@@ -1,0 +1,7 @@
+*.o
+*~
+Ogre.log
+console
+gorilla3d
+playpen
+tests
