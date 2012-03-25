@@ -76,7 +76,7 @@ class OgreConsole : public Ogre::Singleton<OgreConsole>, Ogre::FrameListener, Og
     bool                 mUpdateConsole;
     bool                 mUpdatePrompt;
 
-    int                     mStartline;
+    unsigned int         mStartline;
     std::list<Ogre::String>      lines;
     Ogre::String            prompt;
     std::map<Ogre::String, OgreConsoleFunctionPtr>  commands;

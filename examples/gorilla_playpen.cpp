@@ -24,7 +24,7 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
   Gorilla::QuadList*       quads;
   Gorilla::MarkupText*     markup;
   
-  App() : mNextUpdate(0), mTimer(0), mTimer2(0)
+  App() : mTimer(0), mTimer2(0), mNextUpdate(0)
   {
    
    _makeOgre();

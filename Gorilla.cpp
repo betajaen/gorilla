@@ -1861,7 +1861,6 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
   l.x += thickness;    l.y += thickness;
   
   Vertex temp;
-  Ogre::Vector2 uv = mLayer->_getSolidUV();
   
   // North
   Quad q;

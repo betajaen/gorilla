@@ -22,10 +22,10 @@ template<> OgreConsole* Ogre::Singleton<OgreConsole>::msSingleton=0;
 
 #define CONSOLE_LINE_LENGTH 85
 #define CONSOLE_LINE_COUNT 15
-static const char legalchars[]="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890+!\"'#%&/()=?[]\\*-_.:,; ";
+static const unsigned char legalchars[]="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890+!\"'#%&/()=?[]\\*-_.:,; ";
 
 OgreConsole::OgreConsole()
-: mScreen(0), mStartline(0), mUpdateConsole(false), mUpdatePrompt(false), mIsInitialised(false), mIsVisible(true)
+: mIsVisible(true), mIsInitialised(false), mScreen(0), mUpdateConsole(false), mUpdatePrompt(false), mStartline(0)
 {
 }
  
@@ -130,7 +130,7 @@ void OgreConsole::onKeyPressed(const OIS::KeyEvent &arg)
  
  else
  {
-    for(int c=0;c<sizeof(legalchars);c++){
+    for(unsigned int c=0;c<sizeof(legalchars);c++){
        if(legalchars[c]==arg.text){
           prompt+=arg.text;
           break;
@@ -166,10 +166,10 @@ void OgreConsole::updateConsole()
 
  int lcount=0;
  start=lines.begin();
- for(int c=0;c<mStartline;c++)
+ for(unsigned int c=0;c<mStartline;c++)
     start++;
  end=start;
- for(int c=0;c<CONSOLE_LINE_COUNT;c++){
+ for(unsigned int c=0;c<CONSOLE_LINE_COUNT;c++){
     if(end==lines.end())
        break;
     end++;
@@ -206,7 +206,6 @@ void OgreConsole::print(const Ogre::String &text)
 {
    //subdivide it into lines
    const char *str=text.c_str();
-   int start=0,count=0;
    int len=text.length();
    Ogre::String line;
    for(int c=0;c<len;c++){
