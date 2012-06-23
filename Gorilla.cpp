@@ -143,7 +143,10 @@ namespace Gorilla
    Ogre::StringUtil::toLowerCase(secName);
    
    if (secName == "texture")
+   {
+    settings->find("file")->second.append("~" + groupName);
     _loadTexture(settings);
+   }
    else if (Ogre::StringUtil::startsWith(secName, "font.", false))
    {
     Ogre::uint index = Ogre::StringConverter::parseUnsignedInt(secName.substr(5));
