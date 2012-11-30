@@ -12,7 +12,7 @@ bool quitApp = false;
 
 void whoami(Ogre::StringVector&)
 {
- OgreConsole::getSingleton().print("Your you!");
+ OgreConsole::getSingleton().print("You're you!");
 }
 
 void version(Ogre::StringVector&)
