@@ -531,11 +531,9 @@ namespace Gorilla
   std::string matName = "Gorilla2D." + mTexture->getName();
   m2DMaterial = Ogre::MaterialManager::getSingletonPtr()->getByName(matName);
   
-  if (m2DMaterial.isNull() == false)
-   return;
+  if (m2DMaterial.isNull())
+   m2DMaterial = createOrGet2DMasterMaterial()->clone(matName);
   
-  
-  m2DMaterial = createOrGet2DMasterMaterial()->clone(matName);
   m2DPass = m2DMaterial->getTechnique(0)->getPass(0);
   m2DPass->getTextureUnitState(0)->setTextureName(mTexture->getName());
   
@@ -547,11 +545,9 @@ namespace Gorilla
   std::string matName = "Gorilla3D." + mTexture->getName();
   m3DMaterial = Ogre::MaterialManager::getSingletonPtr()->getByName(matName);
   
-  if (m3DMaterial.isNull() == false)
-   return;
-  
-  
-  m3DMaterial = createOrGet3DMasterMaterial()->clone(matName);
+  if (m3DMaterial.isNull())
+   m3DMaterial = createOrGet3DMasterMaterial()->clone(matName);
+
   m3DPass = m3DMaterial->getTechnique(0)->getPass(0);
   m3DPass->getTextureUnitState(0)->setTextureName(mTexture->getName());
   
