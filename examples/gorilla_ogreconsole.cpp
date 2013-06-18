@@ -190,6 +190,7 @@ class App : public Ogre::FrameListener, public OIS::KeyListener, public OIS::Mou
    mWindow = mRoot->createRenderWindow("Gorilla", 1024, 768, false);
    mSceneMgr = mRoot->createSceneManager(Ogre::ST_GENERIC);
    mCamera = mSceneMgr->createCamera("Camera");
+   mSceneMgr->setAmbientLight(Ogre::ColourValue(1.0f, 1.0f, 1.0f));
    mViewport = mWindow->addViewport(mCamera);
    mViewport->setBackgroundColour(Gorilla::rgb(13, 13, 13));
    
