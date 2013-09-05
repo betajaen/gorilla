@@ -264,11 +264,18 @@ namespace Gorilla
     glyphData->mSpaceLength = Ogre::StringConverter::parseReal(data);
     continue;
    }
-   // spacelength spacelength
-   // >  spacelength 3
+   // baseline baseline
+   // >  baseline 3
    else if (name == "baseline")
    {
     glyphData->mBaseline = Ogre::StringConverter::parseReal(data);
+    continue;
+   }
+   // linespacing linespacing
+   // >  linespacing 2
+   else if (name == "linespacing")
+   {
+    glyphData->mLineSpacing = Ogre::StringConverter::parseReal(data);
     continue;
    }
    // monowidth width
@@ -650,6 +657,7 @@ namespace Gorilla
    mSpaceLength(0),
    mLineHeight(0),
    mBaseline(0),
+   mLineSpacing(0),
    mLetterSpacing(0),
    mMonoWidth(0)
  {

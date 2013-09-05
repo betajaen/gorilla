@@ -500,6 +500,7 @@ namespace Gorilla
     Ogre::Real           mSpaceLength,
                          mLineHeight,
                          mBaseline,
+                         mLineSpacing,
                          mLetterSpacing,
                          mMonoWidth;
    
