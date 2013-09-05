@@ -264,11 +264,18 @@ namespace Gorilla
     glyphData->mSpaceLength = Ogre::StringConverter::parseReal(data);
     continue;
    }
-   // spacelength spacelength
-   // >  spacelength 3
+   // baseline baseline
+   // >  baseline 3
    else if (name == "baseline")
    {
     glyphData->mBaseline = Ogre::StringConverter::parseReal(data);
+    continue;
+   }
+   // linespacing linespacing
+   // >  linespacing 2
+   else if (name == "linespacing")
+   {
+    glyphData->mLineSpacing = Ogre::StringConverter::parseReal(data);
     continue;
    }
    // monowidth width
@@ -650,6 +657,7 @@ namespace Gorilla
    mSpaceLength(0),
    mLineHeight(0),
    mBaseline(0),
+   mLineSpacing(0),
    mLetterSpacing(0),
    mMonoWidth(0)
  {
@@ -2036,6 +2044,7 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
   mBackground.a   = 0.0f;
   mAlignment      = TextAlign_Left;
   mVerticalAlign  = VerticalAlign_Top;
+  mFixedWidth     = false;
  }
 
  void Caption::_calculateDrawSize(Ogre::Vector2& retSize)
@@ -2073,7 +2082,7 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
    if (kerning == 0)
     kerning = mGlyphData->mLetterSpacing;
       
-   cursor  += glyph->glyphAdvance + kerning;
+   cursor  += _getAdvance(glyph, kerning);
    lastChar = thisChar;
    
   } // for
@@ -2196,7 +2205,7 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
     {
      if (mClippedLeftIndex == std::string::npos)
        mClippedLeftIndex = i;
-     cursorX  += glyph->glyphAdvance + kerning;
+     cursorX  += _getAdvance(glyph, kerning);
      lastChar = thisChar;
      continue;
     }
@@ -2208,7 +2217,7 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
     {
      if (mClippedRightIndex == std::string::npos)
        mClippedRightIndex = i;
-     cursorX  += glyph->glyphAdvance + kerning;
+     cursorX  += _getAdvance(glyph, kerning);
      lastChar = thisChar;
      continue;
     }
@@ -2225,7 +2234,7 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
    PUSH_VERTEX(mVertices, temp, right, top, glyph->texCoords[TopRight], mColour);    // Right/Top    1
    
    
-   cursorX  += glyph->glyphAdvance + kerning;
+   cursorX  += _getAdvance(glyph, kerning);
    lastChar = thisChar;
    
   } // for
@@ -2235,6 +2244,15 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
  }
  
  
+ Ogre::Real Caption::_getAdvance(Glyph* glyph, Ogre::Real kerning)
+ {
+   if(mFixedWidth)
+     return mGlyphData->mMonoWidth;
+   else
+     return glyph->glyphAdvance + kerning;
+ }
+
+
  MarkupText::MarkupText(Ogre::uint defaultGlyphIndex, Ogre::Real left, Ogre::Real top, const Ogre::String& text, Layer* parent)
  : mLayer(parent)
  {

@@ -500,6 +500,7 @@ namespace Gorilla
     Ogre::Real           mSpaceLength,
                          mLineHeight,
                          mBaseline,
+                         mLineSpacing,
                          mLetterSpacing,
                          mMonoWidth;
    
@@ -2755,6 +2756,22 @@ namespace Gorilla
      mLayer->_markDirty();
     }
 
+    /*! function. fixedWidth
+        desc.
+            Set, whether the font should be drawn with a fixed width.
+    */
+    void fixedWidth(bool fixedWidth)
+    {
+      mFixedWidth = fixedWidth;
+      mDirty = true;
+      mLayer->_markDirty();
+    }
+
+    bool fixedWidth() const
+    {
+      return mFixedWidth;
+    }
+
     /*! function. _redraw
         desc.
             Redraw the text.
@@ -2773,6 +2790,7 @@ namespace Gorilla
     
    protected:
     
+    bool                  mFixedWidth;
     Layer*                mLayer;
     GlyphData*            mGlyphData;
     Ogre::Real            mLeft, mTop, mWidth, mHeight;
@@ -2784,6 +2802,9 @@ namespace Gorilla
     buffer<Vertex>        mVertices;
     size_t                mClippedLeftIndex, mClippedRightIndex;
     
+  private:
+    Ogre::Real _getAdvance(Glyph* glyph, Ogre::Real kerning);
+
   };
   
   /* class. Caption
