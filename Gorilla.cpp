@@ -2378,7 +2378,6 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
       glyphData = mLayer->_getGlyphData(index);
       if (glyphData == 0)
        return;
-      // TODO: Check against line height?
       lineHeight = std::max(lineHeight, glyphData->mLineHeight);
       continue;
      }
