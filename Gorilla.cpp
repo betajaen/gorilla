@@ -2461,6 +2461,14 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
    top = cursorY + glyph->verticalOffset;
    right = cursorX + glyph->glyphWidth + texelOffsetX;
    bottom = top + glyph->glyphHeight + texelOffsetY;
+
+
+   if (fixedWidth)
+   {
+     Ogre::Real offset = round((glyphData->mMonoWidth - glyph->glyphWidth) / 2.0f);
+     left += offset;
+     right += offset;
+   }
    
    Character c;
    c.mIndex = i;
