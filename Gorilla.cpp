@@ -2222,6 +2222,13 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
      continue;
     }
    }
+
+   if(fixedWidth())
+   {
+     Ogre::Real offset = round((mGlyphData->mMonoWidth - glyph->glyphWidth) / 2.0f);
+     left += offset;
+     right += offset;
+   }
    
    // Triangle A
    PUSH_VERTEX(mVertices, temp, left, bottom, glyph->texCoords[BottomLeft], mColour);  // Left/Bottom  3
