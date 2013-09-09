@@ -2222,6 +2222,13 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
      continue;
     }
    }
+
+   if(fixedWidth())
+   {
+     Ogre::Real offset = std::floor((mGlyphData->mMonoWidth - glyph->glyphWidth) / 2.0f);
+     left += offset;
+     right += offset;
+   }
    
    // Triangle A
    PUSH_VERTEX(mVertices, temp, left, bottom, glyph->texCoords[BottomLeft], mColour);  // Left/Bottom  3
@@ -2454,6 +2461,14 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
    top = cursorY + glyph->verticalOffset;
    right = cursorX + glyph->glyphWidth + texelOffsetX;
    bottom = top + glyph->glyphHeight + texelOffsetY;
+
+
+   if (fixedWidth)
+   {
+     Ogre::Real offset = std::floor((glyphData->mMonoWidth - glyph->glyphWidth) / 2.0f);
+     left += offset;
+     right += offset;
+   }
    
    Character c;
    c.mIndex = i;
