@@ -2225,7 +2225,7 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
 
    if(fixedWidth())
    {
-     Ogre::Real offset = round((mGlyphData->mMonoWidth - glyph->glyphWidth) / 2.0f);
+     Ogre::Real offset = std::floor((mGlyphData->mMonoWidth - glyph->glyphWidth) / 2.0f);
      left += offset;
      right += offset;
    }
@@ -2465,7 +2465,7 @@ void  QuadList::border(Ogre::Real x, Ogre::Real y, Ogre::Real w, Ogre::Real h, O
 
    if (fixedWidth)
    {
-     Ogre::Real offset = round((glyphData->mMonoWidth - glyph->glyphWidth) / 2.0f);
+     Ogre::Real offset = std::floor((glyphData->mMonoWidth - glyph->glyphWidth) / 2.0f);
      left += offset;
      right += offset;
    }
