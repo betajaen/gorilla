@@ -1582,7 +1582,7 @@ namespace Gorilla
     */
     void  background_colour(QuadCorner index, const Ogre::ColourValue& colour)
     {
-     mBorderColour[index] = colour;
+     mBackgroundColour[index] = colour;
      mDirty = true;
      mLayer->_markDirty();
     }
