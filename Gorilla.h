@@ -690,7 +690,7 @@ namespace Gorilla
         note.
             colour_palette_index must be between or equal to 0 and 9.
     */
-    Ogre::ColourValue getMarkupColour(Ogre::uint colour_palette_index);
+    const Ogre::ColourValue &getMarkupColour(Ogre::uint colour_palette_index) const;
     
    protected:
     

@@ -643,7 +643,7 @@ namespace Gorilla
   mMarkupColour[index] = colour;
  }
 
- Ogre::ColourValue  TextureAtlas::getMarkupColour(Ogre::uint index)
+ const Ogre::ColourValue &TextureAtlas::getMarkupColour(Ogre::uint index) const
  {
   if (index > 9)
    return Ogre::ColourValue::White;
