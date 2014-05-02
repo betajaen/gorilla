@@ -435,6 +435,8 @@ namespace Gorilla
    */
    Screen* createScreen(Ogre::Viewport*, const Ogre::String& atlas);
    
+   Screen* createScreen(Ogre::Viewport* viewport, TextureAtlas* atlas);
+   
    /*! function. destroyScreen
        desc.
            Destroy an existing screen, its layers and the contents of those layers.
@@ -690,7 +692,7 @@ namespace Gorilla
         note.
             colour_palette_index must be between or equal to 0 and 9.
     */
-    Ogre::ColourValue getMarkupColour(Ogre::uint colour_palette_index);
+    const Ogre::ColourValue &getMarkupColour(Ogre::uint colour_palette_index) const;
     
    protected:
     

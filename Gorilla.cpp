@@ -643,7 +643,7 @@ namespace Gorilla
   mMarkupColour[index] = colour;
  }
 
- Ogre::ColourValue  TextureAtlas::getMarkupColour(Ogre::uint index)
+ const Ogre::ColourValue &TextureAtlas::getMarkupColour(Ogre::uint index) const
  {
   if (index > 9)
    return Ogre::ColourValue::White;
@@ -714,6 +714,11 @@ namespace Gorilla
  Screen* Silverback::createScreen(Ogre::Viewport* viewport, const Ogre::String& atlas_name)
  {
   TextureAtlas* atlas = (*mAtlases.find(atlas_name)).second;
+  return createScreen(viewport, atlas);
+ }
+
+ Screen* Silverback::createScreen(Ogre::Viewport *viewport, TextureAtlas *atlas)
+ {
   Screen* screen = OGRE_NEW Screen(viewport, atlas);
   mScreens.push_back(screen);
   return screen;
