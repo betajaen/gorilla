@@ -435,6 +435,8 @@ namespace Gorilla
    */
    Screen* createScreen(Ogre::Viewport*, const Ogre::String& atlas);
    
+   Screen* createScreen(Ogre::Viewport* viewport, TextureAtlas* atlas);
+   
    /*! function. destroyScreen
        desc.
            Destroy an existing screen, its layers and the contents of those layers.
