@@ -1546,7 +1546,7 @@ namespace Gorilla
         desc.
             Get a background colour of a specific corner.
     */
-    Ogre::ColourValue  background_colour(QuadCorner index) const
+    const Ogre::ColourValue& background_colour(QuadCorner index) const
     {
      return mBackgroundColour[index];
     }
