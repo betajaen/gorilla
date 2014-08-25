@@ -870,6 +870,8 @@ namespace Gorilla
     
     friend class Silverback;
     friend class Layer;
+
+    inline Ogre::Viewport* getViewport() const { return mViewport; }
     
     /*! desc. getTexelOffsetX
             Helper function to get horizontal texel offset.
@@ -2820,6 +2822,11 @@ namespace Gorilla
    friend class Layer;
    
    public:
+
+    GlyphData*  getDefaultGlyphData() const
+    {
+     return mDefaultGlyphData;
+    }
     
     /*! function. top
         desc.
