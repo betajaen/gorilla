@@ -540,6 +540,21 @@ namespace Gorilla
   
   if (m2DMaterial.isNull())
    m2DMaterial = createOrGet2DMasterMaterial()->clone(matName);
+  else
+  {
+    Ogre::Pass* pass = m2DMaterial->getTechnique(0)->getPass(0);
+    if(pass->hasVertexProgram())
+    {
+      Ogre::GpuProgramPtr gpuPtr = pass->getVertexProgram();
+      gpuPtr->load();
+    }
+
+    if(pass->hasFragmentProgram())
+    {
+      Ogre::GpuProgramPtr gpuPtr = pass->getFragmentProgram();
+      gpuPtr->load();
+    }
+  }
   
   m2DPass = m2DMaterial->getTechnique(0)->getPass(0);
   m2DPass->getTextureUnitState(0)->setTextureName(mTexture->getName());
